@@ -14,7 +14,7 @@ Biot_Savart/calc_b/
 calc_B_BiotSavart.m:
     Input: Cartesian 'observation point' at which components B (Bx, By, Bz) are desired. Coil: a 'struct' that describes the coil geometry, and the coil current
     Output: Bx, By, Bz
-    The method of <ref goes here> is used to rapidly and efficiently calculate the magnetic field components due to currents in the coilset. Check are included to see if the distance between the observxeation point and a coil is less than some specified tolerance.
+    The method of [J. Hanson, S. Hirshman PoP 9, 4410 (2002)] is used to rapidly and efficiently calculate the magnetic field components due to currents in the coilset. Check are included to see if the distance between the observxeation point and a coil is less than some specified tolerance.
 
 calc_B_HSX.m:
     Input: Cartesian observation point (P_x, P_y, P_z), the current in the main field coilset, and the taper array describing the current in teh auxilliary coils.
