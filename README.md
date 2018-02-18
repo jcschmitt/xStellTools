@@ -1,6 +1,6 @@
 # xStellTools, v-1. This is a placeholder
 
-A collection of scripts, codes and documents to assist with visualizing the output from stellarator codes.
+A collection of scripts, codes and documents to assist with stellarators.
 
 See also: http://vmecwiki.pppl.wikispaces.net/
 
