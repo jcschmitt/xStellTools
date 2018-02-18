@@ -1,4 +1,4 @@
-# xStellTools, v-1. This is a placeholder
+# xStellTools, v0.1a
 
 A collection of scripts, codes and documents to assist with stellarators.
 
