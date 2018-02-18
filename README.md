@@ -4,7 +4,7 @@ A collection of scripts, codes and documents to assist with stellarators.
 
 See also: http://vmecwiki.pppl.wikispaces.net/
 
-Codes here are categorized by code base (*.m, *.py, *.jar). 
+Codes here are categorized by directory. 
 This is a loose collection of codes, not a one-code-fits-all. 
 
 Code : Description
