@@ -1,5 +1,9 @@
 function [Ax, Ay, Az, Bx, By, Bz] = ...
     calc_AB_BiotSavart(P_x, P_y,P_z, coil, coil_current, CALC_B)
+% function [Ax, Ay, Az, Bx, By, Bz] = ...
+%     calc_AB_BiotSavart(P_x, P_y,P_z, coil, coil_current, CALC_B)
+% This function calculates the magnetic vector potential, 'A', and, if
+% requested, it will also calculate the magnetic field strength, 'B'
 
 muI_div_4pi = coil_current * 1e-7; % this is mu0 * I / 4*pi
 
