@@ -30,7 +30,7 @@ disp(['<----Found file. Looks like nphi=' num2str(numphi) ...
 % works for the current version of DESCUR and 50 slices/toroidal field
 % period. In the end, I don't think it matters, since all modes are
 % eventually read in.
-numtormodes_first_pass = 25; 
+numtormodes_first_pass = 25;
 
 %phi angle of each cut
 phi = 0:2*pi/(4*numphi):pi/2;
@@ -58,49 +58,61 @@ try
         else
             cmpSTR = tline(4:5);
         end
+        if (tline == -1)
+            break;
+            disp('<----');
+            
+        end
     end
+    
+    for ii = 1:numtormodes_first_pass
+        temp_data = fgetl(fid_outcurve);
+        data(ii,:) = temp_data(1:57);
+    end
+    
+    keep_going = 1;
+    counter = ii;
+    while keep_going % check the outcurve file, this ??? changes.
+        temp_data = fgetl(fid_outcurve)
+        if max(size(temp_data)) > 1
+            counter = counter + 1;
+            data(counter,:) = temp_data;
+        else
+            keep_going = 0;
+        end
+    end
+    fclose(fid_outcurve);
+
+    % Convert all those strings into numbers at one time
+    data = str2num(data);
+    numtotalmodes = counter;
+    
+    disp(['<----Total number of modes found: ' num2str(numtotalmodes)]);
+    
+    % Pull out values
+    m = data(:,1);
+    n = data(:,2);
+    rbc = data(:,3); % cos component of R
+    rbs = data(:,4); % sin component of R
+    zbc = data(:,5); % cos component of Z
+    zbs = data(:,6); % sin component of Z
+    
+    ERR_OUTCURVE = false;
 catch
-    error('Something messed up when trying to read outcurve file')
+    ERR_OUTCURVE = true;
+    warning('Something messed up when trying to read outcurve file')
 end
 
-for ii = 1:numtormodes_first_pass
-    temp_data = fgetl(fid_outcurve);
-    data(ii,:) = temp_data(1:57);
-end
-
-keep_going = 1;
-counter = ii;
-while keep_going % check the outcurve file, this ??? changes.
-    temp_data = fgetl(fid_outcurve)
-    if max(size(temp_data)) > 1
-        counter = counter+1;
-        data(counter,:) = temp_data;        
-    else
-        keep_going = 0;
-    end    
-end
-
-% Convert all those strings into numbers at one time
-data = str2num(data);
-numtotalmodes = counter;
-
-disp(['<----Total number of modes found: ' num2str(numtotalmodes)]);
-
-% Pull out values
-m = data(:,1);
-n = data(:,2);
-rbc = data(:,3); % cos component of R
-rbs = data(:,4); % sin component of R
-zbc = data(:,5); % cos component of Z
-zbs = data(:,6); % sin component of Z
-
-for kk = 1:length(phi) %for each cut
+% for kk = 1:length(phi) % for each cut
+for kk = 1 % just the 1st toroidal cut
     r_rec = zeros(size(theta));
     z_rec = zeros(size(theta));
-
-    for ii = 1:length(theta) %sum up the fourier components of R,Z for each m,n for all angles theta
-        r_rec(ii) = sum(rbc.*cos(m*theta(ii) - 4*n*phi(kk)))+sum(rbs.*sin(m*theta(ii) - 4*n*phi(kk)));
-        z_rec(ii) = sum(zbc.*cos(m*theta(ii) - 4*n*phi(kk)))+sum(zbs.*sin(m*theta(ii) - 4*n*phi(kk)));
+    
+    if ~ERR_OUTCURVE
+        for ii = 1:length(theta) %sum up the fourier components of R,Z for each m,n for all angles theta
+            r_rec(ii) = sum(rbc.*cos(m*theta(ii) - 4*n*phi(kk)))+sum(rbs.*sin(m*theta(ii) - 4*n*phi(kk)));
+            z_rec(ii) = sum(zbc.*cos(m*theta(ii) - 4*n*phi(kk)))+sum(zbs.*sin(m*theta(ii) - 4*n*phi(kk)));
+        end
     end
     
     figure(kk);box on; hold on;
@@ -108,8 +120,9 @@ for kk = 1:length(phi) %for each cut
     plot(rsurf(kk:numphi:end), zsurf(kk:numphi:end), 'k.')
     hold on
     % plot fourier points
-    plot(r_rec,z_rec,'r-','LineWidth',1)
+    if ~ERR_OUTCURVE
+        plot(r_rec,z_rec,'r-','LineWidth',1)
+    end
     axis equal
 end
 
-fclose(fid_outcurve);
