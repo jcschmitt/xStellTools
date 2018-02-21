@@ -1,69 +1,82 @@
-function [] = compare_Boozer_and_Biot_Savart(fname_ext, surf_to_plot, ...
-    modes_to_display)
+function [fig_handle_1, fig_handle_2] = ...
+    plot_Boozer_spectrum(Boozer_output_file, surface_to_plot, ...
+    modes_to_display, PLOT_SPECTRUM, PLOT_SURFACE_2D, ...
+    color_list, symbol_cells, line_cells, colormap_in)
+% function [x_3D, y_3D, z_3D, modB_recon_3D] = ...
+%     plot_boozer_spectrum(Boozer_output_file, surface_to_plot, ...
+%     modes_to_display, PLOT_SPECTRUM, PLOT_SURFACE_2D, ...
+%     color_list, symbol_cells, line_cells, colormap_in)
 %
-% Usage:  
-% compare_Boozer_and_Biot_Savart('boozmn_QHS_Rstart_1_513_6x8.nc', 6, [1:50])
+% Usage: plot_Boozer_spectrum('boozmn_qhs.nc', 99, 1:20, 1, 1);
+%            or
+%        plot_Boozer_spectrum('boozmn_qhs.nc', 75, 3:8, 1, 1);
 %
-% Compare Boozer/VMEC (xbooz_xform) output with field line following code
-% It integrates the field line along increments of B * dl and then converts
-% from Chi back to phi afterwards by dividing by the  boozer g factor.
-%
-% Must have read_boozer.m (part of stellopt matlab package on course site)
-%
-% Modified from previous versions by J. Schmitt and J. Talmadge.
-% Intended for use during ECE-908
-%
-% Please report bugs to jcschmitt@wisc.edu
+% Inputs
+%     Boozer_output_file: The full name of the Boozer output file.
+%     'boozmn___.nc'
+%     surf_to_plot: The index of the surface you wist to plot
+%     modes_to_display: A 'mask' array of the modes you wish to display.
+%     Modes are sorted from largest to smallest, and the index '1' is the
+%     largest, index '2' is the next largest, etc.
+%     color_list: A list of colors for the different spectrum. If more
+%     modes are selected than colors, the colors are cylced.
+%     symbol_cells: A cell of symbols for the different spectrum. If more
+%     modes are selected than COLORS (yes, the check is on colors), the
+%     symbols are cylced.
+%     line_cells: A cell of line styles.
+%     colormap_in: A preferred colormap. Default = 'jet'
+%======================================================================
 
-global current
-global taper
-current=10722; % QHS 1-Tesla on-axis
-taper=0.*[1 1 1 -1 -1 -1]; % Standard QHS configuration is all zero.
 
-relTol = 1e-10;
-absTol = 1e-12;
+if nargin < 8
+    % color_list =  'bkgrcmybkgrcmy';
+    % symbol_list = '...xosdxxx....';
+    disp('<----Using default color/marker/line scheme.')
+    color_list =  'bbbbbbbbbbbbb';
+    symbol_cells = {'none', 'none', 'none', 'none', 'none', 'none', ...
+        'none', 'none', 'none', 'none', 'none', 'none', 'none'};
+    line_cells = {'-', '-', '-', '-', '-', '-', '-', '-', '-', '-', ...
+        '-', '-', '-'};
+    colormap_in = 'jet';
+end
 
-%**************************************************************************
-% Load up vmec xbooz_xform output.  
-% Must have booz_xform (part of stellopt package) for details
-boozer_data = read_boozer(fname_ext);
-ns_b = boozer_data.ns; % number of surfs
-mboz_b = boozer_data.mpol; % number of poloidal modes
-nboz_b = boozer_data.ntor; % " " of toroidal modes
-mnboz_b = boozer_data.mn_modes; % " " of total modes = (nboz_b * 2 + 1) * (mboz_b) - nboz_b
-ixm_b = boozer_data.xm; % poloidal mode numbers
-ixn_b = boozer_data.xn; % toroidal mode numbers
-bmn_b = boozer_data.bmnc; % mode magnitudes (signed)
-phi_b = boozer_data.phi; % enclosed toroidal flux (as a function of radius)
-gmn_b = boozer_data.gmnc; % boozer jacobian
-iota_b = boozer_data.iota; % boozer iota
-rmnc_b = boozer_data.rmnc; % cos terms of r-expansion
-zmns_b = boozer_data.zmns; % sin terms of z-expansion
-bvco_b = boozer_data.bvco;  % The Boozer g factor 
-buco_b = boozer_data.buco;  % The Boozer I factor
+% These variable control the generation of figures
+if nargin < 5
+    PLOT_SURFACE_2D = 1;
+end
+if nargin < 4
+    PLOT_SPECTRUM = 1;
+end
 
-% Modify the settings below to change integration path lengths and path
-% length spacing
+% This controls the visibility (on/off) of mode #'s on the figures.
+SHOW_LABELS = 1; % 1=on  0=off
 
-% set up spacing in chi space by specifying roughly
-% how far in toroidal phi you want to go. Also specify the number of
-% data points you want on the field line
+% This controls whether the x-axis is 'rho=sqrt(s)' or 's=normalized flux'
+% 1 -> x-axis is 'rho'; 0 -> x-axis is 's'
+PLOT_VS_R = 1;
 
-% Total number of divisions per field period
-num_divisions_fp = 1001;
+if nargin < 3
+    modes_to_display = 1:8;
+end
 
-% Set the number of tooridal field periods to trace the field line
-tor_periods = 1;
+if nargin < 2
+    error('K----Don''''t be lazy.  Enter a surface index #');
+end
 
-phi_extent = 2.*pi*tor_periods;
-num_divisions = num_divisions_fp * tor_periods;
+boozer_data = read_Boozer_output(Boozer_output_file);
+ns_b = boozer_data.ns_b; % number of surfs
+disp(['<----Found ' num2str(ns_b) ' surfaces in ' Boozer_output_file]);
 
-boozer_g = abs(bvco_b(surf_to_plot));
-chi_extent = phi_extent * boozer_g;
+mnboz_b = boozer_data.mnboz_b; % " " of total modes = (nboz_b * 2 + 1) * (mboz_b) - nboz_b
+ixm_b = boozer_data.xm_b; % poloidal mode numbers
+ixn_b = boozer_data.xn_b; % toroidal mode numbers
+bmnc_b = boozer_data.bmnc_b; % mode magnitudes (signed)
+phi_b = boozer_data.phi_b; % enclosed toroidal flux (as a function of radius)
+iota_b = boozer_data.iota_b; % boozer iota
 
-% [ixn_b' ixm_b' bmn_b(:,1)] would give list of tor, pol mode number and
+% [ixn_b ixm_b bmnc_b(1,:)'] would give list of tor, pol mode number and
 % magnitude for surface 1
-% [ixn_b' ixm_b' bmn_b(:,2)] "  " for surface 2.  etc
+% [ixn_b ixm_b bmnc_b(2,:)'] "  " for surface 2.  etc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Re-sort the amplitude data into nice arrays
@@ -73,99 +86,122 @@ max_of_mode = zeros(1,mnboz_b);
 mode_label = cell(1,mnboz_b);
 
 for ii = 1:mnboz_b
-    % Sorted amplitude of modes according to highest value over all
-    % surface.
-    %    max_of_mode(ii) = max( abs( bmn_b(:, ii) ));
-    % Sort modes only over the surface you want to look at.
-    % max_of_mode(ii) = max( abs( bmn_b(surf_to_plot, ii) )); %old way
-    max_of_mode(ii) = max( abs( bmn_b(ii, surf_to_plot) ));
+    % to use the 'global' max components
+    %     max_of_mode(ii) = max( abs( bmnc_b(:, ii) ));
+    % to use the 'surface' maximum components
+    max_of_mode(ii) = max( abs( bmnc_b(surface_to_plot, ii) ));
+    
     mode_label{ii} = [ '(' num2str(ixn_b(ii)) ',' num2str(ixm_b(ii)) ')' ];
 end
 
 [~, sorted_indices] = sort(max_of_mode, 'descend');
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This section is for making plots of |B| along a field line
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%First calculate |B| along field line from reconstruction of spectrum
-tor_angle_modB = linspace(0,phi_extent,num_divisions);
-pol_angle_modB = iota_b(surf_to_plot) * (tor_angle_modB);
-modB_recon_modB = zeros(size(pol_angle_modB));
-
-disp('Using the following modes');
-disp('Index |  m  |  n | bmn ')
-for ii = (modes_to_display)
-    disp([num2str(ii) ' | ' num2str(ixm_b(sorted_indices(ii))) ' | ' ...
-        num2str(ixn_b(sorted_indices(ii))) ' | ' ...
-        num2str(bmn_b(sorted_indices(ii), surf_to_plot))]);
+if PLOT_SPECTRUM
+    % Make plots of the radial profile of the largest modes (sorted
+    % according to the values of the mode on the 'surface_to_plot'
+    if (modes_to_display ~= 0)
+        disp(['Displaying modes with indices: [' num2str(sorted_indices(modes_to_display)) '] ']);
+        disp(['Displaying modes with m nums:  [' num2str(ixm_b(sorted_indices(modes_to_display))') '] ']);
+        disp(['Displaying modes with n nums:  [' num2str(ixn_b(sorted_indices(modes_to_display))') '] ']);
+        fig_handle_1 = figure;box on;
+        legend_text = [];
+        
+        x_values = phi_b(1:end)/phi_b(end);
+        if PLOT_VS_R
+            % rho = sqrt(s)
+            x_values = sqrt(x_values);
+            XLABEL = '\rho';
+        else
+            XLABEL = 's = \Psi/\Psi_{LCFS}';
+        end
+        %     XAXIS = ns_b;
+        
+        for ii = modes_to_display
+            jj = mod(ii-1, length(color_list)) + 1;
+            plot(x_values(2:end), bmnc_b(:, sorted_indices(ii)), ...
+                'Color', color_list(jj), ...
+                'Marker', symbol_cells{jj}, 'LineStyle', line_cells{jj});
+            hold on
+            if SHOW_LABELS
+                text( x_values(end)+.01*(x_values(end) - x_values(1)), bmnc_b(end, sorted_indices(ii)), ...
+                    mode_label(sorted_indices(ii)), 'Color', color_list(jj));
+            end
+            legend_text = [legend_text ; mode_label(sorted_indices(ii))];
+        end
+        
+        xlabel(XLABEL);
+        ylabel('Spectrum amplitude');
+        cur_axis = axis;
+        axis([cur_axis(1) cur_axis(2)*1.015 cur_axis(3) cur_axis(4)]);
+        title(strrep([Boozer_output_file], '_', '\_'));
+        legend(legend_text);
+        
+        
+        for ii = modes_to_display
+            disp(['Mode with index: [' num2str(sorted_indices(ii)) '] ']);
+            disp(['Mode with (n,m) =  (' num2str(ixn_b(sorted_indices(ii))) ', ' ...
+                num2str(ixm_b(sorted_indices(ii))') ') ']);
+            for jj = surface_to_plot
+                disp([' xaxis val = ' num2str(x_values(jj))]);
+                disp([' b_nm = ' num2str(bmnc_b(jj, sorted_indices(ii))) ]);
+            end
+        end
+    end
 end
 
-for ii = (modes_to_display)
-    angle_value_modB = (ixm_b(sorted_indices(ii)) * pol_angle_modB - ...
-        ixn_b(sorted_indices(ii)) * tor_angle_modB);
-    modB_recon_modB = modB_recon_modB + ...
-        bmn_b(sorted_indices(ii), surf_to_plot) * cos(angle_value_modB);
+
+if PLOT_SURFACE_2D
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %  this section is for making the |B| plot on the flux surface
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    num_divisions = 400;
+    num_contour_divisions = 10;
+    tor_angle = linspace(0,2*pi, num_divisions);
+    pol_angle = linspace(0,2*pi, num_divisions);
+    
+    [tor_matrix, pol_matrix] = meshgrid(tor_angle, pol_angle);
+    
+    modB_recon_3D = zeros(size(pol_matrix));
+    
+    for ii = (modes_to_display)
+        angle_value = (ixm_b(sorted_indices(ii)) * pol_matrix - ixn_b(sorted_indices(ii)) * tor_matrix);
+        modB_recon_3D = modB_recon_3D + bmnc_b(surface_to_plot, sorted_indices(ii)) * cos(angle_value);
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % this section sets up the B- lines for the contour plot
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    tor_angle = linspace(0,2*pi, num_divisions);
+    pol_angle = linspace(0,2*pi, num_divisions);
+    
+    num_field_lines = 9;
+    B_0 = -2*pi; B_end = 2*pi;
+    BLine_0 = linspace(B_0, B_end, num_field_lines);
+    
+    % BLine_0 = 0;
+    BLines_tor = tor_angle;
+    BLines_pol = zeros(num_field_lines, num_divisions);
+    
+    for ii = 1:length(BLine_0)
+        BLines_pol(ii,:) = iota_b(surface_to_plot) * (BLines_tor - BLine_0(ii));
+    end
+    
+    fig_handle_2 = figure;
+    contourf(tor_angle, pol_angle, modB_recon_3D, num_contour_divisions);
+    colorbar;
+    colormap(colormap_in);
+    hold on;box on;
+    for ii = 1:length(BLine_0)
+        plot3(BLines_tor, BLines_pol(ii, :),2*ones(size(BLines_tor)), 'k:', 'LineWidth', 2);
+    end
+    xlabel('\zeta_{Boozer}','FontSize', 14);
+    ylabel('\theta_{Boozer}','FontSize', 14);
+    
+    view(2)
+    set(gca,'FontSize', 14);
+    title(['|B| on surf \rho = ' num2str(sqrt(phi_b(surface_to_plot)/ phi_b(end)))])
+    hold on;
+    axis([0 2*pi 0 2*pi]);
 end
-
-disp('Completed calculating |B| along field line from Boozer spectrum');
-
-
-%*****************************************************************
-% First, follow B to determine coordinates, with boozer spacing***
-%*****************************************************************
-% Find a starting location: 
-% A convenient location is at the Boxport (phi=0), midplane (z=0), where
-% R = sum of cos-components at phi = 0;
-rStart = sum(rmnc_b(:, surf_to_plot));
-phiStart = 0;
-zStart = 0;
-
-% Set up the initial condition vector for the ODE solver.
-initial = [rStart phiStart zStart];   
-disp(['Starting coordinates (R, Phi, Z) = ' num2str(initial)]);
-
-% Set up integration tolerances. Adjusting these will affect the
-% accuracy/speed of the calculation
-int_options = odeset('AbsTol', absTol, 'RelTol', relTol, 'NormControl', 'off');
-
-% Set up chispace vector
-chispace = linspace(0, chi_extent, num_divisions);
-
-% Follow the vacuum field lines using the Boozer derivaties
-[Chif, Xspace] = ode113('chi_Boozer_derivatives', chispace, initial, ...
-    int_options);
-
-% Extract components from the solution matrix Xpace
-rspace = Xspace(:,1);
-phispace = Xspace(:,2);
-zspace = Xspace(:,3);
-
-numPointsAlongFieldLine = length(Chif);
-
-% preallocate memory for B components
-bx = zeros(1,numPointsAlongFieldLine);
-by = bx; bz = bx;
-modB_grid = bx;
-
-% Now go back and find the magnitude of the field for each point on the
-% field line
-disp('Field line following complete. Calculating |B| along line')
-for kk = 1:numPointsAlongFieldLine
-    [bx(kk), by(kk), bz(kk), modB_grid(kk)] = ...
-        calc_b_bs(rspace(kk), phispace(kk), zspace(kk), current, taper);
-end
-
-% Make some plots
-figure;
-box on; hold on
-plot(tor_angle_modB, modB_recon_modB, 'b', 'LineWidth', 2)
-plot(Chif/boozer_g, modB_grid,'r', 'Linewidth',2);
-
-xlabel('Phi')
-ylabel('|B|')
-
-legend(['Boozer, with ' num2str(length(modes_to_display)) ' modes'], ...
-    'Field line following using chi/boozerg')
 
 

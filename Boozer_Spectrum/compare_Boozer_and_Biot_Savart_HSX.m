@@ -1,4 +1,5 @@
-function [] = compare_Boozer_and_Biot_Savart_HSX(Boozer_output_file, ...
+function [figure_handle] = ...
+    compare_Boozer_and_Biot_Savart_HSX(Boozer_output_file, ...
     surface_to_plot, modes_to_include, current, taper)
 %
 % Usage:  
@@ -25,26 +26,17 @@ boozer_data = read_Boozer_output(Boozer_output_file);
 ns_b = boozer_data.ns_b; % number of surfs
 disp(['<----Found ' num2str(ns_b) ' surfaces in ' Boozer_output_file]);
 
-% mboz_b = boozer_data.mpol; % number of poloidal modes
-% nboz_b = boozer_data.ntor; % " " of toroidal modes
-mnboz_b = boozer_data.mn_modes; % " " of total modes = (nboz_b * 2 + 1) * (mboz_b) - nboz_b
-ixm_b = boozer_data.xm; % poloidal mode numbers
-ixn_b = boozer_data.xn; % toroidal mode numbers
-bmn_b = boozer_data.bmnc; % mode magnitudes (signed)
-% phi_b = boozer_data.phi; % enclosed toroidal flux (as a function of radius)
-% gmn_b = boozer_data.gmnc; % boozer jacobian
-iota_b = boozer_data.iota; % boozer iota
-rmnc_b = boozer_data.rmnc; % cos terms of r-expansion
-% zmns_b = boozer_data.zmns; % sin terms of z-expansion
-bvco_b = boozer_data.bvco;  % The Boozer g factor - depends on toroidal flux
-% buco_b = boozer_data.buco;  % The Boozer I factor
+mnboz_b = boozer_data.mnboz_b; % " " of total modes = (nboz_b * 2 + 1) * (mboz_b) - nboz_b
+if strcmp(modes_to_include, 'all')
+    modes_to_include = 1:mnboz_b;
+end
 
-% Modify the settings below to change integration path lengths and path
-% length spacing
-
-% set up spacing in chi space by specifying roughly
-% how far in toroidal phi you want to go. Also specify the number of
-% data points you want on the field line
+ixm_b = boozer_data.xm_b; % poloidal mode numbers
+ixn_b = boozer_data.xn_b; % toroidal mode numbers
+bmnc_b = boozer_data.bmnc_b; % mode magnitudes (signed)
+iota_b = boozer_data.iota_b; % boozer iota
+rmnc_b = boozer_data.rmnc_b; % cos terms of r-expansion
+bvco_b = boozer_data.bvco_b;  % The Boozer g factor - depends on toroidal flux
 
 % Total number of divisions per field period
 num_divisions_fp = 1001;
@@ -75,7 +67,7 @@ for ii = 1:mnboz_b
     %    max_of_mode(ii) = max( abs( bmn_b(:, ii) ));
     % Sort modes only over the surface you want to look at.
     % max_of_mode(ii) = max( abs( bmn_b(surf_to_plot, ii) )); %old way
-    max_of_mode(ii) = max( abs( bmn_b(ii, surface_to_plot) ));
+    max_of_mode(ii) = max( abs( bmnc_b(surface_to_plot, ii) ));
     mode_label{ii} = [ '(' num2str(ixn_b(ii)) ',' num2str(ixm_b(ii)) ')' ];
 end
 
@@ -95,14 +87,14 @@ disp('Index |  m  |  n | bmn ')
 for ii = (modes_to_include)
     disp([num2str(ii) ' | ' num2str(ixm_b(sorted_indices(ii))) ' | ' ...
         num2str(ixn_b(sorted_indices(ii))) ' | ' ...
-        num2str(bmn_b(sorted_indices(ii), surface_to_plot))]);
+        num2str(bmnc_b(surface_to_plot, sorted_indices(ii)))]);
 end
 
 for ii = (modes_to_include)
     angle_value_modB = (ixm_b(sorted_indices(ii)) * pol_angle_modB - ...
         ixn_b(sorted_indices(ii)) * tor_angle_modB);
     modB_recon_modB = modB_recon_modB + ...
-        bmn_b(sorted_indices(ii), surface_to_plot) * cos(angle_value_modB);
+        bmnc_b(surface_to_plot, sorted_indices(ii)) * cos(angle_value_modB);
 end
 
 disp('Completed calculating |B| along field line from Boozer spectrum');
@@ -114,7 +106,7 @@ disp('Completed calculating |B| along field line from Boozer spectrum');
 % Find a starting location: 
 % A convenient location is at the Boxport (phi=0), midplane (z=0), where
 % R = sum of cos-components at phi = 0;
-rStart = sum(rmnc_b(:, surface_to_plot));
+rStart = sum(rmnc_b(surface_to_plot, :));
 phiStart = 0;
 zStart = 0;
 
@@ -130,7 +122,9 @@ int_options = odeset('AbsTol', absTol, 'RelTol', relTol, 'NormControl', 'off');
 chispace = linspace(0, chi_extent, num_divisions);
 
 % Follow the vacuum field lines using the Boozer derivaties
-myode_fcn = @(my_chi, my_X) Boozer_chi_derivatives(my_chi, my_X, ...
+% This creates a function that is used by the ode solver. I need to pass in
+% the current and taper variables, and this is the easiest way in MATLAB.
+myode_fcn = @(my_chi, my_X) Boozer_chi_derivatives_HSX(my_chi, my_X, ...
     current, taper);
 
 [chi_out, X_out] = ode113(myode_fcn, chispace, initial, ...
@@ -158,7 +152,7 @@ end
 modB_grid = sqrt(bx.^2 + by.^2 + bz.^2);
 
 % Make some plots
-figure;
+figure_handle = figure;
 box on; hold on;
 plot(tor_angle_modB, modB_recon_modB, 'b', 'LineWidth', 2)
 plot(chi_out / boozer_g, modB_grid, 'r', 'Linewidth',2);
@@ -168,5 +162,7 @@ ylabel('|B|')
 
 legend(['Boozer, with ' num2str(length(modes_to_include)) ' modes'], ...
     'Field line following using chi/boozerg')
+title([strrep(Boozer_output_file, '_', '\_') '  Surface #' ...
+    num2str(surface_to_plot)]);
 
 

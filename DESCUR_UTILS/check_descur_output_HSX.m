@@ -28,7 +28,7 @@ disp(['<----Found file. Looks like nphi=' num2str(numphi) ...
 
 % This is probalby related to numphi, but I haven't checked. I know this
 % works for the current version of DESCUR and 50 slices/toroidal field
-% period. In the end, I don't think it matters, since all modes are
+% period. In the end, I don't think it matters because all modes are
 % eventually read in.
 numtormodes_first_pass = 25;
 

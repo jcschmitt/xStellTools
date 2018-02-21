@@ -79,11 +79,12 @@ for ii = 1:coil.num_turns
     % check for test point on a filament, within tolerance 'onfil_tol'
     while find(abs(eps_sq-1) < onfil_tol);
         A = find(abs(eps_sq-1) < onfil_tol);
-        if ~isempty(A)
-            disp(['<----Close to a coil: (x,y,z) = (' ...
-                num2str(P_x) ', ' num2str(P_y) ', ' ...
-                num2str(P_z) ')']);
-        end
+        % Uncomment this for debugging.
+        % if ~isempty(A)
+        %     disp(['<----Close to a coil: (x,y,z) = (' ...
+        %         num2str(P_x) ', ' num2str(P_y) ', ' ...
+        %         num2str(P_z) ')']);
+        % end
         % this is a more stringent test, you can reduce the
         % tolerance if this is used, but it adds two extra sqrt
         % calculations 
