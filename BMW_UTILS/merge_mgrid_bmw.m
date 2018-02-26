@@ -1,20 +1,40 @@
-function merge_mgrid_bmw(MGRID_Original, MGRID_to_add, MGRID_out)
-
+function merge_mgrid_bmw(filename_MGRID_Original, filename_MGRID_to_add, ...
+    filename_MGRID_out)
+% function merge_mgrid_bmw(filename_MGRID_Original, filename_MGRID_to_add, ...
+%     filename_MGRID_out)
+% This function makes a copy of the Original MGRID file
+% 'filename_MGRID_Original' using the name given in 'filename_MGRID_out'.
+% Next, it merges the mgrid data from 'filename_MGRID_to_add' into
+% 'filename_MGRID_out', replacing the contents of the mgrid due to the
+% last field coil in the original file.
+%
+% Generally, the original file should be generated with an extra 'dummy'
+% coil that isn't actually in the experiment. The sole purpose of this
+% dummy coiil is so that the mgrid output .nc file contains the proper
+% number of dimensions, ordering, etc., to maintain compatibility with vmec
+% and other related codes. It is easeier to 'swap' data in this file than
+% it is to 'add' data to this .nc file.
+%
+% To Do: Add the option to create new files, rather than merging files.
+%
 % MGRID_Original = 'mgrid_w7x_with_BMW_space.nc';
 % MGRID_to_add = 'bmw_CJV8I13_flux.nc';
 % MGRID_out = 'merged_mgrid_out.nc';
-
-% Required: Load the netcdf java library (see 'startup' in the STELLOPT
-% directory).
+%
+% This should work with internal matlab netcdf support.
 
 % make copy of original .nc file
-copyfile(MGRID_Original, MGRID_out);
+disp(['<----Making a copy of ' filename_MGRID_Original ' with name ' ...
+    filename_MGRID_out]);
+copyfile(filename_MGRID_Original, filename_MGRID_out);
 
 % open copy for writing
-ncid_out = netcdf.open(MGRID_out, 'NC_WRITE');
+disp('<----Opening output file for writing');
+ncid_out = netcdf.open(filename_MGRID_out, 'NC_WRITE');
 
+disp('<----Opening bmw output to merge into output file')
 % open mgrid to add for reading
-ncid_merge = netcdf.open(MGRID_to_add, 'NC_NOWRITE');
+ncid_merge = netcdf.open(filename_MGRID_to_add, 'NC_NOWRITE');
 
 % Get grid sizes and confirm they are the same
 disp('<----Checking grid sizes')
