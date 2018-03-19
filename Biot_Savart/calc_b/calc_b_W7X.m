@@ -1,6 +1,6 @@
 function [Bx,By,Bz,BR,BPhi] = calc_b_W7X(P_x, P_y, P_z, coil_current_array)
-%function [Bx,By,Bz,Br,Bphi] = calc_b_W7X(P_x, P_y, P_z, [TF OH RedUpper RedLower ...
-% OrangeUpper etc. ])
+%function [Bx,By,Bz,Br,Bphi] = calc_b_W7X(P_x, P_y, P_z, 
+
 % Input: Px, Py, Pz:  Cartesian coordinates of the observation point
 %        coil_current_array:  An array of 14 elements that specify the coil
 %        current in the following order:
@@ -81,25 +81,25 @@ WF_TRIM_B1 = 72;
     calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.Coil_B, coil_current_array(7));
 
 [Bx_Sweep_Coil_1, By_Sweep_Coil_1, Bz_Sweep_Coil_1] = ...
-    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.Sweep_Coil_1, coil_current_array(6));
+    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.Sweep_Coil_1, coil_current_array(8));
 
 [Bx_Sweep_Coil_2, By_Sweep_Coil_2, Bz_Sweep_Coil_2] = ...
-    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.Sweep_Coil_2, coil_current_array(6));
+    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.Sweep_Coil_2, coil_current_array(9));
 
 [Bx_TRIM_A1, By_TRIM_A1, Bz_TRIM_A1] = ...
-    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.TRIM_A1, coil_current_array(8));
+    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.TRIM_A1, coil_current_array(10));
 
 [Bx_TRIM_A2, By_TRIM_A2, Bz_TRIM_A2] = ...
-    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.TRIM_A2, coil_current_array(9));
+    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.TRIM_A2, coil_current_array(11));
 
 [Bx_TRIM_A3, By_TRIM_A3, Bz_TRIM_A3] = ...
-    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.TRIM_A3, coil_current_array(10));
+    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.TRIM_A3, coil_current_array(12));
 
 [Bx_TRIM_A4, By_TRIM_A4, Bz_TRIM_A4] = ...
-    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.TRIM_A4, coil_current_array(11));
+    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.TRIM_A4, coil_current_array(13));
 
 [Bx_TRIM_B1, By_TRIM_B1, Bz_TRIM_B1] = ...
-    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.TRIM_B1, coil_current_array(12));
+    calc_B_BiotSavart(P_x, P_y, P_z, W7X_coils.TRIM_B1, coil_current_array(14));
 
 % Add them together.
 Bx = WF_Coil_1 * Bx_Coil_1 + ...
