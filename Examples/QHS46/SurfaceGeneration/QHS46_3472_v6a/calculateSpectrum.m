@@ -1,5 +1,5 @@
 function [nm_amp, pk_n_sorted, pk_m_sorted, pk_pos_sorted, nm_avail, nm_error, nm_next_best_error, n_values, m_values, iota_best] = ...
-    calculateSpectrum(chi, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp, DEBUG);
+    calculateSpectrum(chi, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp, DEBUG)
 %               Apply a Gaussian window function to the data
 %               Rearrange the data to guarantee that the modB curve has even symmetry
 %               (so that the FFT has only real components)

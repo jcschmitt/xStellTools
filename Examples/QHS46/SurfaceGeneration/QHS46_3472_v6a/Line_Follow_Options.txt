@@ -21,7 +21,7 @@ Phi increment (in degrees)
 
 Starting coordinates for each surface
 r-coords
-7.359
+7.359495302871074
 7.409
 7.459
 7.509
