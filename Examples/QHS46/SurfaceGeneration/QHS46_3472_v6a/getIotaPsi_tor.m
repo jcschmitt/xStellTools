@@ -51,8 +51,9 @@ for ii = 1:numFiles
     end
 end
 
-r_eff = sqrt( abs(Psi_toroidal) / (0.5 * pi) );  % Assuming 0.5 Tesla on axis
+%r_eff = sqrt( abs(Psi_toroidal) / (0.5 * pi) );  % Assuming 0.5 Tesla on axis
 % r_eff = sqrt( abs(Psi_toroidal) / (1.0 * pi) );  % Assuming 1 Tesla on axis
+r_eff = sqrt( abs(Psi_toroidal) / (2.5 * pi) );  % Assuming 2.5 Tesla on axis
 
 if VIEW_PLOTS
     h = figure;
