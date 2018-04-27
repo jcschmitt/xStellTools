@@ -6,19 +6,20 @@ function [rStart, iota, Psi_toroidal] = getIotaPsi_tor(mode, surfaceIndices, VIE
 % interpolation paths.  Useful for Condor jobs 
 
 %IOTA_DIRECTORY_PATH = 'Y:\CODES\HSX Iota Profile Toroidal Flux'
-IOTA_DIRECTORY_PATH = '/Users/schmittj/Documents/MATLAB/HSX Iota Profile Toroidal Flux'
+%IOTA_DIRECTORY_PATH = '/Users/schmittj/Documents/MATLAB/HSX Iota Profile Toroidal Flux'
 
 
 if (nargin < 3)
     VIEW_PLOTS = 0;
 end
 
-foldername = [IOTA_DIRECTORY_PATH '/' mode];
+%foldername = [IOTA_DIRECTORY_PATH '/' mode];
+foldername = pwd; 
 
 surfaceIndices = sort(surfaceIndices);
 numFiles = length(surfaceIndices);
 for ii = 1:numFiles
-    filenames{ii} = ['HSXLineFollow_Coord_Data_surface_' num2str(surfaceIndices(ii))];
+    filenames{ii} = ['LineFollow_Coord_Data_surface_' num2str(surfaceIndices(ii))];
 end
 
 % loop through each surface (one surface per file) and load the radial start location, iota, and toroidal flux
@@ -32,21 +33,21 @@ for ii = 1:numFiles
         Psi_toroidal(ii) = filedata.flux_startLoc;
     catch
         warning(['Unable to load data for ' filenames{ii}]);
-        try
-            disp('Gonna try archive directory')
-            IOTA_DIRECTORY_PATH2 = ['\\Hsx4f_backup\Backup_1\JohnS\HSX Iota Profile Toroidal Flux archive\' mode]
-            filedata = load([IOTA_DIRECTORY_PATH2 '/' filenames{ii}]);
-            disp(['ii:' num2str(ii)])
-            rStart(ii) = filedata.rStart(surfaceIndices(ii));
-            iota(ii) = filedata.iota;
-            Psi_toroidal(ii) = filedata.flux_startLoc;
-        catch
-            disp('It bombed');
+        %try
+            %disp('Gonna try archive directory')
+            %IOTA_DIRECTORY_PATH2 = ['\\Hsx4f_backup\Backup_1\JohnS\HSX Iota Profile Toroidal Flux archive\' mode]
+            %filedata = load([IOTA_DIRECTORY_PATH2 '/' filenames{ii}]);
+            %disp(['ii:' num2str(ii)])
+            %rStart(ii) = filedata.rStart(surfaceIndices(ii));
+            %iota(ii) = filedata.iota;
+            %Psi_toroidal(ii) = filedata.flux_startLoc;
+        %catch
+            %disp('It bombed');
             
             rStart(ii) = 0;
             iota(ii) = 0.99;
             Psi_toroidal = .01;
-        end
+        %end
     end
 end
 

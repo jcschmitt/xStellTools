@@ -79,16 +79,9 @@ function [dcoords_dphi] = LineFollowDerivs(phi, coords, current)
 % need to return drdphi and dzdphi (which are cylindrical coordinates...)
 r = coords(1);
 z = coords(2);
-% The following line calls a modified version of bs_dervs_aux_mex that
-% includes the Earth's magnetic field.  Not yet implemented correctly in
-% this revision
-% [bx, by, bz] = bs_derivs_aux_mex(r, phi, z, earthField, current, taper);
-% If taper == [0 0 0 0 0 0], don't input the taper array into the
-% solver--The solver runs faster.
+
 % Biot-Savart code
 [bx, by, bz] = calc_b_QHS46_RPhiZ(r, phi, z, current);
-% Grid-Interpolation code
-% [bx, by, bz, delb] = hsxfield_grid_interp(r, phi, z, current, taper);
 
 br = bx*cos(phi) + by*sin(phi);
 bphi_over_r = ( -bx*sin(phi) + by*cos(phi) ) / r;

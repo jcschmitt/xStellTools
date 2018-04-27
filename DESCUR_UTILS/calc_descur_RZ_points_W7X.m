@@ -1,13 +1,12 @@
 function [surf_x, surf_y, surf_z, phiout] = ...
     calc_descur_RZ_points_W7X(rboundary, nphi, ntheta, coil_current_array)
 % function [surf_x, surf_y, surf_z, phiout] = ...
-%     calc_descur_RZ_points_W7X(rboundary, nphi, ntheta, current, taper)
+%     calc_descur_RZ_points_W7X(rboundary, nphi, ntheta, coil_current_array)
 % inputs:
 %   rboundary- R coord of boundary at the boxport
 %   nphi- number of toridal cuts
 %   ntheta- number of points on each cut
-%   current- main coil current in amps (+ for clockwise, - for counter-clockwise)
-%   taper- taper array for relative magnitudes of the aux coil ampturns
+%   current- main coil current in amps (Check the following claim: + for clockwise, - for counter-clockwise)
 %
 % outputs:
 %   surf_x, surf_y, surf_z: x,y,z coords of the points on the surface
