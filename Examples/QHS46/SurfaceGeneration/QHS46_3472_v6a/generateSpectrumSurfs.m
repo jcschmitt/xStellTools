@@ -218,9 +218,11 @@ for ii = surfaceToGenerate
         % 5% steps
         steps_5p = round(numPoints_alongChi / 20);
         for kk = 1:numPoints_alongChi
-            [bx(kk), by(kk), bz(kk)] = calc_b_QHS46_RPhiZ(r_FFT(kk), phi_FFT(kk), z_FFT(kk), current);
+            [bx(kk), by(kk), bz(kk)] = calc_b_QHS46_RPhiZ(r_FFT(kk), ...
+                phi_FFT(kk), z_FFT(kk), current);
             if (mod(kk, steps_5p) == 0)
-                disp(['<----Finished ' num2str(round(100*kk/numPoints_alongChi)) ...
+                disp(['<----Finished ' ...
+                    num2str(round(100*kk/numPoints_alongChi)) ...
                     '% of the points']);
             end
         end
