@@ -1,10 +1,10 @@
 function W7X_coils = load_W7X_coils()
-% function LTX_coils = load_W7X_coils()
+% function QHS46_coils = load_W7X_coils()
 %
-% Loads the information for the details of the W7X field coils into the
-% W7X_coils structure.
+% Loads the information for the details of the QHS46 field coils into the
+% QHS46_coils structure.
 %
-% JC Schmitt, 2017
+% JC Schmitt, 2018
 
 % The variable 'in_foldername' is a string that points to the location
 % where this Biot-Savart code is located.  For instance, the following line
