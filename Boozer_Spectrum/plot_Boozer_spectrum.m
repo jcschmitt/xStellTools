@@ -81,17 +81,22 @@ iota_b = boozer_data.iota_b; % boozer iota
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Re-sort the amplitude data into nice arrays
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+max_max = -inf;
 
 max_of_mode = zeros(1,mnboz_b);
 mode_label = cell(1,mnboz_b);
 
 for ii = 1:mnboz_b
     % to use the 'global' max components
-    %     max_of_mode(ii) = max( abs( bmnc_b(:, ii) ));
+    max_of_mode(ii) = max( abs( bmnc_b(:, ii) ));
     % to use the 'surface' maximum components
-    max_of_mode(ii) = max( abs( bmnc_b(surface_to_plot, ii) ));
+    % max_of_mode(ii) = max( abs( bmnc_b(surface_to_plot, ii) ));
+    max_max = max(max_max, abs(bmnc_b(1,ii)));
     
     mode_label{ii} = [ '(' num2str(ixn_b(ii)) ',' num2str(ixm_b(ii)) ')' ];
+    %if (ixn_b(ii) == 48 && ixm_b(ii) ==0)
+    %    keyboard
+    %end
 end
 
 [~, sorted_indices] = sort(max_of_mode, 'descend');
@@ -118,12 +123,13 @@ if PLOT_SPECTRUM
         
         for ii = modes_to_display
             jj = mod(ii-1, length(color_list)) + 1;
-            plot(x_values(2:end), bmnc_b(:, sorted_indices(ii)), ...
+            plot(x_values(2:end), bmnc_b(:, sorted_indices(ii)) / max_max, ...
                 'Color', color_list(jj), ...
                 'Marker', symbol_cells{jj}, 'LineStyle', line_cells{jj});
-            hold on
+            hold on;grid on
+            
             if SHOW_LABELS
-                text( x_values(end)+.01*(x_values(end) - x_values(1)), bmnc_b(end, sorted_indices(ii)), ...
+                text( x_values(end)+.01*(x_values(end) - x_values(1)), bmnc_b(end, sorted_indices(ii)) / max_max, ...
                     mode_label(sorted_indices(ii)), 'Color', color_list(jj));
             end
             legend_text = [legend_text ; mode_label(sorted_indices(ii))];
@@ -148,7 +154,10 @@ if PLOT_SPECTRUM
         end
     end
 end
-
+try
+    make_my_plot_pretty3;
+catch
+end
 
 if PLOT_SURFACE_2D
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
