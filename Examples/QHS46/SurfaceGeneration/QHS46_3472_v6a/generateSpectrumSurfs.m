@@ -204,7 +204,7 @@ for ii = surfaceToGenerate
         phi_FFT = [phi_1 phi_2];
         z_FFT = [z_1 z_2];
 
-        disp(['Now calculating |B| along the entire chi-curve']);
+        disp(['<----Now calculating |B| along the entire chi-curve']);
         % Calculate the values of the |B| for each of the points specified by
         % by *_FFT
         tic
@@ -212,23 +212,19 @@ for ii = surfaceToGenerate
         % preallocate memory for B components
         bx = zeros(1,numPoints_alongChi);
         by = bx; bz = bx;
-        if 0
-            FIELD_SOURCE = 1;
-            for kk = 1:numPoints_alongChi
-                [bx(kk), by(kk), bz(kk)] = calc_b_bs_JL(r_FFT(kk), phi_FFT(kk), z_FFT(kk), FIELD_SOURCE);
-            end
-        else
-            disp(['total # of points: ' num2str(numPoints_alongChi)])
-            %factor = 0.001;
-            %for kk = 1:numPoints_alongChi
-            %    if (mod(kk,round(factor*numPoints_alongChi)) == 0)
-            %        disp(['Finished with ' num2str(100*factor*round((1/factor)*kk/numPoints_alongChi)) '% of the points']);
-            %    end
-            parfor kk = 1:numPoints_alongChi
-                [bx(kk), by(kk), bz(kk)] = calc_b_QHS46_RPhiZ(r_FFT(kk), phi_FFT(kk), z_FFT(kk), current);
+
+        disp(['<----Total # of points: ' num2str(numPoints_alongChi)])
+        %parfor kk = 1:numPoints_alongChi
+        % 5% steps
+        steps_5p = round(numPoints_alongChi / 20);
+        for kk = 1:numPoints_alongChi
+            [bx(kk), by(kk), bz(kk)] = calc_b_QHS46_RPhiZ(r_FFT(kk), phi_FFT(kk), z_FFT(kk), current);
+            if (mod(kk, steps_5p) == 0)
+                disp(['<----Finished ' num2str(round(100*kk/numPoints_alongChi)) ...
+                    '% of the points']);
             end
         end
-
+        
         modB = sqrt(bx.^2 + by.^2 + bz.^2);
         toc
 
