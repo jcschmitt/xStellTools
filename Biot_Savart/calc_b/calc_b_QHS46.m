@@ -19,7 +19,7 @@ function [Bx,By,Bz,BR,BPhi] = calc_b_QHS46(P_x, P_y, P_z, coil_current_array)
 % The details of the QHS46 coils are stored in this persistent array
 persistent QHS46_coils
 
-if isempty(QHS46_coils)  % load the LTX coil information if necessary
+if isempty(QHS46_coils)  % load the QHS46 coil information if necessary
     QHS46_coils = load_QHS46_coils;
 end
 

@@ -84,7 +84,7 @@ fclose(fid_input);
 
 for ii = surfaceToGenerate
 
-    chiSkip = 10;  % This sets a length (in chi) the line following code will follow before saving the data to a file.
+    chiSkip = 100;  % This sets a length (in chi) the line following code will follow before saving the data to a file.
     % Useful if the process may be interrupted (such as with Condor, or a reboot)
     if (chiEnd > chiSkip)
         chiEnd = (chiSkip:chiSkip:chiEnd);
