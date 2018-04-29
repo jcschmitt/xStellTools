@@ -17,7 +17,7 @@ Number of surfaces
 24
 
 chi end (chi start = 0).  Make this divisible by chiSkip in generateSpectrumSurfs.m 
-2800
+36000
 
 chi density ( 2^(chi density) = # of points per unit length of chi).  6 for Hamada, 8 for Boozer 
 8

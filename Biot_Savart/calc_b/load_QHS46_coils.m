@@ -11,7 +11,8 @@ function QHS46_coils = load_QHS46_coils()
 % works on my Macbook:
 % in_foldername = '/Users/jschmitt/Documents/MATLAB/BiotSavart/';
 
-% Initially, in_foldername will be empty, forcing you to fix it.
+% If in_foldername is empty, it will look for the file in the same
+% directoy as this file (load_QHS46_coils.m) 
 %in_foldername = '';
 in_foldername = '';
 
