@@ -93,7 +93,7 @@ fclose(fid_input);
 
 for ii = surfaceToGenerate
     
-    transitSkip = 10;  % This sets how many transits the line following code will follow before saving the data to a file. 
+    transitSkip = inf;  % This sets how many transits the line following code will follow before saving the data to a file. 
                        % Useful if the process may be interrupted (such as with Condor, or a reboot)
     if (transits > transitSkip)
         phiEnd = phiStart(ii) + (transitSkip:transitSkip:transits) * 2 * pi;
@@ -196,12 +196,16 @@ for ii = surfaceToGenerate
     iota = calculateIota(rAxis, coords(1:phiIndexInc:end, 1:2), phiIncInDegrees);
     
     % 	break; % break out of this for testing purposes
-    disp(['Now calculating the enclosed flux based on puncture plot ']);
-    %flux_startLoc = calculateFlux(current, phi(1:phiIndexInc:end), coords(1:phiIndexInc:end,1:2));
-    flux_startLoc = calculateFlux(current, phi(1:phiIndexInc:end), coords(1:phiIndexInc:end,1:2), 40, 1);
+    if ~exist('flux_startLoc')
+        disp(['Now calculating the enclosed flux based on puncture plot ']);
+        %flux_startLoc = calculateFlux(current, phi(1:phiIndexInc:end), coords(1:phiIndexInc:end,1:2));
+        flux_startLoc = calculateFlux(current, phi(1:phiIndexInc:end), coords(1:phiIndexInc:end,1:2), 40, 1);
+        IntdldB = coords(:, 3);
+        coords = coords(:, 1:2);
+    else
+	    disp('<----Found previous enclosed flux.');
+    end
     
-    IntdldB = coords(:, 3);
-    coords = coords(:, 1:2);
     save(filename, ...
         'magneticConfiguration', ...
         'current', ...
