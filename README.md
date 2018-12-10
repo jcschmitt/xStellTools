@@ -1,4 +1,4 @@
-# xStellTools, v0.1a
+# xStellTools, v0.1b
 
 A collection of scripts, codes and documents related to stellarators.
 
