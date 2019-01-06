@@ -18,7 +18,7 @@ disp(['<----Axis location: r = ' num2str(rAxis)]);
 [bx, by, bz] = calc_b(coilset, rAxis, 0, 0, coil_current_array);
 modB = sqrt(bx^2 + by^2 + bz^2);
 current_2p5_tesla = (2.5 / modB) * coil_current_array;
-disp(['<----Coil current array for 2.5 T on-axis at phi=0:' ...
+disp(['<----Coil current array for 2.5 T on-axis at phi=0 (Amps): ' ...
     num2str(current_2p5_tesla)]);
 
 
