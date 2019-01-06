@@ -94,20 +94,27 @@ while ii <= midpoint - seek_window_width * 2;  % Set the last start point of the
     else
         % Make a fit window and and try to slide it so that that peak is centered
         fit_window = [(ii + index - fit_window_width):(ii + index + fit_window_width - 1 )];
+        xlim_1 = max([(ii + index - 20*fit_window_width), 1]);
+        xlim_2 = min([(ii + index + 20*fit_window_width - 1 ), midpoint]);
         x_fit = n_minus_miota(fit_window);
         y_fit = B_FFT(fit_window);
         if DEBUG*PAUSE_TIME_FACTOR
             % Do something debuggy
             if (~(exist('plotWindowOpen')))
                 h = figure;
-                plot(n_minus_miota, B_FFT_orig, 'c+');
+                plot(n_minus_miota(xlim_1:xlim_2), B_FFT_orig(xlim_1:xlim_2), 'c+');
                 hold on
-                plot(n_minus_miota, B_FFT, 'r+');
-                plot(n_minus_miota, B_FFT_gw, 'g:');
+                plot(n_minus_miota(xlim_1:xlim_2), B_FFT(xlim_1:xlim_2), 'r+');
+                plot(n_minus_miota(xlim_1:xlim_2), B_FFT_gw(xlim_1:xlim_2), 'm:');
                 plotWindowOpen = 1;
             else
                 figure(h);
+                plot(n_minus_miota(xlim_1:xlim_2), B_FFT_orig(xlim_1:xlim_2), 'c+');
+                hold on
+                plot(n_minus_miota(xlim_1:xlim_2), B_FFT(xlim_1:xlim_2), 'r+');
+                plot(n_minus_miota(xlim_1:xlim_2), B_FFT_gw(xlim_1:xlim_2), 'm:');
             end
+            legend('B_{FFT} (Orig)', 'B_{FFT}', 'B_{FFT} (gw)');
             widnow_h = plot(x_fit, zeros(size(x_fit)), 'ko');
             x_width_seek = max(x_fit)-min(x_fit);
             cur_axis = axis;
