@@ -34,8 +34,14 @@ end
 % Going to use lsqnonlin fto find the solution.
 % The function will be an anonymous function based on 
 % The inital guess
-for mm = 0:M_max
+for mm = 0
     for nn = (0:-1:-N_max)*nfp
+        MVALS = [MVALS mm];
+        NVALS = [NVALS nn];
+    end
+end
+for mm = 1:M_max
+    for nn = (N_max:-1:-N_max)*nfp
         MVALS = [MVALS mm];
         NVALS = [NVALS nn];
     end
@@ -48,9 +54,10 @@ num_modes = length(MVALS);
 
 x0 = 0 * [MVALS MVALS];
 x0(1) = 2; % The R00 cos component is the 1st element
-%x0((num_modes+1) = 0.4;  % The ???
+
 lb = -3*ones(size(x0));
 ub =  3*ones(size(x0));
+
 %options = optimoptions('lsqnonlin', 'MaxIterations', 4, 'UseParallel', true); 
 options = optimoptions('lsqnonlin', 'UseParallel', true); 
 
@@ -74,7 +81,7 @@ ZMNS = x((num_modes+1):end);
 % 
 % [MVALS' NVALS' RMNC' ZMNS']
 % 
-keyboard
+%keyboard
 
 
 
@@ -91,7 +98,7 @@ for ii = 1:length(vert_x)
                       (z_surf - vert_z(ii)).^2);
     deltas(ii) = min(min(delta_mesh));
 end       
-%disp(['<----sqrt(sum(delta^2))) = ' num2str(sqrt(sum(deltas.^2)))]);
+disp(['<----sqrt(sum(delta^2))) = ' num2str(sqrt(sum(deltas.^2)))]);
 
 
 function [x_surf, y_surf, z_surf] = make_tor_surf(x_in, MVALS, NVALS)
