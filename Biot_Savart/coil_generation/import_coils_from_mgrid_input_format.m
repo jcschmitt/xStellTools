@@ -213,7 +213,7 @@ if options.make_plots
     box on;hold on; axis equal; view(3)
     xlabel('x');ylabel('y');zlabel('z')
     
-    plot_fieldcoils(Mod, 'm');
+    %plot_fieldcoils(Mod, 'm');
     for ii = 1:num_coils
         % loop over each unique coil name and save it to the file
         this_coil_name = coil_name_list{ii};

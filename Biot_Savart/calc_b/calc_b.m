@@ -42,7 +42,7 @@ if Reload_coilset
     Coilset_Loaded = Coilset;
 end
 
-if length(coil_current_array) ~= 1
+if length(coil_current_array) < 1
     error('The coil_current_arrray must have at least 1 element');
 end
 
@@ -64,7 +64,7 @@ else
     By_Coil = 0 * Field_coils.winding_factors;
     Bz_Coil = 0 * Field_coils.winding_factors;
     for ii = 1:num_coils
-        coilname = Fieldcoils.coil_order{ii};
+        coilname = Field_coils.coil_order{ii};
         [Bx_Coil(ii), By_Coil(ii), Bz_Coil(ii)] = ...
             eval(['calc_B_BiotSavart(P_x, P_y, P_z, Field_coils.', coilname ', coil_current_array(ii));']);
     end
