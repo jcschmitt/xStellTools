@@ -19,9 +19,10 @@ for ii = 1:numFiles
         %filedata = load([foldername '/' filenames{ii}]);
         filedata = load([filenames{ii}]);
         if (indexInc == 1)
-            if (filedata.phiIncInDegrees ~= 90)
-                error('what the heck are you doing?  phiInc ~= 90');
-            end
+            filedata.phiIncInDegrees
+            %if (filedata.phiIncInDegrees ~= 90)
+            %    error('what the heck are you doing?  phiInc ~= 90');
+            %end
         end
         r{ii} = filedata.coords(1:indexInc:end,1);
         z{ii} = filedata.coords(1:indexInc:end,2);
@@ -36,7 +37,7 @@ end
 fig_handle = figure;
 for ii = 1:numFiles
     figure(fig_handle);
-    plot(r{ii}, z{ii}, '.', 'MarkerSize', 2);
+    plot(r{ii}, z{ii}, 'b.', 'MarkerSize', 8);
     hold on;
 end
 figure(fig_handle);
