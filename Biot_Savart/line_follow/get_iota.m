@@ -58,39 +58,39 @@ r_eff = sqrt( abs(Psi_toroidal) / (2.5 * pi) );  % Assuming 2.5 Tesla on axis
 if VIEW_PLOTS
     h = figure;
     subplot(3,1,1);
-    plot(surfaceIndices, iota, '.');
+    plot(surfaceIndices, iota, '+');
     hold on
-    plot(surfaceIndices, -iota, 'r.');
+    plot(surfaceIndices, -iota, 'r+');
     ylabel('\iota/2\pi');
     title(mode);
     subplot(3,1,2);
-    plot(surfaceIndices, Psi_toroidal, '.');
+    plot(surfaceIndices, Psi_toroidal, '+');
     ylabel('\psi_{tor}');
     subplot(3,1,3);
-    plot(surfaceIndices, r_eff, '.');
+    plot(surfaceIndices, r_eff, '+');
     ylabel('r_{eff}');
     h = figure;
     subplot(2,1,1);
-    plot(r_eff, iota, '.');
+    plot(r_eff, iota, '+');
     ylabel('\iota/2\pi');
     title(mode);
     subplot(2,1,2);
-    plot(r_eff, Psi_toroidal, '.');
+    plot(r_eff, Psi_toroidal, '+');
     ylabel('\psi_{tor}');
     xlabel('r_{eff}');
     h = figure;
     subplot(2,1,1);
-    plot(surfaceIndices, r_eff/r_eff(end), '.');
+    plot(surfaceIndices, r_eff/r_eff(end), '+');
     ylabel('\rho');
     xlabel('Index #');
     title(mode);
     subplot(2,1,2);
-    plot(r_eff/r_eff(end), Psi_toroidal, '.');
+    plot(r_eff/r_eff(end), Psi_toroidal, '+');
     ylabel('\psi_{tor}');
     xlabel('\rho');
 
     figure;
-    plot(r_eff/r_eff(end), iota, '.');
+    plot(r_eff/r_eff(end), iota, '+');
     ylabel('Rotational Transform');
     xlabel('\rho');
     title(mode);

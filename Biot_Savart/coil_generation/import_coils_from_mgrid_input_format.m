@@ -1,7 +1,7 @@
 function import_coils_from_mgrid_input_format(varargin)
 % Import and (optionally) save and plot field coils.
 % Import format is that which is compatible with mgrid/xgrid
-% Saved format is compatible with the Biot-Savart and Matlab-based
+% Saved format is compatible with the Matlab-based Biot-Savart and
 % field-line following tools included in xStellTools.
 %
 % version_number: 1 = coils.extension (original)
@@ -14,19 +14,32 @@ function import_coils_from_mgrid_input_format(varargin)
 % coil.turn_number(:).z = z coordinates of the vertics, in meters
 %
 % Add example here:
-% import_coils_from_mgrid_input_format('coils_file_in',
+% import_coils_from_mgrid_input_format('coils_file_in', ...
 %   'coils.wistell_a_004', 'make_plots', 1, ...
 %   'save_mat_data', 1, 'output_mat_filename', 'coilset_wistell_a_004.mat') 
-
+% import_coils_from_mgrid_input_format('make_plots', 1, 'coils_file_in',
+%   'coils.w7x_asbuilt_16_v3fit_nfp_5', 'save_mat_data', 1,
+%   'output_mat_filename', 'coilset_w7x_asbuilt16', 'winding_factors', [108
+%   108 108 108 108 36 36 8 8 8 8 8 8 8 8 8 8 1 1 1 1 1 108 108 108 108 36
+%   36], 'coil_order', {'AAE10_SC', 'AAE29_SC', 'AAE38_SC', 'AAE47_SC',
+%   'AAE56_SC', 'AAE14_SC', 'AAE23_SC', 'CC1L', 'CC1U', 'CC5L', 'CC5U',
+%   'CC4L', 'CC4U', 'CC3L', 'CC3U', 'CC2L', 'CC2U', 'AAQ11', 'AAQ22',
+%   'AAQ31', 'AAQ41', 'AAQ51', 'AAE10', 'AAE29', 'AAE38', 'AAE47', 'AAE56',
+%   'AAE14', 'AAE23'})        
 % Parsing the input. Solution from
 % https://stackoverflow.com/questions/2775263/how-to-deal-with-name-value-pairs-of-function-arguments-in-matlab
 %# define defaults at the beginning of the code so that you do not need to
 %# scroll way down in case you want to change something or if the help is
 %# incomplete
-options = struct('output_mat_filename', '','flf_file_prefix', '', ...
-    'save_mat_data', 0, 'save_flf_data', 0, 'make_plots', 0, ...
-    'coils_file_in', '', 'debug_level', 0, 'coil_order', 0, ...
-    'winding_factors', 1);
+options = struct('output_mat_filename', '', ...
+                 'flf_file_prefix', '', ...
+                 'save_mat_data', 0, ...
+                 'save_flf_data', 0,...
+                 'make_plots', 0, ...
+                 'coils_file_in', '', ...
+                 'debug_level', 0, ...
+                 'coil_order', 0, ...
+                 'winding_factors', 1);
 
 %# read the acceptable names
 option_names = fieldnames(options);
@@ -61,6 +74,17 @@ end
 
 fid = fopen(options.coils_file_in);
 % Start reading file
+while ~feof(fid);
+    skipped = fgetl(fid);
+    if options.debug_level >= 1000
+        disp(skipped)
+    end
+    if (strcmpi(strtrim(skipped), '** coils_dot_starts_below **'))
+        break;
+    end
+end
+% Skip first 4 lines
+
 % Skip first 4 lines
 for ii = 1:3
     skipped = fgetl(fid);
@@ -207,7 +231,9 @@ if options.save_flf_data
 end
 
 if options.make_plots
-    
+    colorlist = {'b', 'r', 'g', 'c', 'm', 'k', 'b', 'r', 'g', 'c', 'm', 'k', ...
+        'b', 'r', 'g', 'c', 'm', 'k', 'b', 'r', 'g', 'c', 'm', 'k', ...
+        'b', 'r', 'g', 'c', 'm'}
     % Step 6:  Pretty pictures
     figure;
     box on;hold on; axis equal; view(3)
@@ -217,7 +243,9 @@ if options.make_plots
     for ii = 1:num_coils
         % loop over each unique coil name and save it to the file
         this_coil_name = coil_name_list{ii};
-        eval(['plot_fieldcoils(', this_coil_name, ', ''k'' )']);
+        this_color = colorlist{ii};
+        %eval(['plot_fieldcoils(', this_coil_name, ', ''k'' )']);
+        eval(['plot_fieldcoils(', this_coil_name, ', ''', this_color, ''' )']);
     end
     
     
