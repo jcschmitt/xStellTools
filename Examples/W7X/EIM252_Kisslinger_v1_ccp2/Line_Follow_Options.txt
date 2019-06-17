@@ -16,7 +16,7 @@ coilset_w7x_Kisslinger_ideal_v1
 <===Number of surfaces
 61
 <===Number of transits
-50
+320
 
 <===Phi increment (in degrees) Also, 360 / Number of field periods
 72
