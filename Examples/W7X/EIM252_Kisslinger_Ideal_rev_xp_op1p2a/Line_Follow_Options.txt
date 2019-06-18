@@ -5,7 +5,7 @@ EIM252_Kisslinger_Ideal_rev_xp_op1p2a
 coilset_w7x_Kisslinger_ideal_v1
 
 <===Coil Currents
-13067. 13067. 13067. 13067. 13067. -182. 182. 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+13067. 13067. 13067. 13067. 13067. -182. -182. 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 
 <===Integration Tolerances
 <===relTol
