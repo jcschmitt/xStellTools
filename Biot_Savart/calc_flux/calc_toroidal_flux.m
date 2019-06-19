@@ -10,9 +10,9 @@ end
 % 1e-9 seems to be a good value for convergence. Should be checked for each
 % configuration.
 % 1e-9 works in most cases
-%TOL_FLUX = 1e-9;
+TOL_FLUX = 1e-9;
 % trying to improve the EIM edge island situation
-TOL_FLUX = 1e-4;
+%TOL_FLUX = 1e-4;
 % A 40th order polynomial usually works, unless the surface is very
 % 'corrugated'.
 POLYFIT_ORDER = 40;
