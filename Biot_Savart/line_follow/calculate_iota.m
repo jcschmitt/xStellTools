@@ -4,12 +4,13 @@ function [iota] = calculate_iota(rAxis, coords, phiIncInDegrees);
 % stellarator symmetric.
 R = coords(:, 1); z = coords(:, 2);  
 polAngle = atan2(z, R - rAxis);
-for ii = 1:length(polAngle)
-    if ( polAngle(ii) < 0 )
-        polAngle(ii) = polAngle(ii) + 2*pi;
+polAngle_fix = polAngle;
+for ii = 1:length(polAngle_fix)
+    if ( polAngle_fix(ii) < 0 )
+        polAngle_fix(ii) = polAngle_fix(ii) + 2*pi;
     end
 end
-diffPolAngle = diff(polAngle);
+diffPolAngle = diff(polAngle_fix);
 ind = find(diffPolAngle < 0);
 diffPolAngle(ind) = diffPolAngle(ind) + 2*pi;
 diffTorAngle = phiIncInDegrees * (pi / 180) * ones(size(diffPolAngle));
