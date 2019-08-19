@@ -1063,6 +1063,7 @@ class stellgen:
                            " \n" +
                            " executable = submit_stellopt.sh\n"  +
                            " arguments =\n" +
+                           " requirements = (TARGET.has_avx == True)\n"  +
                            " \n" +
                            " should_transfer_files = YES\n" +
                            " when_to_transfer_output = ON_EXIT\n" +
