@@ -1156,6 +1156,13 @@ class stellgen:
         self.add_label_and_entry_to_frame(counter, 'submit',
                                           self.FILESETC,
                                           self.filenames_frame1)
+        counter += 0
+        select_stellopt_submit = tk.Button(self.filenames_frame1,
+                                command=self.find_stellopt_submit, # self.doit,
+                                text='Select stellopt submit file')
+
+        select_stellopt_submit.grid(row=counter, rowspan=1, column=2, columnspan=1)
+        
         counter += 1
         self.SUBMIT_CONTENTS = self.add_text_entry_to_frame(counter,
                                      'submit_contents',
@@ -1192,6 +1199,18 @@ class stellgen:
             initialdir=os.path.dirname('./input/'))
         self.FILESETC['NESCIN_FILEIN'].set(importFile)
        
+    def find_stellopt_submit(self):
+        import_file = filedialog.askopenfilename(
+            initialdir=os.path.dirname('./input/'))
+        (the_folder, the_file) = os.path.split(import_file)
+        self.FILESETC['submit'].set(the_file)
+        file_handle = open(import_file);
+        file_text = file_handle.read()
+        file_handle.close()
+        new_text = tk.StringVar()
+        new_text.set(file_text)
+        self.SUBMIT_CONTENTS.delete('1.0', 'end')
+        self.SUBMIT_CONTENTS.insert('1.0', new_text.get())
           
     def doit(self):
         # first, count the # of variations and determine the total nubmer of files to be generated
