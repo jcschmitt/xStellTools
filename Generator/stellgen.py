@@ -639,6 +639,12 @@ class stellgen:
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_LAMBDA']['SIGMA'].set(1.0e9)
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_LAMBDA']['COUNT'].set(1)
 
+        # 'Optimum Selectables'
+        for this_key in ('COBRAVMEC', 'BOOZ_XFORM', 'BOOTIN', 'SFINCS', 'PROFILES'):
+            self.OPTIMUM_TARGETS_PARAMS[this_key] = {}
+            self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
+            self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'].set(False)
+
 
 
         # do stuff and things
