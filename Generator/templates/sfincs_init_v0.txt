@@ -1,0 +1,49 @@
+!**********************************
+! Beginning of SFINCS namelists
+!**********************************
+&general
+/
+&geometryParameters
+/
+&speciesParameters
+  Zs = -1 1
+  mHats = 0.000544617 1
+/
+&physicsParameters
+  dPhiHatdpsiN = 0.001d+0
+/
+&resolutionParameters
+  Ntheta = 55
+!ss NthetaMinFactor = 0.95
+!ss NthetaMaxFactor = 1.4
+!ss NthetaNumRuns = 150
+
+  Nzeta = 63
+!ss NzetaMinFactor = 0.7
+!ss NzetaMaxFactor = 2
+!ss NzetaNumRuns = 0
+
+  Nxi = 75
+!ss NxiMinFactor = 0.8
+!ss NxiMaxFactor = 2
+!ss NxiNumRuns = 0
+  
+  Nx = 5
+!ss NxMinFactor = 1
+!ss NxMaxFactor = 1.6
+!ss NxNumRuns = 0
+
+  solverTolerance = 1e-05
+!ss solverToleranceMinFactor = 0.01
+!ss solverToleranceMaxFactor = 1
+!ss solverToleranceNumRuns = 0
+/
+&otherNumericalParameters
+/
+&preconditionerOptions
+/
+&export_f
+/
+!**********************************
+! End of SFINCS namelists
+!**********************************
