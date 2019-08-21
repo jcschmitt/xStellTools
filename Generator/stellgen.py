@@ -2135,7 +2135,6 @@ class stellgen:
 
                 paren_part = '(1)'
                 mult_part = '1*'
-                mult_part = str(count) + '*'
                 next_line = ('TARGET_' + this_key + paren_part + ' = ' +
                             mult_part + str(target)  + '\n' +
                             'SIGMA_' + this_key + paren_part + ' = ' +
@@ -2143,7 +2142,7 @@ class stellgen:
                 input_file.write(next_line)
 
                 paren_part = '(2:' + str(count) + ')'
-                mult_part = str(count) + '*'
+                mult_part = str(count-1) + '*'
                 next_line = ('TARGET_' + this_key + paren_part + ' = ' +
                             mult_part + str(target)  + '\n' +
                             'SIGMA_' + this_key + paren_part + ' = ' +
