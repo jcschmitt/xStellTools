@@ -1,0 +1,31 @@
+!----------------------------------------------------------------------
+!       Profile Functions
+!----------------------------------------------------------------------
+
+  ! Note that ne_opt is normalized to 1e18 meters^{-3}.
+  ! n = (0.7e20/m^3) * (1 - s^5)
+  NE_TYPE = 'power_series'
+  NE_OPT = 70.0 0.0 0.0 0.0 0.0 -70.0
+
+  ! TE_OPT and TI_OPT are in units of 1 eV.
+  ! T  = 2 keV * (1 - s)
+  TE_TYPE = 'power_series'
+  TE_OPT = 2e3 -2e3
+  TI_TYPE = 'power_series'
+  TI_OPT = 2e3 -2e3
+
+  bootj_type='power_series'
+  ! The number of nonzero entries in bootj_aux_f sets the degree of the polynomial fit!
+  ! However, in the vboot-loop, a spline is used, so this setting may not be used (check).
+  bootj_aux_f = 16*1.0e-10
+
+  sfincs_s = 0.00851345, 0.0337639, 0.0748914, 0.130496, 0.198683, 0.277131, 0.363169, 0.453866, 0.546134, 0.636831, 0.722869, 0.801317, 0.869504, 0.925109, 0.966236, 0.991487 ! 16 points
+
+  !  sfincs_s = 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95 0.96 0.97 0.98
+
+  sfincs_min_procs = 32
+  vboot_tolerance = 1.0e-2
+  VBOOT_MAX_ITERATIONS=8
+  sfincs_Er_option='zero'
+  !  sfincs_Er_option='estimate'
+

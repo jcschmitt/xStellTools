@@ -39,6 +39,7 @@ class stellgen:
         self.targets_tab = ttk.Frame(self.tab_control)
         self.variables_tab = ttk.Frame(self.tab_control)
         self.regcoil_tab = ttk.Frame(self.tab_control)
+        self.bootstrap_tab = ttk.Frame(self.tab_control)
         self.scanables_tab = ttk.Frame(self.tab_control)
         self.filenames_tab = ttk.Frame(self.tab_control)
 
@@ -51,6 +52,7 @@ class stellgen:
         self.make_scanables_tab(self.scanables_tab)
         self.make_vmec_tab(self.vmec_tab)
         self.make_regcoil_tab(self.regcoil_tab)
+        self.make_bootstrap_tab(self.bootstrap_tab)
 
         self.tab_control.add(self.filenames_tab, text='Files')
         self.tab_control.add(self.scanables_tab, text='Scan Control')
@@ -60,6 +62,7 @@ class stellgen:
         self.tab_control.add(self.vmec_tab,
                             text='VMEC')
         self.tab_control.add(self.regcoil_tab, text='Regcoil')
+        self.tab_control.add(self.bootstrap_tab, text='Profiles &\nBootstrap')
         self.tab_control.grid()
 
         my_root.title("STELLOPT Generator 0.1a")
@@ -192,7 +195,7 @@ class stellgen:
 
 
 
-    def add_optimum_top_legend_to_frame(self, position, target_frame):
+    def add_optimum_legend_to_frame(self, position, target_frame):
         this_lbl = tk.Label(target_frame,
                       bg=self.bg_color_1,
                       anchor=tk.E,
@@ -211,6 +214,8 @@ class stellgen:
                       text='Count')
         this_lbl.grid(row=position, rowspan=1, column=4, columnspan=1,
                       sticky=tk.E)
+        
+    
 
     def add_optimum_target_entry_to_frame(self, position,
                                      in_key, in_dict, target_frame):
@@ -511,6 +516,9 @@ class stellgen:
         self.OPTIMUM_PARAMS['EQUIL_TYPE'] = tk.StringVar()
         self.OPTIMUM_PARAMS['EQUIL_TYPE'].set('VMEC2000_ONEEQ')
 
+        self.OPTIMUM_PARAMS['BOOTCALC_TYPE'] = tk.StringVar()
+        self.OPTIMUM_PARAMS['BOOTCALC_TYPE'].set('BOOTSJ')
+
         self.OPTIMUM_PARAMS['OPT_TYPE'] = tk.StringVar()
         self.OPTIMUM_PARAMS['OPT_TYPE'].set('LMDIF_bounded')
 
@@ -546,6 +554,31 @@ class stellgen:
                            "  REGCOIL_NUM_FIELD_PERIODS = 5\n\n")
         self.OPTIMUM_PARAMS['Extra_Lines'].set(extra_lines_str)
 
+       # These parameters need to be written out later.
+        self.OPTIMUM_PARAMS['Profile_Functions'] = tk.StringVar()
+        extra_lines_str = ("!---------------------------\n" + 
+                           "!       Profile Functions   \n" + 
+                           "!---------------------------\n\n" + 
+                           "  ! Note that ne_opt is normalized to 1e18 meters^{-3}.\n" + 
+                           "  ! n = (0.7e20/m^3) * (1 - s^5)\n" + 
+                           "  NE_TYPE = 'power_series'\n" + 
+                           "  NE_OPT = 70.0 0.0 0.0 0.0 0.0 -70.0\n\n" + 
+                           "! TE_OPT and TI_OPT are in units of 1 eV.\n" + 
+                           " ! T  = 2 keV * (1 - s)\n" + 
+                           "  TE_TYPE = 'power_series'\n" + 
+                           "  TE_OPT = 2e3 -2e3\n" + 
+                           "  TI_TYPE = 'power_series'\n" + 
+                           "  TI_OPT = 2e3 -2e3\n\n" + 
+                           "bootj_type='power_series'\n" + 
+                           "! The number of nonzero entries in bootj_aux_f sets the degree of the polynomial fit!\n" + 
+                           "bootj_aux_f = 16*1.0e-10\n\n" + 
+                           "sfincs_s = 0.00851345, 0.0337639, 0.0748914, 0.130496, 0.198683, 0.277131, 0.363169, 0.453866, 0.546134, 0.636831, 0.722869, 0.801317, 0.869504, 0.925109, 0.966236, 0.991487 ! 16 points\n\n" + 
+                           " sfincs_min_procs = 32\n" + 
+                           " vboot_tolerance = 1.0e-2\n" + 
+                           " sfincs_Er_option='zero'\n" + 
+                           "!  sfincs_Er_option='estimate'\n\n")
+        self.OPTIMUM_PARAMS['Profile_Functions'].set(extra_lines_str)
+
         # do stuff and things
         # Make two frames. One for run parameters and one for scana
         self.optimum_frame = tk.LabelFrame(this_tab,
@@ -563,8 +596,9 @@ class stellgen:
                         padx=5, pady=5, ipadx=5, ipady=5)
 
         counter = 0
-        for this_key in ('NFUNC_MAX', 'EQUIL_TYPE', 'OPT_TYPE', 'FTOL', 'XTOL',
-                         'GTOL', 'FACTOR', 'EPSFCN', 'MODE', 'LKEEP_MINS'):
+        for this_key in ('NFUNC_MAX', 'EQUIL_TYPE', 'BOOTCALC_TYPE',
+                         'OPT_TYPE', 'FTOL', 'XTOL', 'GTOL', 'FACTOR',
+                         'EPSFCN', 'MODE', 'LKEEP_MINS'):
             counter += 1
             self.add_label_and_entry_to_frame(counter, this_key,
                                               self.OPTIMUM_PARAMS,
@@ -583,6 +617,7 @@ class stellgen:
         # Store everything in a dictionary for later
         self.OPTIMUM_TARGETS_PARAMS = {}
 
+        # regcoil settings
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_CHI2_B'] = {}
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_CHI2_B']['TARGET']  = tk.DoubleVar()
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_CHI2_B']['SIGMA']  = tk.DoubleVar()
@@ -639,41 +674,154 @@ class stellgen:
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_LAMBDA']['SIGMA'].set(1.0e9)
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_LAMBDA']['COUNT'].set(1)
 
-        # 'Optimum Selectables'
-        for this_key in ('COBRAVMEC', 'BOOZ_XFORM', 'BOOTIN', 'SFINCS', 'PROFILES'):
-            self.OPTIMUM_TARGETS_PARAMS[this_key] = {}
+        # cobravmec settings
+        self.OPTIMUM_TARGETS_PARAMS['BALLOON'] = {}
+        self.OPTIMUM_TARGETS_PARAMS['BALLOON']['BALLOON_THETA'] = tk.StringVar()
+        self.OPTIMUM_TARGETS_PARAMS['BALLOON']['BALLOON_THETA'].set('0.0 45.0 90.0')
+        self.OPTIMUM_TARGETS_PARAMS['BALLOON']['BALLOON_ZETA'] = tk.StringVar()
+        self.OPTIMUM_TARGETS_PARAMS['BALLOON']['BALLOON_ZETA'].set('0.0 45.0 90.0')
+        self.OPTIMUM_TARGETS_PARAMS['BALLOON']['TARGET']  = tk.DoubleVar()
+        self.OPTIMUM_TARGETS_PARAMS['BALLOON']['SIGMA']  = tk.DoubleVar()
+        self.OPTIMUM_TARGETS_PARAMS['BALLOON']['COUNT']  = tk.IntVar()
+        self.OPTIMUM_TARGETS_PARAMS['BALLOON']['TARGET'].set(0.0)
+        self.OPTIMUM_TARGETS_PARAMS['BALLOON']['SIGMA'].set(1.0)
+        self.OPTIMUM_TARGETS_PARAMS['BALLOON']['COUNT'].set(51)
+        
+        # Boozer Coordinates
+        self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']  = {}
+        self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']['MBOZ']  = tk.IntVar()
+        self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']['MBOZ'].set(64)
+        self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']['NBOZ']  = tk.IntVar()
+        self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']['NBOZ'].set(32)
+        
+        # Boozer Coordinate Helicity
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY'] = {}
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['TARGET']  = tk.DoubleVar()
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['SIGMA']  = tk.DoubleVar()
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['COUNT'] = tk.IntVar()
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['MODE'] = tk.StringVar()
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['TARGET'].set(0.0)
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['SIGMA'].set(1.0)
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['COUNT'].set(51)
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['MODE'].set('(4, 1)')
+        
+
+        # 'Optimum Extras'
+        for this_key in ('BALLOON', 'BOOZER_COORD', 'HELICITY'):
             self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
             self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'].set(False)
 
 
-
         # do stuff and things
-        # Make two frames. One for  run parameters and one for extras
-        self.optimum_targets_frame = tk.LabelFrame(this_tab,
+        # Make frames for each target set. One for  run parameters and one for extras
+        counter_frame = 0
+        # regcoil
+        counter_frame +=1
+        self.optimum_regcoil_targets_frame = tk.LabelFrame(this_tab,
                                    bg=self.bg_color_1,
                                    bd=5,
                                    padx=5,
                                    pady=5,
                                    relief=tk.RIDGE,
-                                   text="TARGETS",
+                                   text="REGCOIL (Regularized NESCoil)",
                                    font=('Helvetica', '14'))
-        self.optimum_targets_frame.grid(row=1,
-                        rowspan=2,
+        self.optimum_regcoil_targets_frame.grid(row=counter_frame,
+                        rowspan=1,
                         column=1,
                         columnspan=1,
                         padx=5, pady=5, ipadx=5, ipady=5)
 
         counter = 1
-        self.add_optimum_top_legend_to_frame(counter, self.optimum_targets_frame)
+        self.add_optimum_legend_to_frame(counter, self.optimum_regcoil_targets_frame)
         
         for this_key in ('REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_K', 'REGCOIL_RMS_K',
                          'REGCOIL_C2P_DIST_MIN', 'REGCOIL_VOLUME_COIL', 'REGCOIL_LAMBDA'):
             counter += 1
             self.add_optimum_target_entry_to_frame(counter, this_key,
                                               self.OPTIMUM_TARGETS_PARAMS,
-                                              self.optimum_targets_frame)
+                                              self.optimum_regcoil_targets_frame)
 
+        # cobravmec
+        counter_frame +=1
+        self.optimum_cobravmec_targets_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="COBRAVMEC (Ideal MHD Ballooning Stability)",
+                                   font=('Helvetica', '14'))
+        self.optimum_cobravmec_targets_frame.grid(row=counter_frame,
+                        rowspan=1,
+                        column=1,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        counter = 1
+        for this_key in ('BALLOON_THETA', 'BALLOON_ZETA'):
+            counter += 1
+            self.add_label_and_entry_to_frame(counter, this_key,
+                                              self.OPTIMUM_TARGETS_PARAMS['BALLOON'],
+                                              self.optimum_cobravmec_targets_frame)
+
+        counter += 1
+        self.add_optimum_legend_to_frame(counter, self.optimum_cobravmec_targets_frame)
+
+        counter += 1
+        self.add_optimum_target_entry_to_frame(counter, 'BALLOON',
+                                          self.OPTIMUM_TARGETS_PARAMS,
+                                          self.optimum_cobravmec_targets_frame)
         
+        # Boozer coordinates
+        counter_frame +=1
+        self.optimum_boozer_coordinates_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="BOOZ_XFORM (Boozer Coordinate Transformation)",
+                                   font=('Helvetica', '14'))
+        self.optimum_boozer_coordinates_frame.grid(row=counter_frame,
+                        rowspan=1,
+                        column=1,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        counter = 1
+        for this_key in ('MBOZ', 'NBOZ'):
+            counter += 1
+            self.add_label_and_entry_to_frame(counter, this_key,
+                                              self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD'],
+                                              self.optimum_boozer_coordinates_frame)
+
+        # Helicity coordinates
+        counter_frame +=1
+        self.optimum_helicity_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="Helicity",
+                                   font=('Helvetica', '14'))
+        self.optimum_helicity_frame.grid(row=counter_frame,
+                        rowspan=1,
+                        column=1,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        counter = 1
+        this_key ='MODE'
+        counter += 1
+        self.add_label_and_entry_to_frame(counter, this_key,
+                                          self.OPTIMUM_TARGETS_PARAMS['HELICITY'],
+                                          self.optimum_helicity_frame)
+        counter += 1
+        self.add_optimum_target_entry_to_frame(counter, 'HELICITY',
+                                          self.OPTIMUM_TARGETS_PARAMS,
+                                          self.optimum_helicity_frame)
+
 
 
     def make_variables_tab(self, this_tab):
@@ -733,6 +881,7 @@ class stellgen:
         row_counter = 1
         col_counter = 1
         
+        # REGCOIL OPT
         clear_variables_button = tk.Button(self.optimum_append_frame,
                                 command=self.clear_variables,
                                 text='Clear Varaibles')
@@ -794,12 +943,43 @@ class stellgen:
         regcoil_8_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
 
 
+        # Boundary opt
+        row_counter = 3
+        col_counter = 1
+        boundary_1_button = tk.Button(self.optimum_append_frame,
+                                command=self.append_variables_boundary_2x2, # self.doit,
+                                text='Boundary, 2x2')
+        boundary_1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        boundary_2_button = tk.Button(self.optimum_append_frame,
+                                command=self.append_variables_boundary_4x4, # self.doit,
+                                text='Boundary, 4x4')
+        boundary_2_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        boundary_3_button = tk.Button(self.optimum_append_frame,
+                                command=self.append_variables_boundary_6x6, # self.doit,
+                                text='Boundary, 6x6')
+        boundary_3_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        boundary_4_button = tk.Button(self.optimum_append_frame,
+                                command=self.append_variables_boundary_8x8, # self.doit,
+                                text='Boundary, 8x8')
+        boundary_4_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+
+
+
     def clear_variables(self):
         my_empty_tk_string = tk.StringVar()
         my_empty_tk_string.set('')
         self.OPTIMUM_VARIABLE_LINES.delete('1.0', 'end')
         self.OPTIMUM_VARIABLE_LINES.insert('1.0', my_empty_tk_string.get())
 
+
+    # REGCOIL Files
     def append_variables_regcoil_uniform(self):
         file_handle = open('templates/append_regcoil_uniform.txt');
         file_text = read(file_handle)
@@ -867,6 +1047,40 @@ class stellgen:
 
     def append_variables_regcoil_24x16(self):
         file_handle = open('templates/append_regcoil_24x16.txt');
+        file_text = file_handle.read()
+        file_handle.close()
+        new_text = tk.StringVar()
+        new_text.set(file_text)
+        self.OPTIMUM_VARIABLE_LINES.insert('end', new_text.get())
+
+
+    # Boundary files
+    def append_variables_boundary_2x2(self):
+        file_handle = open('templates/append_boundary_2x2.txt');
+        file_text = file_handle.read()
+        file_handle.close()
+        new_text = tk.StringVar()
+        new_text.set(file_text)
+        self.OPTIMUM_VARIABLE_LINES.insert('end', new_text.get())
+
+    def append_variables_boundary_4x4(self):
+        file_handle = open('templates/append_boundary_4x4.txt');
+        file_text = file_handle.read()
+        file_handle.close()
+        new_text = tk.StringVar()
+        new_text.set(file_text)
+        self.OPTIMUM_VARIABLE_LINES.insert('end', new_text.get())
+
+    def append_variables_boundary_6x6(self):
+        file_handle = open('templates/append_boundary_6x6.txt');
+        file_text = file_handle.read()
+        file_handle.close()
+        new_text = tk.StringVar()
+        new_text.set(file_text)
+        self.OPTIMUM_VARIABLE_LINES.insert('end', new_text.get())
+
+    def append_variables_boundary_8x8(self):
+        file_handle = open('templates/append_boundary_8x8.txt');
         file_text = file_handle.read()
         file_handle.close()
         new_text = tk.StringVar()
@@ -964,6 +1178,116 @@ class stellgen:
                                               self.REGCOIL_PARAMS,
                                               self.regcoil_frame)
           
+    def make_bootstrap_tab(self, this_tab):
+        # VMEC Execution parameters.
+        # Store everything in a dictionary for later
+        # BOOTSJ
+        self.BOOTSTRAP_PARAMS = {}
+        self.BOOTSTRAP_PARAMS['MBUSE']  = tk.IntVar()
+        self.BOOTSTRAP_PARAMS['MBUSE'].set(64)
+        self.BOOTSTRAP_PARAMS['NBUSE']  = tk.IntVar()
+        self.BOOTSTRAP_PARAMS['NBUSE'].set(32)
+        self.BOOTSTRAP_PARAMS['ZEFF1']  = tk.DoubleVar()
+        self.BOOTSTRAP_PARAMS['ZEFF1'].set(1.00)
+        self.BOOTSTRAP_PARAMS['DENS0']  = tk.DoubleVar()
+        self.BOOTSTRAP_PARAMS['DENS0'].set(0.70)
+        self.BOOTSTRAP_PARAMS['TETI']  = tk.DoubleVar()
+        self.BOOTSTRAP_PARAMS['TETI'].set(1.00)
+        self.BOOTSTRAP_PARAMS['TEMPRES']  = tk.DoubleVar()
+        self.BOOTSTRAP_PARAMS['TEMPRES'].set(64)
+        self.BOOTSTRAP_PARAMS['DAMP_BS']  = tk.DoubleVar()
+        self.BOOTSTRAP_PARAMS['DAMP_BS'].set(0.1)
+        self.BOOTSTRAP_PARAMS['ISYMM0']  = tk.IntVar()
+        self.BOOTSTRAP_PARAMS['ISYMM0'].set(0)
+        self.BOOTSTRAP_PARAMS['ATE']  = tk.StringVar()
+        self.BOOTSTRAP_PARAMS['ATE'].set('2.0 -2.0')
+        self.BOOTSTRAP_PARAMS['ATI']  = tk.StringVar()
+        self.BOOTSTRAP_PARAMS['ATI'].set('2.0 -2.0')
+
+        # SFINCS Stuff
+        self.BOOTSTRAP_PARAMS['SFINCS_Text'] = tk.StringVar()
+        sfincs_file = open('templates/sfincs_init_v0.txt')
+        sfincs_text = sfincs_file.read()
+        sfincs_file.close()
+        self.BOOTSTRAP_PARAMS['SFINCS_Text'].set(sfincs_text)
+
+        # Profiles Stuff
+        self.BOOTSTRAP_PARAMS['PROFILES'] = tk.StringVar()
+        sfincs_file = open('templates/profiles_init_v0.txt')
+        sfincs_text = sfincs_file.read()
+        sfincs_file.close()
+        self.BOOTSTRAP_PARAMS['PROFILES'].set(sfincs_text)
+
+
+        # do stuff and things
+        # Make two frames. 
+
+        profiles_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="Profiles",
+                                   font=('Helvetica', '14'))
+        profiles_frame.grid(row=1,
+                        rowspan=1,
+                        column=1,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        bootsj_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="BOOTSJ Parameters",
+                                   font=('Helvetica', '14'))
+        bootsj_frame.grid(row=1,
+                        rowspan=1,
+                        column=2,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        sfincs_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="SFINCS Parameters",
+                                   font=('Helvetica', '14'))
+        sfincs_frame.grid(row=3,
+                        rowspan=1,
+                        column=1,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+
+        counter = 0
+        for this_key in ('MBUSE', 'NBUSE', 'ZEFF1', 'DENS0', 'TETI', 'TEMPRES',
+                         'DAMP_BS', 'ISYMM0', 'ATE', 'ATI'):
+            counter += 1
+            self.add_label_and_entry_to_frame(counter, this_key,
+                                              self.BOOTSTRAP_PARAMS,
+                                              bootsj_frame)
+
+        row_counter = 0 # frame 2 will be used
+        self.SFINCS_Text = self.add_text_entry_to_frame(row_counter,
+                                    'SFINCS_Text',
+                                    self.BOOTSTRAP_PARAMS,
+                                    sfincs_frame, entry_width=80)
+
+
+        row_counter = 1 # frame 3 will be used
+        self.Profiles_Text = self.add_text_entry_to_frame(row_counter,
+                                    'PROFILES',
+                                    self.BOOTSTRAP_PARAMS,
+                                    profiles_frame, entry_width=80)
+
+
+        
 
     def make_scanables_tab(self, this_tab):
         # Store everything in a dictionary for later
@@ -992,6 +1316,13 @@ class stellgen:
         for this_key in ('REGCOIL_FOURIER_SPECTRUM', 'REGCOIL_2x2', 'REGCOIL_4x4', 'REGCOIL_6x6', 'REGCOIL_8x8',
                          'REGCOIL_10x10', 'REGCOIL_12x12', 'REGCOIL_16x16', 'REGCOIL_24x16',
                          'COORDINATE_REGCOIL_TARGET_VALUE', 'AUTOGEN_REGCOIL_BOUNDS'):
+            self.OPTIMUM_SCAN_PARAMS[this_key] = {}
+            self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
+            self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'].set(False)
+
+        # 'Boundary Fourier Selectables'
+        for this_key in ('BOUNDARY_SPECTRUM', 'BOUND_2x2', 'BOUND_4x4', 'BOUND_6x6', 'BOUND_8x8',
+                         'AUTOGEN_BOUNDARY_LIMITS'):
             self.OPTIMUM_SCAN_PARAMS[this_key] = {}
             self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
             self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'].set(False)
@@ -1054,6 +1385,16 @@ class stellgen:
         counter2 += 1
         self.add_selectables_line_to_frame(counter, counter2, 'AUTOGEN_REGCOIL_BOUNDS', self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
         
+        counter += 1
+        counter2 = 0    # column counter  
+        for this_key in ('BOUNDARY_SPECTRUM', 'BOUND_2x2', 'BOUND_4x4', 'BOUND_6x6', 'BOUND_8x8'):
+            counter2 += 1
+            self.add_selectables_line_to_frame(counter, counter2, this_key, self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
+              
+        counter +=1
+        counter2 = 0
+        counter2 += 1
+        self.add_selectables_line_to_frame(counter, counter2, 'AUTOGEN_BOUNDARY_LIMITS', self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
     
     def make_filenames_tab(self, this_tab):
         # Store everything in a dictionary for later
@@ -1294,6 +1635,21 @@ class stellgen:
             self.variation_count.append(variations)
             self.OPTIMUM_SCAN_PARAMS['REGCOIL_FOURIER_SPECTRUM']['variations'] = variations
 
+ 
+        if (self.OPTIMUM_SCAN_PARAMS['BOUNDARY_SPECTRUM']['Enabled'].get() is True):
+            self.variation_list.append('BOUNDARY_SPECTRUM')
+            num_lcfs_selections = 0
+            self.OPTIMUM_SCAN_PARAMS['BOUNDARY_SPECTRUM']['Selections'] = []
+            for this_key in ('BOUND_2x2', 'BOUND_4x4', 'BOUND_6x6', 'BOUND_8x8'):
+                if (self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'].get() is True):
+                    num_lcfs_selections += 1
+                    self.OPTIMUM_SCAN_PARAMS['BOUNDARY_SPECTRUM']['Selections'].append(this_key)
+            # not used?
+            variations = num_lcfs_selections
+            total_variations = total_variations * variations
+            self.variation_count.append(variations)
+            self.OPTIMUM_SCAN_PARAMS['BOUNDARY_SPECTRUM']['variations'] = variations
+
 
         # confirm that these files should be generated
         if (total_variations == 0):
@@ -1331,8 +1687,8 @@ class stellgen:
         self.my_tempfile1 = 'temp_sg1.out'
         self.my_tempfile2 = 'temp_sg2.out'
         self.my_tempfile3 = 'temp_sg3.out'
-        #self.my_tempfile4 = 'temp_sg4.out'
-        #self.my_tempfile5 = 'temp_sg5.out'
+        self.my_tempfile4 = 'temp_sg4.out'
+        self.my_tempfile5 = 'temp_sg5.out'
 
         self.recursive_scan_variation(self.variation_list,
                                       self.variation_count, 
@@ -1357,12 +1713,13 @@ class stellgen:
             self.write_indata_nml()
             self.write_optimum_nml()
             self.write_regcoil_nml()
+            self.write_bootsj_nml()
+            self.write_sfincs_nml()
             self.create_files(the_foldername_in,the_filename_in)
         else: 
             # pop a variation of the list
             my_scan_item = variation_list_in.pop()
             my_scan_count = variation_count_in.pop()
-
             # depending on the type, do different things
             if (my_scan_item in('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL',
                          'REGCOIL_VOLUME_COIL', 'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA')):
@@ -1401,7 +1758,8 @@ class stellgen:
                 rfs_count = 0
                 for rfs_selection in self.OPTIMUM_SCAN_PARAMS['REGCOIL_FOURIER_SPECTRUM']['Selections']:
                     # Make the 'edits'
-                    self.clear_variables()
+                    #self.clear_variables()
+
                     if (rfs_selection == 'REGCOIL_2x2'):
                         self.append_variables_regcoil_2x2()
                     elif (rfs_selection == 'REGCOIL_4x4'):
@@ -1454,6 +1812,43 @@ class stellgen:
                                      the_foldername_out,
                                      the_filename_in)
 
+            if (my_scan_item in('BOUNDARY_SPECTRUM')):
+                print('Scan over: ' +
+                       str(self.OPTIMUM_SCAN_PARAMS['BOUNDARY_SPECTRUM']['Selections']))
+                # Loop over number of variations
+                lcfs_count = 0
+                for lcfs_selection in self.OPTIMUM_SCAN_PARAMS['BOUNDARY_SPECTRUM']['Selections']:
+                    # Make the 'edits'
+                    self.clear_variables()
+
+                    if (lcfs_selection == 'BOUND_2x2'):
+                        print('<----2')
+                        self.append_variables_boundary_2x2()
+                    elif (lcfs_selection == 'BOUND_4x4'):
+                        print('<----4')
+                        self.append_variables_boundary_4x4()
+                    elif (lcfs_selection == 'BOUND_6x6'):
+                        print('<----6')
+                        self.append_variables_boundary_6x6()
+                    elif (lcfs_selection == 'BOUND_8x8'):
+                        print('<----8')
+                        self.append_variables_boundary_8x8()
+                    else:
+                        print('<----Something went wrong when parsing lcfs_selection in recursive_scan_variation')
+                    
+                    # Modify the foldername_in
+                    the_foldername_out = the_foldername_in + '_LCFS' + str(lcfs_count)
+                    lcfs_count += 1
+                    
+                    # append bounds, if desired
+                    #if (self.OPTIMUM_SCAN_PARAMS['AUTOGEN_BOUNDARY_LIMITS']['Enabled'].get() is True):
+                    #    self.append_boundary_limits()
+                    
+                    # Call resursively with reduced list
+                    self.recursive_scan_variation(variation_list_in, 
+                                     variation_count_in, 
+                                     the_foldername_out,
+                                     the_filename_in)
 
 
             variation_list_in.append(my_scan_item)
@@ -1601,7 +1996,7 @@ class stellgen:
                 try:
                     new_vmec_nml['indata'][this_item] = self.VMEC_RUN_PARAMS[str.upper(this_item)].get()
                 except:
-                    print('<----Did not find: ' + this_item + '  Skipping')
+                    print('<----Did not find indata/: ' + this_item + '  Skipping')
                 
             try:
                 new_vmec_nml['indata']['mgrid_file'] = self.VMEC_RUN_PARAMS['MGRID_FILE'].get().strip()
@@ -1616,7 +2011,7 @@ class stellgen:
                         the_numbers.append(float(my_item))
                     new_vmec_nml['indata'][this_item] = the_numbers
                 except:         
-                    print('<----Did not find: ' + this_item + ' Skipping')
+                    print('<----Did not find indata/: ' + this_item + ' Skipping')
 
             for this_item in ('ns_array', 'niter_array'):
                 try:
@@ -1626,7 +2021,7 @@ class stellgen:
                         the_numbers.append(int(my_item))
                     new_vmec_nml['indata'][this_item] = the_numbers
                 except:         
-                    print('<----Did not find: ' + this_item + ' Skipping')
+                    print('<----Did not find indata/: ' + this_item + ' Skipping')
                     
             new_vmec_nml.write(self.my_tempfile1, force=True)
 
@@ -1664,6 +2059,7 @@ class stellgen:
             new_optimum_nml['optimum']['NFUNC_MAX'] = self.OPTIMUM_PARAMS['NFUNC_MAX'].get()
             new_optimum_nml['optimum']['EQUIL_TYPE'] = self.OPTIMUM_PARAMS['EQUIL_TYPE'].get()
             new_optimum_nml['optimum']['OPT_TYPE'] = self.OPTIMUM_PARAMS['OPT_TYPE'].get()
+            new_optimum_nml['optimum']['BOOTCALC_TYPE'] = self.OPTIMUM_PARAMS['BOOTCALC_TYPE'].get()
             new_optimum_nml['optimum']['FTOL'] = self.OPTIMUM_PARAMS['FTOL'].get()
             new_optimum_nml['optimum']['GTOL'] = self.OPTIMUM_PARAMS['GTOL'].get()
             new_optimum_nml['optimum']['FACTOR'] = self.OPTIMUM_PARAMS['FACTOR'].get()
@@ -1699,6 +2095,8 @@ class stellgen:
                 input_file.write(next_line)
             
             # now write targets
+            
+            # REGCOIL
             for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL',
                              'REGCOIL_VOLUME_COIL', 'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA'):
                 count = self.OPTIMUM_TARGETS_PARAMS[this_key]['COUNT'].get()
@@ -1719,7 +2117,80 @@ class stellgen:
                                 mult_part + str(sigma)  + '\n')
                     input_file.write(next_line)
 
-            input_file.write(self.OPTIMUM_VARIABLE_LINES.get(1.0, "end"))           
+            # COBRAVMEC
+            this_key = 'BALLOON'
+            count = self.OPTIMUM_TARGETS_PARAMS[this_key]['COUNT'].get()
+            target = self.OPTIMUM_TARGETS_PARAMS[this_key]['TARGET'].get()
+            sigma = self.OPTIMUM_TARGETS_PARAMS[this_key]['SIGMA'].get()
+            if (count <= 1):
+                pass
+            else:
+                next_line = ('  BALLOON_THETA = ' + 
+                             self.OPTIMUM_TARGETS_PARAMS[this_key]['BALLOON_THETA'].get()  +
+                              '\n' +
+                              '  BALLOON_ZETA = ' + 
+                             self.OPTIMUM_TARGETS_PARAMS[this_key]['BALLOON_ZETA'].get()  +
+                              '\n')
+                input_file.write(next_line)
+
+                paren_part = '(1)'
+                mult_part = '1*'
+                mult_part = str(count) + '*'
+                next_line = ('TARGET_' + this_key + paren_part + ' = ' +
+                            mult_part + str(target)  + '\n' +
+                            'SIGMA_' + this_key + paren_part + ' = ' +
+                            mult_part + str(sigma)  + '\n')
+                input_file.write(next_line)
+
+                paren_part = '(2:' + str(count) + ')'
+                mult_part = str(count) + '*'
+                next_line = ('TARGET_' + this_key + paren_part + ' = ' +
+                            mult_part + str(target)  + '\n' +
+                            'SIGMA_' + this_key + paren_part + ' = ' +
+                            mult_part + str(sigma)  + '\n')
+                input_file.write(next_line)
+
+            # BOOZ_XFORM
+            next_line = ('  MBOZ = ' + 
+                         str(self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']['MBOZ'].get() ) +
+                          '\n' +
+                          '  NBOZ = ' + 
+                         str(self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']['NBOZ'].get() ) +
+                          '\n')
+            input_file.write(next_line)
+
+            # HELICITY
+            this_key = 'HELICITY'
+            next_line = ('  HELICITY = ' + 
+                         self.OPTIMUM_TARGETS_PARAMS[this_key]['MODE'].get()  +
+                          '\n')
+            input_file.write(next_line)
+            
+            count = self.OPTIMUM_TARGETS_PARAMS[this_key]['COUNT'].get()
+            target = self.OPTIMUM_TARGETS_PARAMS[this_key]['TARGET'].get()
+            sigma = self.OPTIMUM_TARGETS_PARAMS[this_key]['SIGMA'].get()
+            if (count == 0):
+                pass
+            else:
+                if (count == 1):
+                    paren_part = '(1)'
+                    mult_part = '1*'
+                else:
+                    paren_part = '(1:' + str(count) + ')'
+                    mult_part = str(count) + '*'
+                next_line = ('target_' + this_key + paren_part + ' = ' +
+                            mult_part + str(target)  + '\n' +
+                            'sigma_' + this_key + paren_part + ' = ' +
+                            mult_part + str(sigma)  + '\n')
+                input_file.write(next_line)
+
+
+            # Profiles
+            input_file.write(self.Profiles_Text.get(1.0, "end"))
+
+            # Write the variable lines to the files
+            input_file.write(self.OPTIMUM_VARIABLE_LINES.get(1.0, "end"))  
+                     
             input_file.write('/\n')
 
             # be nice. close the file handle
@@ -1752,7 +2223,43 @@ class stellgen:
         new_regcoil_nml.write(self.my_tempfile3, force=True)
 
         return
-    
+
+    def write_bootsj_nml(self):
+        
+        new_bootsj_nml = f90nml.Namelist()
+        new_bootsj_nml['bootin'] = {}
+        new_bootsj_nml['bootin']['mbuse'] = self.BOOTSTRAP_PARAMS['MBUSE'].get()
+        new_bootsj_nml['bootin']['nbuse'] = self.BOOTSTRAP_PARAMS['NBUSE'].get()
+        new_bootsj_nml['bootin']['zeff1'] = self.BOOTSTRAP_PARAMS['ZEFF1'].get()
+        new_bootsj_nml['bootin']['dens0'] = self.BOOTSTRAP_PARAMS['DENS0'].get()
+        new_bootsj_nml['bootin']['teti'] = self.BOOTSTRAP_PARAMS['TETI'].get()
+        new_bootsj_nml['bootin']['tempres'] = self.BOOTSTRAP_PARAMS['TEMPRES'].get()
+        new_bootsj_nml['bootin']['damp_bs'] = self.BOOTSTRAP_PARAMS['DAMP_BS'].get()
+        new_bootsj_nml['bootin']['isymm0'] = self.BOOTSTRAP_PARAMS['ISYMM0'].get()
+
+        for this_item in ('ate', 'ati'):
+            try:
+                the_list = self.BOOTSTRAP_PARAMS[str.upper(this_item)].get().replace(',', ' ').split()
+                the_numbers = []
+                for my_item in the_list:
+                    the_numbers.append(float(my_item))
+                new_bootsj_nml['bootin'][this_item] = the_numbers
+            except:         
+                print('<----Did not find: ' + this_item + ' Skipping')
+
+        new_bootsj_nml.write(self.my_tempfile4, force=True)
+
+        return
+
+    def write_sfincs_nml(self):
+        
+        input_file = open(self.my_tempfile5, 'w')
+
+        input_file.write(self.SFINCS_Text.get(1.0, "end"))
+
+        input_file.close()
+        return
+
     def create_files(self, folder_name_in, filename_in):
         output_directory = os.path.join('output', folder_name_in)
         
@@ -1787,6 +2294,23 @@ class stellgen:
         temp_file.close()
         for this_line in file_text:
             input_file.write(this_line)
+
+        temp_file = open(self.my_tempfile4, 'r')
+        
+        file_text = temp_file.readlines()
+        temp_file.close()
+        for this_line in file_text:
+            input_file.write(this_line)
+
+        temp_file = open(self.my_tempfile5, 'r')
+        
+        file_text = temp_file.readlines()
+        temp_file.close()
+        for this_line in file_text:
+            input_file.write(this_line)
+            
+        
+        input_file.write('\n&END\n')
             
         # be nice, close the input file
         input_file.close()
@@ -1795,6 +2319,8 @@ class stellgen:
         os.remove(self.my_tempfile1)
         os.remove(self.my_tempfile2)
         os.remove(self.my_tempfile3)
+        os.remove(self.my_tempfile4)
+        os.remove(self.my_tempfile5)
 
         # generate filename for the README file, and open it for writing
         readme_fn_complete = os.path.join(output_directory, 'README.txt')
