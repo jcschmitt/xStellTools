@@ -1,0 +1,3 @@
+  TARGET_ASPECT =    6.70
+  SIGMA_ASPECT =    1.00E-004
+
