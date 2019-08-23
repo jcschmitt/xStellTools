@@ -695,19 +695,32 @@ class stellgen:
         self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']['NBOZ'].set(32)
         
         # Boozer Coordinate Helicity
-        self.OPTIMUM_TARGETS_PARAMS['HELICITY'] = {}
-        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['TARGET']  = tk.DoubleVar()
-        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['SIGMA']  = tk.DoubleVar()
-        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['COUNT'] = tk.IntVar()
-        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['MODE'] = tk.StringVar()
-        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['TARGET'].set(0.0)
-        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['SIGMA'].set(1.0)
-        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['COUNT'].set(51)
-        self.OPTIMUM_TARGETS_PARAMS['HELICITY']['MODE'].set('(4, 1)')
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY'] = tk.StringVar()
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY'].set('\n')
         
+        # NEO
+        self.OPTIMUM_TARGETS_PARAMS['NEO'] = tk.StringVar()
+        self.OPTIMUM_TARGETS_PARAMS['NEO'].set('\n')
+
+        # MAGWELL
+        self.OPTIMUM_TARGETS_PARAMS['MAGWELL'] = {}
+        self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['TARGET']  = tk.DoubleVar()
+        self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['SIGMA']  = tk.DoubleVar()
+        self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['COUNT']  = tk.IntVar()
+        self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['TARGET'].set(0.01)
+        self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['SIGMA'].set(-1.0e30)
+        self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['COUNT'].set(51)
+
+        # GAMMA_C
+        self.OPTIMUM_TARGETS_PARAMS['GAMMA_C'] = tk.StringVar()
+        self.OPTIMUM_TARGETS_PARAMS['GAMMA_C'].set('\n')
+
+        # Aspect Ratio
+        self.OPTIMUM_TARGETS_PARAMS['ASPECT'] = tk.StringVar()
+        self.OPTIMUM_TARGETS_PARAMS['ASPECT'].set('\n')
 
         # 'Optimum Extras'
-        for this_key in ('BALLOON', 'BOOZER_COORD', 'HELICITY'):
+        for this_key in ('BALLOON', 'BOOZER_COORD'):
             self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
             self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'].set(False)
 
@@ -771,6 +784,7 @@ class stellgen:
         self.add_optimum_target_entry_to_frame(counter, 'BALLOON',
                                           self.OPTIMUM_TARGETS_PARAMS,
                                           self.optimum_cobravmec_targets_frame)
+
         
         # Boozer coordinates
         counter_frame +=1
@@ -795,8 +809,31 @@ class stellgen:
                                               self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD'],
                                               self.optimum_boozer_coordinates_frame)
 
-        # Helicity coordinates
+
+        # MAGWELL 
         counter_frame +=1
+        self.optimum_magwell_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="MAGWELL",
+                                   font=('Helvetica', '14'))
+        self.optimum_magwell_frame.grid(row=counter_frame,
+                        rowspan=1,
+                        column=1,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        counter = 1
+        self.add_optimum_target_entry_to_frame(counter, 'MAGWELL',
+                                          self.OPTIMUM_TARGETS_PARAMS,
+                                          self.optimum_magwell_frame)
+
+
+        # Helicity coordinates
+        counter_frame = 1
         self.optimum_helicity_frame = tk.LabelFrame(this_tab,
                                    bg=self.bg_color_1,
                                    bd=5,
@@ -807,20 +844,118 @@ class stellgen:
                                    font=('Helvetica', '14'))
         self.optimum_helicity_frame.grid(row=counter_frame,
                         rowspan=1,
-                        column=1,
+                        column=2,
                         columnspan=1,
                         padx=5, pady=5, ipadx=5, ipady=5)
 
-        counter = 1
-        this_key ='MODE'
-        counter += 1
-        self.add_label_and_entry_to_frame(counter, this_key,
-                                          self.OPTIMUM_TARGETS_PARAMS['HELICITY'],
-                                          self.optimum_helicity_frame)
-        counter += 1
-        self.add_optimum_target_entry_to_frame(counter, 'HELICITY',
-                                          self.OPTIMUM_TARGETS_PARAMS,
-                                          self.optimum_helicity_frame)
+        sfincs_file = open('templates/helicity_init_v0.txt')
+        sfincs_text = sfincs_file.read()
+        sfincs_file.close()
+        self.OPTIMUM_TARGETS_PARAMS['HELICITY'].set(sfincs_text)
+
+        counter +=1 # frame 3 will be used
+        self.Helicity_Text = self.add_text_entry_to_frame(counter,
+                                    'HELICITY',
+                                    self.OPTIMUM_TARGETS_PARAMS,
+                                    self.optimum_helicity_frame, 
+                                    entry_width=80, entry_height=8)
+
+
+        # NEO 
+        counter_frame +=1
+        self.optimum_neo_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="NEO",
+                                   font=('Helvetica', '14'))
+        self.optimum_neo_frame.grid(row=counter_frame,
+                        rowspan=1,
+                        column=2,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        sfincs_file = open('templates/neo_init_v0.txt')
+        sfincs_text = sfincs_file.read()
+        sfincs_file.close()
+        self.OPTIMUM_TARGETS_PARAMS['NEO'].set(sfincs_text)
+
+        counter +=1 # 
+        self.NEO_Text = self.add_text_entry_to_frame(counter,
+                                    'NEO',
+                                    self.OPTIMUM_TARGETS_PARAMS,
+                                    self.optimum_neo_frame, 
+                                    entry_width=80, entry_height=8)
+
+
+
+        # Gamma_C 
+        counter_frame +=1
+        self.gammac_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="GAMMA_C",
+                                   font=('Helvetica', '14'))
+        self.gammac_frame.grid(row=counter_frame,
+                        rowspan=1,
+                        column=2,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        sfincs_file = open('templates/gamma_c_init_v0.txt')
+        sfincs_text = sfincs_file.read()
+        sfincs_file.close()
+        self.OPTIMUM_TARGETS_PARAMS['GAMMA_C'].set(sfincs_text)
+
+        counter +=1 # 
+        self.GAMMA_C_Text = self.add_text_entry_to_frame(counter,
+                                    'GAMMA_C',
+                                    self.OPTIMUM_TARGETS_PARAMS,
+                                    self.gammac_frame, 
+                                    entry_width=80, entry_height=5)
+
+
+        # Aspect Ratio 
+        counter_frame +=1
+        self.optimum_aspect_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="Aspect Ratio",
+                                   font=('Helvetica', '14'))
+        self.optimum_aspect_frame.grid(row=counter_frame,
+                        rowspan=1,
+                        column=2,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        sfincs_file = open('templates/aspect_init_v0.txt')
+        sfincs_text = sfincs_file.read()
+        sfincs_file.close()
+        self.OPTIMUM_TARGETS_PARAMS['ASPECT'].set(sfincs_text)
+
+        counter +=1 # 
+        self.ASPECT_Text = self.add_text_entry_to_frame(counter,
+                                    'ASPECT',
+                                    self.OPTIMUM_TARGETS_PARAMS,
+                                    self.optimum_aspect_frame, 
+                                    entry_width=80, entry_height=4)
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2158,13 +2293,8 @@ class stellgen:
                           '\n')
             input_file.write(next_line)
 
-            # HELICITY
-            this_key = 'HELICITY'
-            next_line = ('  HELICITY = ' + 
-                         self.OPTIMUM_TARGETS_PARAMS[this_key]['MODE'].get()  +
-                          '\n')
-            input_file.write(next_line)
-            
+            # MAGWELL
+            this_key = 'MAGWELL'
             count = self.OPTIMUM_TARGETS_PARAMS[this_key]['COUNT'].get()
             target = self.OPTIMUM_TARGETS_PARAMS[this_key]['TARGET'].get()
             sigma = self.OPTIMUM_TARGETS_PARAMS[this_key]['SIGMA'].get()
@@ -2175,14 +2305,25 @@ class stellgen:
                     paren_part = '(1)'
                     mult_part = '1*'
                 else:
-                    paren_part = '(1:' + str(count) + ')'
-                    mult_part = str(count) + '*'
+                    paren_part = '(2:' + str(count) + ')'
+                    mult_part = str(count-1) + '*'
                 next_line = ('target_' + this_key + paren_part + ' = ' +
                             mult_part + str(target)  + '\n' +
                             'sigma_' + this_key + paren_part + ' = ' +
                             mult_part + str(sigma)  + '\n')
                 input_file.write(next_line)
 
+            # HELICITY
+            input_file.write(self.Helicity_Text.get(1.0, "end"))
+
+            # NEO
+            input_file.write(self.NEO_Text.get(1.0, "end"))
+
+            # GAMMA_C
+            input_file.write(self.GAMMA_C_Text.get(1.0, "end"))
+
+            # Aspect Ratio
+            input_file.write(self.ASPECT_Text.get(1.0, "end"))
 
             # Profiles
             input_file.write(self.Profiles_Text.get(1.0, "end"))
