@@ -1019,7 +1019,7 @@ class stellgen:
         # REGCOIL OPT
         clear_variables_button = tk.Button(self.optimum_append_frame,
                                 command=self.clear_variables,
-                                text='Clear Varaibles')
+                                text='Clear Variables')
         clear_variables_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
 
         row_counter = 2
@@ -1450,7 +1450,8 @@ class stellgen:
         # 'Regcoil Fourier Selectables'
         for this_key in ('REGCOIL_FOURIER_SPECTRUM', 'REGCOIL_2x2', 'REGCOIL_4x4', 'REGCOIL_6x6', 'REGCOIL_8x8',
                          'REGCOIL_10x10', 'REGCOIL_12x12', 'REGCOIL_16x16', 'REGCOIL_24x16',
-                         'COORDINATE_REGCOIL_TARGET_VALUE', 'AUTOGEN_REGCOIL_BOUNDS'):
+                         'COORDINATE_REGCOIL_TARGET_VALUE', 'AUTOGEN_REGCOIL_BOUNDS', 'AUTOGEN_REGCOIL_D',
+                         'CLEAR_VARS_B4_REGCOIL', 'CLEAR_VARS_B4_BOUNDARY'):
             self.OPTIMUM_SCAN_PARAMS[this_key] = {}
             self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
             self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'].set(False)
@@ -1518,7 +1519,20 @@ class stellgen:
         counter +=1
         counter2 = 0
         counter2 += 1
+        self.add_selectables_line_to_frame(counter, counter2, 'CLEAR_VARS_B4_REGCOIL', self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
+
+        counter += 0
+        counter2 += 1
+        self.add_selectables_line_to_frame(counter, counter2, 'CLEAR_VARS_B4_BOUNDARY', self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
+
+        counter +=1
+        counter2 = 0
+        counter2 += 1
         self.add_selectables_line_to_frame(counter, counter2, 'AUTOGEN_REGCOIL_BOUNDS', self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
+
+        counter += 0
+        counter2 += 1
+        self.add_selectables_line_to_frame(counter, counter2, 'AUTOGEN_REGCOIL_D', self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
         
         counter += 1
         counter2 = 0    # column counter  
@@ -1893,7 +1907,8 @@ class stellgen:
                 rfs_count = 0
                 for rfs_selection in self.OPTIMUM_SCAN_PARAMS['REGCOIL_FOURIER_SPECTRUM']['Selections']:
                     # Make the 'edits'
-                    #self.clear_variables()
+                    if (self.OPTIMUM_SCAN_PARAMS['CLEAR_VARS_B4_REGCOIL']['Enabled'].get() is True):
+                        self.clear_variables()
 
                     if (rfs_selection == 'REGCOIL_2x2'):
                         self.append_variables_regcoil_2x2()
@@ -1921,6 +1936,10 @@ class stellgen:
                     # append bounds, if desired
                     if (self.OPTIMUM_SCAN_PARAMS['AUTOGEN_REGCOIL_BOUNDS']['Enabled'].get() is True):
                         self.append_regcoil_bounds()
+
+                    # append bounds, if desired
+                    if (self.OPTIMUM_SCAN_PARAMS['AUTOGEN_REGCOIL_D']['Enabled'].get() is True):
+                        self.append_regcoil_d()
                     
                     # Call resursively with reduced list
                     self.recursive_scan_variation(variation_list_in, 
@@ -1954,6 +1973,8 @@ class stellgen:
                 lcfs_count = 0
                 for lcfs_selection in self.OPTIMUM_SCAN_PARAMS['BOUNDARY_SPECTRUM']['Selections']:
                     # Make the 'edits'
+                    if (self.OPTIMUM_SCAN_PARAMS['CLEAR_VARS_B4_BOUNDARY']['Enabled'].get() is True):
+                        self.clear_variables()
                     self.clear_variables()
 
                     if (lcfs_selection == 'BOUND_2x2'):
@@ -2121,6 +2142,112 @@ class stellgen:
         # write the bounds to the end of the appropriate variable
         new_text = tk.StringVar()
         new_text.set(bounds_text)
+        self.OPTIMUM_VARIABLE_LINES.insert('end', new_text.get())
+
+        
+    def append_regcoil_d(self):
+        # scan over input nescin file and assign "reasonable" bounds        
+        source_file = self.FILESETC['NESCIN_FILEIN'].get()
+        nescin_file = open(source_file)
+        match_pattern = "------ Current Surface"
+        
+        # skip to the line that matches the pattern
+        next_line = nescin_file.readline()
+        while (next_line.find(match_pattern) < 0):
+            next_line = nescin_file.readline()
+        
+        # read in # of Fourier modes
+        next_line = nescin_file.readline()
+        next_line = nescin_file.readline()
+        num_fourier_modes = int(next_line)
+        
+        # read in two text lines that don't contain useful information
+        next_line = nescin_file.readline()
+        next_line = nescin_file.readline()
+        
+        # read in components. 
+        m = []
+        n = []
+        rmnc_coil = []
+        zmns_coil = []
+        rmns_coil = []
+        zmnc_coil = []
+        
+        for ii in range(0,num_fourier_modes):
+            next_line = nescin_file.readline()
+            (newm, newn, newrmnc, newzmns, newrmns, newzmnc) = next_line.split()
+            m.append(int(newm))
+            n.append(int(newn))
+            rmnc_coil.append(float(newrmnc))
+            zmns_coil.append(float(newzmns))
+            rmns_coil.append(float(newrmns))
+            zmnc_coil.append(float(newzmnc))
+
+        # be nice and close the file            
+        nescin_file.close()
+
+        # Generate bounds.
+        dbounds_text = ''
+        
+        for ii in range(0,num_fourier_modes):
+            #print('<----ii: ' + str(ii) + ', rmnc: ' + str(abs(rmnc_coil[ii])))
+            if (abs(rmnc_coil[ii]) < 0.0005):
+                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.005'
+            elif (abs(rmnc_coil[ii]) < 0.005):
+                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.02'
+            elif (abs(rmnc_coil[ii]) < 0.02):
+                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.1'
+            elif (abs(rmnc_coil[ii]) < 0.05):
+                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.2'
+            elif (abs(rmnc_coil[ii]) < 0.30):
+                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.6'
+            elif (abs(rmnc_coil[ii]) < 0.65):
+                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.8'
+            else:
+                #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
+                if ((m[ii] == 0) and (n[ii] == 0)):
+                    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = ' + str(rmnc_coil[ii])
+                else:
+                    print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+
+            if (abs(zmns_coil[ii]) < 0.0005):
+                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.005'
+            elif (abs(zmns_coil[ii]) < 0.005):
+                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.02'
+            elif (abs(zmns_coil[ii]) < 0.02):
+                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.1'
+            elif (abs(zmns_coil[ii]) < 0.05):
+                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.2'
+            elif (abs(zmns_coil[ii]) < 0.30):
+                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.6'
+            elif (abs(zmns_coil[ii]) < 0.65):
+                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+                               ', ' + str(n[ii]) + ') = 0.8'
+            else:
+                print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+                            
+            dbounds_text += dr_bounds + '\n'
+            if ( (m[ii] == 0) and (n[ii] == 0) ):
+                # (0,0) mode
+                pass
+            else:
+                dbounds_text += dz_bounds + '\n'
+                              
+        # write the bounds to the end of the appropriate variable
+        new_text = tk.StringVar()
+        new_text.set(dbounds_text)
         self.OPTIMUM_VARIABLE_LINES.insert('end', new_text.get())
         
     def write_indata_nml(self):
