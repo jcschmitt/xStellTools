@@ -1458,7 +1458,7 @@ class stellgen:
 
         # 'Boundary Fourier Selectables'
         for this_key in ('BOUNDARY_SPECTRUM', 'BOUND_2x2', 'BOUND_4x4', 'BOUND_6x6', 'BOUND_8x8',
-                         'AUTOGEN_BOUNDARY_LIMITS'):
+                         'AUTOGEN_BOUNDARY_LIMITS', 'AUTOGEN_BOUNDARY_D'):
             self.OPTIMUM_SCAN_PARAMS[this_key] = {}
             self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
             self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'].set(False)
@@ -1544,7 +1544,11 @@ class stellgen:
         counter2 = 0
         counter2 += 1
         self.add_selectables_line_to_frame(counter, counter2, 'AUTOGEN_BOUNDARY_LIMITS', self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
-    
+
+        counter2 += 1
+        self.add_selectables_line_to_frame(counter, counter2, 'AUTOGEN_BOUNDARY_D', self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
+
+
     def make_filenames_tab(self, this_tab):
         # Store everything in a dictionary for later
         self.FILESETC = {} # FILESETC = "Files, etc"
@@ -1609,6 +1613,11 @@ class stellgen:
         self.FILESETC['NESCIN_FILEOUT'] = tk.StringVar()
         self.FILESETC['NESCIN_FILEOUT'].set('nescin.out')
         
+        self.FILESETC['BOUNDARY_INIT'] = {}
+        self.FILESETC['BOUNDARY_INIT']['Enabled'] = tk.BooleanVar()
+        self.FILESETC['BOUNDARY_INIT']['Enabled'].set(False)
+        self.FILESETC['BOUNDARY_INIT_IN'] = tk.StringVar()
+        self.FILESETC['BOUNDARY_INIT_IN'].set('/Users/schmittj/src/xStellTools/Generator/templates/vmec_mljs4_a3b25_p2_nml')
 
         
         # Make two frames. 
@@ -1686,7 +1695,7 @@ class stellgen:
         counter = 0
         counter2 = 0
         
-        counter2 += 1
+        counter2 = 1
         self.add_selectables_line_to_frame(counter, counter2, 'NESCIN',
                                            self.FILESETC, self.filenames_frame2)
         counter += 1
@@ -1704,13 +1713,36 @@ class stellgen:
                                 text='Select NESCIN File')
 
         find_nescin.grid(row=counter, rowspan=1, column=1, columnspan=1)
+
+
         
+        counter2 = 1
+        counter += 1
+        self.add_selectables_line_to_frame(counter, counter2, 'BOUNDARY_INIT',
+                                           self.FILESETC, self.filenames_frame2)
+        counter += 1
+        self.add_label_and_entry_to_frame(counter, 'BOUNDARY_INIT_IN',
+                                          self.FILESETC,
+                                          self.filenames_frame2)
+
+        counter += 1
+        find_boundary = tk.Button(self.filenames_frame2,
+                                command=self.find_boundary, # self.doit,
+                                text='Select BOUNDARY INIT File')
+
+        find_boundary.grid(row=counter, rowspan=1, column=1, columnspan=1)
         
     def find_nescin(self):
         # Use input as the intial guess
         importFile = filedialog.askopenfilename(
             initialdir=os.path.dirname('./input/'))
         self.FILESETC['NESCIN_FILEIN'].set(importFile)
+
+    def find_boundary(self):
+        # Use input as the intial guess
+        importFile = filedialog.askopenfilename(
+            initialdir=os.path.dirname('./templates/'))
+        self.FILESETC['BOUNDARY_INIT_IN'].set(importFile)
        
     def find_stellopt_submit(self):
         import_file = filedialog.askopenfilename(
@@ -1997,9 +2029,13 @@ class stellgen:
                     lcfs_count += 1
                     
                     # append bounds, if desired
-                    #if (self.OPTIMUM_SCAN_PARAMS['AUTOGEN_BOUNDARY_LIMITS']['Enabled'].get() is True):
-                    #    self.append_boundary_limits()
-                    
+                    if (self.OPTIMUM_SCAN_PARAMS['AUTOGEN_BOUNDARY_LIMITS']['Enabled'].get() is True):
+                        self.append_boundary_bounds()
+
+                    # append D's, if desired
+                    if (self.OPTIMUM_SCAN_PARAMS['AUTOGEN_BOUNDARY_D']['Enabled'].get() is True):
+                        self.append_boundary_d()
+
                     # Call resursively with reduced list
                     self.recursive_scan_variation(variation_list_in, 
                                      variation_count_in, 
@@ -2250,6 +2286,164 @@ class stellgen:
         new_text.set(dbounds_text)
         self.OPTIMUM_VARIABLE_LINES.insert('end', new_text.get())
         
+
+    def append_boundary_bounds(self):
+        # scan over input  file and assign "reasonable" bounds        
+        source_file = self.FILESETC['BOUNDARY_INIT_IN'].get()
+        
+        new_vmec_nml = f90nml.read(source_file)
+        rbc = new_vmec_nml['input']['rbc']
+        zbs = new_vmec_nml['input']['zbs']
+        
+        bounds_text = ''
+        for nn in range (0, 9):
+            for mm in range(-8,9):
+                this_rbc = rbc[nn][mm+8]
+                this_zbs = zbs[nn][mm+8]
+                #print('  mm=', str(mm), ' nn=', str(nn), ', rbc(mm,nn) = ', str(this_rbc))
+                #print('  mm=', str(mm), ' nn=', str(nn), ', zbs(mm,nn) = ', str(this_zbs))
+                if (abs(this_rbc) < 0.0005):
+                    rbc_min = '  RBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.005'
+                    rbc_max = '  RBC_MAX(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.005'
+                elif (abs(this_rbc) < 0.005):
+                    rbc_min = '  RBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.02'
+                    rbc_max = '  RBC_MAX(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.02'
+                elif (abs(this_rbc) < 0.02):
+                    rbc_min = '  RBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.1'
+                    rbc_max = '  RBC_MAX(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.1'
+                elif (abs(this_rbc) < 0.05):
+                    rbc_min = '  RBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.2'
+                    rbc_max = '  RBC_MAX(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.2'
+                elif (abs(this_rbc) < 0.30):
+                    rbc_min = '  RBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.6'
+                    rbc_max = '  RBC_MAX(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.6'
+                elif (abs(this_rbc) < 0.65):
+                    rbc_min = '  RBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.8'
+                    rbc_max = '  RBC_MAX(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.8'
+                else:
+                    #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
+                    if ((mm == 0) and (nn == 0)):
+                        r_min00 = 0.75 * this_rbc
+                        r_max00 = 1.25 * this_rbc
+                        rbc_min = '  RBC_MIN(' + str(mm) + \
+                                       ', ' + str(nn) + ') = ' + str(r_min00)
+                        rbc_max = '  RBC_MAX(' + str(mm) + \
+                                       ', ' + str(nn) + ') = ' + str(r_max00)
+                    else:
+                        print('<----Check the input file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(nn) + ')')
+ 
+                if (abs(this_zbs) < 0.0005):
+                    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.005'
+                    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.005'
+                elif (abs(this_zbs) < 0.005):
+                    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.02'
+                    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.02'
+                elif (abs(this_zbs) < 0.02):
+                    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.1'
+                    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.1'
+                elif (abs(this_zbs) < 0.05):
+                    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.2'
+                    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.2'
+                elif (abs(this_zbs) < 0.30):
+                    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.6'
+                    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.6'
+                elif (abs(this_zbs) < 0.65):
+                    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = -0.8'
+                    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.8'
+                else:
+                    print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(mm) + ', ' + str(nn) + ')')
+                                 
+                bounds_text += rbc_min + '\n' + rbc_max + '\n'
+                if ( (mm == 0) and (nn == 0) ):
+                    # (0,0) mode
+                    pass
+                else:
+                    bounds_text += zbs_min + '\n' + zbs_max + '\n'
+                                   
+        # write the bounds to the end of the appropriate variable
+        new_text = tk.StringVar()
+        new_text.set(bounds_text)
+        self.OPTIMUM_VARIABLE_LINES.insert('end', new_text.get())
+
+        
+    def append_boundary_d(self):
+        # scan over input nescin file and assign "reasonable" bounds      
+        source_file = self.FILESETC['BOUNDARY_INIT_IN'].get()
+        
+        new_vmec_nml = f90nml.read(source_file)
+        rbc = new_vmec_nml['input']['rbc']
+        zbs = new_vmec_nml['input']['zbs']
+        
+        # Generate bounds.
+        dbound_text = ''
+        
+        for nn in range (0, 9):
+            for mm in range(-8,9):
+                this_rbc = rbc[nn][mm+8]
+                this_zbs = zbs[nn][mm+8]
+                this_max = max([abs(this_zbs), abs(this_rbc)])
+
+                #print('  mm=', str(mm), ' nn=', str(nn), ', rbc(mm,nn) = ', str(this_rbc))
+                #print('  mm=', str(mm), ' nn=', str(nn), ', zbs(mm,nn) = ', str(this_zbs))
+                if (this_max < 0.0005):
+                    dbound = '  DBOUND(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.005'
+                elif (this_max < 0.005):
+                    dbound = '  DBOUND(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.02'
+                elif (this_max < 0.020):
+                    dbound = '  DBOUND(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.1'
+                elif (this_max < 0.05):
+                    dbound = '  DBOUND(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.2'
+                elif (this_max < 0.30):
+                    dbound = '  DBOUND(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.6'
+                elif (this_max < 0.65):
+                    dbound = '  DBOUND(' + str(mm) + \
+                                   ', ' + str(nn) + ') = 0.8'
+                else:
+                    if ((mm == 0) and (nn == 0)):
+                        dbound = '  DBOUND(' + str(mm) + \
+                                   ', ' + str(nn) + ') = ' + str(this_max)
+                    else:
+                        print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(mm) + ', ' + str(nn) + ')')
+                             
+                dbound_text += dbound + '\n'
+                              
+        # write the bounds to the end of the appropriate variable
+        new_text = tk.StringVar()
+        new_text.set(dbound_text)
+        self.OPTIMUM_VARIABLE_LINES.insert('end', new_text.get())
+        
+    
+    
+    
     def write_indata_nml(self):
             new_vmec_nml = f90nml.Namelist()
             new_vmec_nml['indata'] = {}
