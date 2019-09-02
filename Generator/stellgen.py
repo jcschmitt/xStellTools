@@ -425,6 +425,43 @@ class stellgen:
                                 text='WB24')
         vmec_wb24_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
 
+        row_counter += 1 # frame 3 will be used
+        col_counter = 1
+        vmec_aten_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_aten_beta_1p7, # self.doit,
+                                text='ATEN 1.7%')
+        vmec_aten_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        vmec_mljs2_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_mljs2_beta_1p8, # self.doit,
+                                text='MLJS2 1.8%')
+        vmec_mljs2_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        vmec_mljs3_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_mljs3_beta_1p8, # self.doit,
+                                text='MLJS3 1.8%')
+        vmec_mljs3_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        vmec_mljs4_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_mljs4_beta_2p1, # self.doit,
+                                text='MLJS4 2.1%')
+        vmec_mljs4_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        vmec_ware5p2_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_ware5p2_beta_1p9, # self.doit,
+                                text='WARE5P2 1.9%')
+        vmec_ware5p2_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        vmec_wb24_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_wb24_beta_1p6, # self.doit,
+                                text='WB24 1.6%')
+        vmec_wb24_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
     def load_vmec_p1(self, filename):
         vmec_nml = f90nml.read(filename)
         # numeric values
@@ -486,26 +523,60 @@ class stellgen:
         self.load_vmec_p2('templates/vmec_aten_a3b25_p2')
         
 
+    def load_vmec_init_position_aten_beta_1p7(self):
+        self.load_vmec_p1('templates/vmec_aten_beta_1p7_p1')
+        self.load_vmec_p2('templates/vmec_aten_beta_1p7_p2')
+        
+
     def load_vmec_init_position_mljs2(self):
         self.load_vmec_p1('templates/vmec_mljs2_a3b25_p1')
         self.load_vmec_p2('templates/vmec_mljs2_a3b25_p2')
+
+
+    def load_vmec_init_position_mljs2_beta_1p8(self):
+        self.load_vmec_p1('templates/vmec_mljs2_beta_1p8_p1')
+        self.load_vmec_p2('templates/vmec_mljs2_beta_1p8_p2')
 
 
     def load_vmec_init_position_mljs3(self):
         self.load_vmec_p1('templates/vmec_mljs3_a3b25_p1')
         self.load_vmec_p2('templates/vmec_mljs3_a3b25_p2')
 
+
+    def load_vmec_init_position_mljs3_beta_1p8(self):
+        self.load_vmec_p1('templates/vmec_mljs3_beta_1p8_p1')
+        self.load_vmec_p2('templates/vmec_mljs3_beta_1p8_p2')
+
+
     def load_vmec_init_position_mljs4(self):
         self.load_vmec_p1('templates/vmec_mljs4_a3b25_p1')
         self.load_vmec_p2('templates/vmec_mljs4_a3b25_p2')
+
+
+    def load_vmec_init_position_mljs4_beta_2p1(self):
+        self.load_vmec_p1('templates/vmec_mljs4_beta_2p1_p1')
+        self.load_vmec_p2('templates/vmec_mljs4_beta_2p1_p2')
+
 
     def load_vmec_init_position_ware5p2(self):
         self.load_vmec_p1('templates/vmec_ware5p2_a3b25_p1')
         self.load_vmec_p2('templates/vmec_ware5p2_a3b25_p2')
 
+
+    def load_vmec_init_position_ware5p2_beta_1p9(self):
+        self.load_vmec_p1('templates/vmec_ware5p2_beta_1p9_p1')
+        self.load_vmec_p2('templates/vmec_ware5p2_beta_1p9_p2')
+
+
     def load_vmec_init_position_wb24(self):
         self.load_vmec_p1('templates/vmec_wb24_a3b25_p1')
         self.load_vmec_p2('templates/vmec_wb24_a3b25_p2')
+
+   
+    def load_vmec_init_position_wb24_beta_1p6(self):
+        self.load_vmec_p1('templates/vmec_wb24_beta_1p6_p1')
+        self.load_vmec_p2('templates/vmec_wb24_beta_1p6_p2')
+
    
     def make_optimum_tab(self, this_tab):
         # Store everything in a dictionary for later
@@ -1318,6 +1389,9 @@ class stellgen:
         # Store everything in a dictionary for later
         # BOOTSJ
         self.BOOTSTRAP_PARAMS = {}
+        self.BOOTSTRAP_PARAMS['BOOTSJ'] = {}
+        self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'] = tk.BooleanVar()
+        self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'].set(False)
         self.BOOTSTRAP_PARAMS['MBUSE']  = tk.IntVar()
         self.BOOTSTRAP_PARAMS['MBUSE'].set(64)
         self.BOOTSTRAP_PARAMS['NBUSE']  = tk.IntVar()
@@ -1340,6 +1414,9 @@ class stellgen:
         self.BOOTSTRAP_PARAMS['ATI'].set('2.0 -2.0')
 
         # SFINCS Stuff
+        self.BOOTSTRAP_PARAMS['SFINCS'] = {}
+        self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'] = tk.BooleanVar()
+        self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'].set(False)
         self.BOOTSTRAP_PARAMS['SFINCS_Text'] = tk.StringVar()
         sfincs_file = open('templates/sfincs_init_v0.txt')
         sfincs_text = sfincs_file.read()
@@ -1347,11 +1424,14 @@ class stellgen:
         self.BOOTSTRAP_PARAMS['SFINCS_Text'].set(sfincs_text)
 
         # Profiles Stuff
-        self.BOOTSTRAP_PARAMS['PROFILES'] = tk.StringVar()
+        self.BOOTSTRAP_PARAMS['PROFILES'] = {}
+        self.BOOTSTRAP_PARAMS['PROFILES']['Enabled'] = tk.BooleanVar()
+        self.BOOTSTRAP_PARAMS['PROFILES']['Enabled'].set(False)
+        self.BOOTSTRAP_PARAMS['PROFILES_Text'] = tk.StringVar()
         sfincs_file = open('templates/profiles_init_v0.txt')
         sfincs_text = sfincs_file.read()
         sfincs_file.close()
-        self.BOOTSTRAP_PARAMS['PROFILES'].set(sfincs_text)
+        self.BOOTSTRAP_PARAMS['PROFILES_Text'].set(sfincs_text)
 
 
         # do stuff and things
@@ -1401,6 +1481,10 @@ class stellgen:
 
 
         counter = 0
+        counter2 = 1
+        self.add_selectables_line_to_frame(counter, counter2, 'BOOTSJ',
+                                           self.BOOTSTRAP_PARAMS, bootsj_frame)
+
         for this_key in ('MBUSE', 'NBUSE', 'ZEFF1', 'DENS0', 'TETI', 'TEMPRES',
                          'DAMP_BS', 'ISYMM0', 'ATE', 'ATI'):
             counter += 1
@@ -1409,15 +1493,23 @@ class stellgen:
                                               bootsj_frame)
 
         row_counter = 0 # frame 2 will be used
+        col_counter = 0
+        self.add_selectables_line_to_frame(row_counter, col_counter, 'SFINCS',
+                                           self.BOOTSTRAP_PARAMS, sfincs_frame)
+        row_counter += 1 # frame 2 will be used
         self.SFINCS_Text = self.add_text_entry_to_frame(row_counter,
                                     'SFINCS_Text',
                                     self.BOOTSTRAP_PARAMS,
                                     sfincs_frame, entry_width=80)
 
 
-        row_counter = 1 # frame 3 will be used
+        row_counter = 0 # frame 2 will be used
+        col_counter = 0
+        self.add_selectables_line_to_frame(row_counter, col_counter, 'PROFILES',
+                                           self.BOOTSTRAP_PARAMS, profiles_frame)
+        row_counter += 1 # frame 3 will be used
         self.Profiles_Text = self.add_text_entry_to_frame(row_counter,
-                                    'PROFILES',
+                                    'PROFILES_Text',
                                     self.BOOTSTRAP_PARAMS,
                                     profiles_frame, entry_width=80)
 
@@ -1894,8 +1986,10 @@ class stellgen:
             self.write_indata_nml()
             self.write_optimum_nml()
             self.write_regcoil_nml()
-            self.write_bootsj_nml()
-            self.write_sfincs_nml()
+            if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'] is True):
+               self.write_bootsj_nml()
+            if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'] is True):
+               self.write_sfincs_nml()
             self.create_files(the_foldername_in,the_filename_in)
         else: 
             # pop a variation of the list
@@ -2647,7 +2741,8 @@ class stellgen:
             input_file.write(self.ASPECT_Text.get(1.0, "end"))
 
             # Profiles
-            input_file.write(self.Profiles_Text.get(1.0, "end"))
+            if (self.BOOTSTRAP_PARAMS['PROFILES']['Enabled'] is True):
+               input_file.write(self.Profiles_Text.get(1.0, "end"))
 
             # Write the variable lines to the files
             input_file.write(self.OPTIMUM_VARIABLE_LINES.get(1.0, "end"))  
@@ -2756,20 +2851,22 @@ class stellgen:
         for this_line in file_text:
             input_file.write(this_line)
 
-        temp_file = open(self.my_tempfile4, 'r')
+        if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'] is True):
+           temp_file = open(self.my_tempfile4, 'r')
         
-        file_text = temp_file.readlines()
-        temp_file.close()
-        for this_line in file_text:
-            input_file.write(this_line)
+           file_text = temp_file.readlines()
+           temp_file.close()
+           for this_line in file_text:
+               input_file.write(this_line)
 
-        temp_file = open(self.my_tempfile5, 'r')
+        if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'] is True):
+           temp_file = open(self.my_tempfile5, 'r')
         
-        file_text = temp_file.readlines()
-        temp_file.close()
-        for this_line in file_text:
-            input_file.write(this_line)
-            
+           file_text = temp_file.readlines()
+           temp_file.close()
+           for this_line in file_text:
+               input_file.write(this_line)
+               
         
         input_file.write('\n&END\n')
             
@@ -2780,8 +2877,10 @@ class stellgen:
         os.remove(self.my_tempfile1)
         os.remove(self.my_tempfile2)
         os.remove(self.my_tempfile3)
-        os.remove(self.my_tempfile4)
-        os.remove(self.my_tempfile5)
+        if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'] is True):
+          os.remove(self.my_tempfile4)
+        if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'] is True):
+          os.remove(self.my_tempfile5)
 
         # generate filename for the README file, and open it for writing
         readme_fn_complete = os.path.join(output_directory, 'README.txt')
