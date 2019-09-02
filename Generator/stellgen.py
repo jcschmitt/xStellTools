@@ -511,7 +511,7 @@ class stellgen:
         # Store everything in a dictionary for later
         self.OPTIMUM_PARAMS = {}
         self.OPTIMUM_PARAMS['NFUNC_MAX'] = tk.IntVar()
-        self.OPTIMUM_PARAMS['NFUNC_MAX'].set(10000)
+        self.OPTIMUM_PARAMS['NFUNC_MAX'].set(5000)
 
         self.OPTIMUM_PARAMS['EQUIL_TYPE'] = tk.StringVar()
         self.OPTIMUM_PARAMS['EQUIL_TYPE'].set('VMEC2000_ONEEQ')
@@ -1329,7 +1329,7 @@ class stellgen:
         self.BOOTSTRAP_PARAMS['TETI']  = tk.DoubleVar()
         self.BOOTSTRAP_PARAMS['TETI'].set(1.00)
         self.BOOTSTRAP_PARAMS['TEMPRES']  = tk.DoubleVar()
-        self.BOOTSTRAP_PARAMS['TEMPRES'].set(64)
+        self.BOOTSTRAP_PARAMS['TEMPRES'].set(-1.0)
         self.BOOTSTRAP_PARAMS['DAMP_BS']  = tk.DoubleVar()
         self.BOOTSTRAP_PARAMS['DAMP_BS'].set(0.1)
         self.BOOTSTRAP_PARAMS['ISYMM0']  = tk.IntVar()
