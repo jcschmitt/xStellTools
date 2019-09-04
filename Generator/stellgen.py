@@ -704,6 +704,14 @@ class stellgen:
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['TARGET'].set(0.0)
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['SIGMA'].set(1.0e-3)
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['COUNT'].set(4096)
+         
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL'] = {}
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['TARGET']  = tk.DoubleVar()
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['SIGMA']  = tk.DoubleVar()
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['COUNT']  = tk.IntVar()
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['TARGET'].set(0.0)
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['SIGMA'].set(1.0e-3)
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['COUNT'].set(1)
         
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_K'] = {}
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_K']['TARGET']  = tk.DoubleVar()
@@ -726,7 +734,7 @@ class stellgen:
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['SIGMA']  = tk.DoubleVar()
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['COUNT']  = tk.IntVar()
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['TARGET'].set(0.20)
-        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['SIGMA'].set(1.0e-3)
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['SIGMA'].set(1.0e-5)
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['COUNT'].set(1)
 
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_VOLUME_COIL'] = {}
@@ -818,7 +826,7 @@ class stellgen:
         counter = 1
         self.add_optimum_legend_to_frame(counter, self.optimum_regcoil_targets_frame)
         
-        for this_key in ('REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_K', 'REGCOIL_RMS_K',
+        for this_key in ('REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL', 'REGCOIL_MAX_K', 'REGCOIL_RMS_K',
                          'REGCOIL_C2P_DIST_MIN', 'REGCOIL_VOLUME_COIL', 'REGCOIL_LAMBDA'):
             counter += 1
             self.add_optimum_target_entry_to_frame(counter, this_key,
@@ -1521,7 +1529,7 @@ class stellgen:
         self.OPTIMUM_SCAN_PARAMS = {}
         #  Options with sigmas, or weights that are synced individually
         for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 
-                         'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_VOLUME_COIL',
+                         'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL', 'REGCOIL_VOLUME_COIL',
                         'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA'):
             self.OPTIMUM_SCAN_PARAMS[this_key] = {}
             self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
@@ -1587,7 +1595,7 @@ class stellgen:
         counter2 += 1
         self.add_selectables_line_to_frame(counter, counter2, this_key, self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
         
-        for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 
+        for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL',
                          'REGCOIL_VOLUME_COIL', 'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA'):
             counter += 1
             self.add_label_and_scan_line_to_frame(counter, this_key,
@@ -1854,7 +1862,7 @@ class stellgen:
         total_variations = 1
         self.variation_list = []
         self.variation_count = []
-        for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL',
+        for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL',
                          'REGCOIL_VOLUME_COIL', 'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA'):
             if (self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'].get()):
                 selected_values = np.array(self.OPTIMUM_SCAN_PARAMS[this_key]['Values'].get().replace(',', ' ').split(), 'float')
@@ -1996,7 +2004,7 @@ class stellgen:
             my_scan_item = variation_list_in.pop()
             my_scan_count = variation_count_in.pop()
             # depending on the type, do different things
-            if (my_scan_item in('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL',
+            if (my_scan_item in('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL',
                          'REGCOIL_VOLUME_COIL', 'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA')):
                 print('Scan over ' + my_scan_item + ' with ' + str(my_scan_count) + ' steps')
                 # Loop over number of variations
@@ -2013,6 +2021,8 @@ class stellgen:
                         fext = '_RC2B'
                     elif (my_scan_item == 'REGCOIL_BNORMAL_TOTAL'):
                         fext = '_RCBNT'
+                    elif (my_scan_item == 'REGCOIL_MAX_BNORMAL'):
+                        fext = '_RCMBN'
                     elif (my_scan_item == 'REGCOIL_VOLUME_COIL'):
                         fext = '_RVC'
                     elif (my_scan_item == 'REGCOIL_C2P_DIST_MIN'):
@@ -2647,7 +2657,7 @@ class stellgen:
             # now write targets
             
             # REGCOIL
-            for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL',
+            for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL',
                              'REGCOIL_VOLUME_COIL', 'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA'):
                 count = self.OPTIMUM_TARGETS_PARAMS[this_key]['COUNT'].get()
                 target = self.OPTIMUM_TARGETS_PARAMS[this_key]['TARGET'].get()
