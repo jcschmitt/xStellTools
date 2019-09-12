@@ -1445,7 +1445,7 @@ class stellgen:
         # do stuff and things
         # Make two frames. 
 
-        profiles_frame = tk.LabelFrame(this_tab,
+        self.profiles_frame = tk.LabelFrame(this_tab,
                                    bg=self.bg_color_1,
                                    bd=5,
                                    padx=5,
@@ -1453,13 +1453,13 @@ class stellgen:
                                    relief=tk.RIDGE,
                                    text="Profiles",
                                    font=('Helvetica', '14'))
-        profiles_frame.grid(row=1,
+        self.profiles_frame.grid(row=1,
                         rowspan=1,
                         column=1,
                         columnspan=1,
                         padx=5, pady=5, ipadx=5, ipady=5)
 
-        bootsj_frame = tk.LabelFrame(this_tab,
+        self.bootsj_frame = tk.LabelFrame(this_tab,
                                    bg=self.bg_color_1,
                                    bd=5,
                                    padx=5,
@@ -1467,13 +1467,13 @@ class stellgen:
                                    relief=tk.RIDGE,
                                    text="BOOTSJ Parameters",
                                    font=('Helvetica', '14'))
-        bootsj_frame.grid(row=1,
+        self.bootsj_frame.grid(row=1,
                         rowspan=1,
                         column=2,
                         columnspan=1,
                         padx=5, pady=5, ipadx=5, ipady=5)
 
-        sfincs_frame = tk.LabelFrame(this_tab,
+        self.sfincs_frame = tk.LabelFrame(this_tab,
                                    bg=self.bg_color_1,
                                    bd=5,
                                    padx=5,
@@ -1481,7 +1481,7 @@ class stellgen:
                                    relief=tk.RIDGE,
                                    text="SFINCS Parameters",
                                    font=('Helvetica', '14'))
-        sfincs_frame.grid(row=3,
+        self.sfincs_frame.grid(row=3,
                         rowspan=1,
                         column=1,
                         columnspan=1,
@@ -1491,35 +1491,35 @@ class stellgen:
         counter = 0
         counter2 = 1
         self.add_selectables_line_to_frame(counter, counter2, 'BOOTSJ',
-                                           self.BOOTSTRAP_PARAMS, bootsj_frame)
+                                           self.BOOTSTRAP_PARAMS, self.bootsj_frame)
 
         for this_key in ('MBUSE', 'NBUSE', 'ZEFF1', 'DENS0', 'TETI', 'TEMPRES',
                          'DAMP_BS', 'ISYMM0', 'ATE', 'ATI'):
             counter += 1
             self.add_label_and_entry_to_frame(counter, this_key,
                                               self.BOOTSTRAP_PARAMS,
-                                              bootsj_frame)
+                                              self.bootsj_frame)
 
         row_counter = 0 # frame 2 will be used
         col_counter = 0
         self.add_selectables_line_to_frame(row_counter, col_counter, 'SFINCS',
-                                           self.BOOTSTRAP_PARAMS, sfincs_frame)
+                                           self.BOOTSTRAP_PARAMS, self.sfincs_frame)
         row_counter += 1 # frame 2 will be used
         self.SFINCS_Text = self.add_text_entry_to_frame(row_counter,
                                     'SFINCS_Text',
                                     self.BOOTSTRAP_PARAMS,
-                                    sfincs_frame, entry_width=80)
+                                    self.sfincs_frame, entry_width=80)
 
 
         row_counter = 0 # frame 2 will be used
         col_counter = 0
         self.add_selectables_line_to_frame(row_counter, col_counter, 'PROFILES',
-                                           self.BOOTSTRAP_PARAMS, profiles_frame)
+                                           self.BOOTSTRAP_PARAMS, self.profiles_frame)
         row_counter += 1 # frame 3 will be used
         self.Profiles_Text = self.add_text_entry_to_frame(row_counter,
                                     'PROFILES_Text',
                                     self.BOOTSTRAP_PARAMS,
-                                    profiles_frame, entry_width=80)
+                                    self.profiles_frame, entry_width=80)
 
 
         
@@ -1719,6 +1719,14 @@ class stellgen:
         self.FILESETC['BOUNDARY_INIT_IN'] = tk.StringVar()
         self.FILESETC['BOUNDARY_INIT_IN'].set('/Users/schmittj/src/xStellTools/Generator/templates/vmec_mljs4_a3b25_p2_nml')
 
+        self.FILESETC['COBRA_FILE'] = {}
+        self.FILESETC['COBRA_FILE']['Enabled'] = tk.BooleanVar()
+        self.FILESETC['COBRA_FILE']['Enabled'].set(False)
+        self.FILESETC['COBRA_FILEIN'] = tk.StringVar()
+        self.FILESETC['COBRA_FILEIN'].set('')
+        self.FILESETC['COBRA_FILEOUT'] = tk.StringVar()
+        self.FILESETC['COBRA_FILEOUT'].set('in_cobra.stell0.rerun')
+ 
         
         # Make two frames. 
         self.filenames_frame1 = tk.LabelFrame(this_tab,
@@ -1832,11 +1840,39 @@ class stellgen:
 
         find_boundary.grid(row=counter, rowspan=1, column=1, columnspan=1)
         
+        
+        counter += 1
+        counter2 = 1
+        self.add_selectables_line_to_frame(counter, counter2, 'COBRA_FILE',
+                                           self.FILESETC, self.filenames_frame2)
+        counter += 1
+        self.add_label_and_entry_to_frame(counter, 'COBRA_FILEIN',
+                                          self.FILESETC,
+                                          self.filenames_frame2)
+        counter += 1
+        self.add_label_and_entry_to_frame(counter, 'COBRA_FILEOUT',
+                                          self.FILESETC,
+                                          self.filenames_frame2)
+
+        counter += 1
+        find_cobra = tk.Button(self.filenames_frame2,
+                                command=self.find_cobra, # self.doit,
+                                text='Select COBRA File')
+
+        find_cobra.grid(row=counter, rowspan=1, column=1, columnspan=1)
+
+
     def find_nescin(self):
         # Use input as the intial guess
         importFile = filedialog.askopenfilename(
             initialdir=os.path.dirname('./input/'))
         self.FILESETC['NESCIN_FILEIN'].set(importFile)
+
+    def find_cobra(self):
+        # Use input as the intial guess
+        importFile = filedialog.askopenfilename(
+            initialdir=os.path.dirname('./input/'))
+        self.FILESETC['COBRA_FILEIN'].set(importFile)
 
     def find_boundary(self):
         # Use input as the intial guess
@@ -1994,9 +2030,9 @@ class stellgen:
             self.write_indata_nml()
             self.write_optimum_nml()
             self.write_regcoil_nml()
-            if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'] is True):
+            if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'].get() is True):
                self.write_bootsj_nml()
-            if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'] is True):
+            if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'].get() is True):
                self.write_sfincs_nml()
             self.create_files(the_foldername_in,the_filename_in)
         else: 
@@ -2751,7 +2787,7 @@ class stellgen:
             input_file.write(self.ASPECT_Text.get(1.0, "end"))
 
             # Profiles
-            if (self.BOOTSTRAP_PARAMS['PROFILES']['Enabled'] is True):
+            if (self.BOOTSTRAP_PARAMS['PROFILES']['Enabled'].get() is True):
                input_file.write(self.Profiles_Text.get(1.0, "end"))
 
             # Write the variable lines to the files
@@ -2861,7 +2897,7 @@ class stellgen:
         for this_line in file_text:
             input_file.write(this_line)
 
-        if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'] is True):
+        if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'].get() is True):
            temp_file = open(self.my_tempfile4, 'r')
         
            file_text = temp_file.readlines()
@@ -2869,7 +2905,7 @@ class stellgen:
            for this_line in file_text:
                input_file.write(this_line)
 
-        if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'] is True):
+        if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'].get() is True):
            temp_file = open(self.my_tempfile5, 'r')
         
            file_text = temp_file.readlines()
@@ -2887,9 +2923,9 @@ class stellgen:
         os.remove(self.my_tempfile1)
         os.remove(self.my_tempfile2)
         os.remove(self.my_tempfile3)
-        if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'] is True):
+        if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'].get() is True):
           os.remove(self.my_tempfile4)
-        if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'] is True):
+        if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'].get() is True):
           os.remove(self.my_tempfile5)
 
         # generate filename for the README file, and open it for writing
@@ -2917,6 +2953,11 @@ class stellgen:
         if (self.FILESETC['NESCIN']['Enabled'].get() is True):
             source_file = self.FILESETC['NESCIN_FILEIN'].get()
             destination_file = os.path.join(output_directory, self.FILESETC['NESCIN_FILEOUT'].get())
+            shutil.copyfile(source_file, destination_file)
+
+        if (self.FILESETC['COBRA_FILE']['Enabled'].get() is True):
+            source_file = self.FILESETC['COBRA_FILEIN'].get()
+            destination_file = os.path.join(output_directory, self.FILESETC['COBRA_FILEOUT'].get())
             shutil.copyfile(source_file, destination_file)
                      
 # This is where the magic happens
