@@ -23,6 +23,11 @@ class stellgen:
         # Set up the main window, its frames, and their components
         self.my_root = my_root
 
+        # A list (dictionary?) of variables to  be saved/restored
+        self.my_saved_variables = {}
+        self.my_saved_variables['count'] = 0
+        self.my_saved_variables['the_list'] = {}
+
         #########################
         # set up the tabs(menus)
         #########################
@@ -70,6 +75,25 @@ class stellgen:
         the_top = my_root.winfo_toplevel()
         the_menu_bar = tk.Menu(the_top)
         the_top['menu'] = the_menu_bar
+
+
+    def save(self):
+        pass
+        # choose file name
+        #data = {"name": self.name,
+        #        "nodes": self.nodes,
+        #        ...
+        #       }
+        #with open('data.json', 'w') as f:
+        #    json.dump(data, f)
+   
+ 
+    def load(self):
+        pass
+        #with open('data.json') as f:
+        #    data = json.load(f)
+        #self.name = data["name"]
+        #self.nodes = data["nodes"]
 
 
     def add_label_and_entry_to_frame(self, position,
@@ -2362,55 +2386,88 @@ class stellgen:
         # be nice and close the file            
         nescin_file.close()
 
-        # Generate bounds.
+        # Generate trust regions.
         dbounds_text = ''
         
         for ii in range(0,num_fourier_modes):
             #print('<----ii: ' + str(ii) + ', rmnc: ' + str(abs(rmnc_coil[ii])))
             if (abs(rmnc_coil[ii]) < 0.0005):
                 dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.005'
+                               ', ' + str(n[ii]) + ') = 800.'
+            #                   ', ' + str(n[ii]) + ') = 2000.'
+            #                   ', ' + str(n[ii]) + ') = 0.0005'
             elif (abs(rmnc_coil[ii]) < 0.005):
                 dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.02'
+                               ', ' + str(n[ii]) + ') = 80.'
+            #                   ', ' + str(n[ii]) + ') = 200.'
+            #                   ', ' + str(n[ii]) + ') = 0.005'
             elif (abs(rmnc_coil[ii]) < 0.02):
                 dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.1'
+                               ', ' + str(n[ii]) + ') = 20.'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
             elif (abs(rmnc_coil[ii]) < 0.05):
                 dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.2'
+                               ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
             elif (abs(rmnc_coil[ii]) < 0.30):
                 dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.6'
+                               ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 3.33'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
             elif (abs(rmnc_coil[ii]) < 0.65):
                 dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.8'
+                               ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 1.54'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
             else:
                 #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
                 if ((m[ii] == 0) and (n[ii] == 0)):
                     dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = ' + str(rmnc_coil[ii])
+                               ', ' + str(n[ii]) + ') = ' + str(1.0)
+            #                   ', ' + str(n[ii]) + ') = ' + str(0.01*round(100.0*rmnc_coil[ii]))
+            #                   ', ' + str(n[ii]) + ') = ' + str(0.01*round(100.0/rmnc_coil[ii]))
+            #                   ', ' + str(n[ii]) + ') = ' + str(rmnc_coil[ii])
                 else:
                     print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
 
             if (abs(zmns_coil[ii]) < 0.0005):
                 dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.005'
+                               ', ' + str(n[ii]) + ') = 800'
+            #                   ', ' + str(n[ii]) + ') = 2000'
+            #                   ', ' + str(n[ii]) + ') = 0.0005'
             elif (abs(zmns_coil[ii]) < 0.005):
                 dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.02'
+                               ', ' + str(n[ii]) + ') = 80'
+            #                   ', ' + str(n[ii]) + ') = 200'
+            #                   ', ' + str(n[ii]) + ') = 0.005'
             elif (abs(zmns_coil[ii]) < 0.02):
                 dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.1'
+                               ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
             elif (abs(zmns_coil[ii]) < 0.05):
                 dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.2'
+                               ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
             elif (abs(zmns_coil[ii]) < 0.30):
                 dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.6'
+                               ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 3.33'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
             elif (abs(zmns_coil[ii]) < 0.65):
                 dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.8'
+                               ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 1.54'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
             else:
                 print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
                             
@@ -2551,26 +2608,26 @@ class stellgen:
                 #print('  mm=', str(mm), ' nn=', str(nn), ', zbs(mm,nn) = ', str(this_zbs))
                 if (this_max < 0.0005):
                     dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.005'
+                                   ', ' + str(nn) + ') = 2000'
                 elif (this_max < 0.005):
                     dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.02'
+                                   ', ' + str(nn) + ') = 200'
                 elif (this_max < 0.020):
                     dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.1'
+                                   ', ' + str(nn) + ') = 50'
                 elif (this_max < 0.05):
                     dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.2'
+                                   ', ' + str(nn) + ') = 20'
                 elif (this_max < 0.30):
                     dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.6'
+                                   ', ' + str(nn) + ') = 3.33'
                 elif (this_max < 0.65):
                     dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.8'
+                                   ', ' + str(nn) + ') = 1.54'
                 else:
                     if ((mm == 0) and (nn == 0)):
                         dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = ' + str(this_max)
+                                   ', ' + str(nn) + ') = ' + str(round(0.01*(100.0/this_max)))
                     else:
                         print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(mm) + ', ' + str(nn) + ')')
                              
