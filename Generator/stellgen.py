@@ -47,6 +47,7 @@ class stellgen:
         self.bootstrap_tab = ttk.Frame(self.tab_control)
         self.scanables_tab = ttk.Frame(self.tab_control)
         self.filenames_tab = ttk.Frame(self.tab_control)
+        self.tr_tab = ttk.Frame(self.tab_control)
 
         
         #self.make_main_tab(self.main_tab)
@@ -58,6 +59,7 @@ class stellgen:
         self.make_vmec_tab(self.vmec_tab)
         self.make_regcoil_tab(self.regcoil_tab)
         self.make_bootstrap_tab(self.bootstrap_tab)
+        self.make_tr_tab(self.tr_tab)
 
         self.tab_control.add(self.filenames_tab, text='Files')
         self.tab_control.add(self.scanables_tab, text='Scan Control')
@@ -68,6 +70,7 @@ class stellgen:
                             text='VMEC')
         self.tab_control.add(self.regcoil_tab, text='Regcoil')
         self.tab_control.add(self.bootstrap_tab, text='Profiles &\nBootstrap')
+        self.tab_control.add(self.tr_tab, text='Boundaries &\nTrust Regions')
         self.tab_control.grid()
 
         my_root.title("STELLOPT Generator 0.1a")
@@ -270,6 +273,59 @@ class stellgen:
         this_count.grid(row=position, rowspan=1, column=4, columnspan=1,
                         sticky=tk.W)
         
+    def add_trust_region_entry_to_frame(self, position,
+                                        in_key, in_dict, target_frame):
+        entry_width = 8
+
+        this_lbl = tk.Label(target_frame,
+                      bg=self.bg_color_1,
+                      anchor=tk.E,
+                      text=(in_key+":"))
+        this_lbl.grid(row=position, rowspan=1, column=1, columnspan=1,
+                      sticky=tk.E)
+
+        this_target = tk.Entry(target_frame,
+                              width=entry_width,
+                              textvariable=in_dict[in_key]['LE_TARGET'])
+        this_target.grid(row=position, rowspan=1, column=2, columnspan=1,
+                        sticky=tk.W)
+
+        this_diag = tk.Entry(target_frame,
+                              width=entry_width,
+                              textvariable=in_dict[in_key]['DIAG'])
+        this_diag.grid(row=position, rowspan=1, column=3, columnspan=1,
+                        sticky=tk.W)
+
+    def add_boundary_entry_to_frame(self, position,
+                                    in_key, in_dict, target_frame):
+        entry_width = 8
+
+        this_lbl = tk.Label(target_frame,
+                      bg=self.bg_color_1,
+                      anchor=tk.E,
+                      text=(in_key+":"))
+        this_lbl.grid(row=position, rowspan=1, column=1, columnspan=1,
+                      sticky=tk.E)
+
+        this_target = tk.Entry(target_frame,
+                              width=entry_width,
+                              textvariable=in_dict[in_key]['LE_TARGET'])
+        this_target.grid(row=position, rowspan=1, column=2, columnspan=1,
+                        sticky=tk.W)
+
+        this_diag = tk.Entry(target_frame,
+                              width=entry_width,
+                              textvariable=in_dict[in_key]['LBOUNDS'])
+        this_diag.grid(row=position, rowspan=1, column=3, columnspan=1,
+                        sticky=tk.W)
+
+        this_diag = tk.Entry(target_frame,
+                              width=entry_width,
+                              textvariable=in_dict[in_key]['UBOUNDS'])
+        this_diag.grid(row=position, rowspan=1, column=4, columnspan=1,
+                        sticky=tk.W)
+
+ 
    
     def make_vmec_tab(self, this_tab):
         # VMEC Execution parameters.
@@ -1673,6 +1729,201 @@ class stellgen:
         self.add_selectables_line_to_frame(counter, counter2, 'AUTOGEN_BOUNDARY_D', self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
 
 
+    def make_tr_tab(self, this_tab):
+        # Store everything in a dictionary for later
+        self.TR_PARAMS = {}
+        self.BOUNDS_PARAMS = {}
+        #  
+        for this_key_prefix in ('RCTR', 'LCFSTR'):
+            for ii in range(0,10):
+               this_key = this_key_prefix + str(ii)
+               self.TR_PARAMS[this_key] = {}
+               self.TR_PARAMS[this_key]['LE_TARGET'] = tk.StringVar()
+               self.TR_PARAMS[this_key]['LE_TARGET'].set('')
+               self.TR_PARAMS[this_key]['DIAG'] = tk.StringVar()
+               self.TR_PARAMS[this_key]['DIAG'].set('')
+        for this_key_prefix in ('RCBOUNDS', 'LCFSBOUNDS'):
+            for ii in range(0,10):
+               this_key = this_key_prefix + str(ii)
+               self.BOUNDS_PARAMS[this_key] = {}
+               self.BOUNDS_PARAMS[this_key]['LE_TARGET'] = tk.StringVar()
+               self.BOUNDS_PARAMS[this_key]['LE_TARGET'].set('')
+               self.BOUNDS_PARAMS[this_key]['LBOUNDS'] = tk.StringVar()
+               self.BOUNDS_PARAMS[this_key]['LBOUNDS'].set('')
+               self.BOUNDS_PARAMS[this_key]['UBOUNDS'] = tk.StringVar()
+               self.BOUNDS_PARAMS[this_key]['UBOUNDS'].set('')
+
+
+        self.TR_PARAMS['RCTR0']['LE_TARGET'].set('0.0005')
+        self.TR_PARAMS['RCTR0']['DIAG'].set('2000')
+        self.TR_PARAMS['RCTR1']['LE_TARGET'].set('0.005')
+        self.TR_PARAMS['RCTR1']['DIAG'].set('200')
+        self.TR_PARAMS['RCTR2']['LE_TARGET'].set('0.02')
+        self.TR_PARAMS['RCTR2']['DIAG'].set('50')
+        self.TR_PARAMS['RCTR3']['LE_TARGET'].set('0.05')
+        self.TR_PARAMS['RCTR3']['DIAG'].set('50')
+        self.TR_PARAMS['RCTR4']['LE_TARGET'].set('0.3')
+        self.TR_PARAMS['RCTR4']['DIAG'].set('50')
+        self.TR_PARAMS['RCTR5']['LE_TARGET'].set('0.65')
+        self.TR_PARAMS['RCTR5']['DIAG'].set('50')
+        self.TR_PARAMS['RCTR6']['LE_TARGET'].set('10')
+        self.TR_PARAMS['RCTR6']['DIAG'].set('1.0')
+
+        self.BOUNDS_PARAMS['RCBOUNDS0']['LE_TARGET'].set('0.0005')
+        self.BOUNDS_PARAMS['RCBOUNDS0']['LBOUNDS'].set('-0.005')
+        self.BOUNDS_PARAMS['RCBOUNDS0']['UBOUNDS'].set('0.005')
+        self.BOUNDS_PARAMS['RCBOUNDS1']['LE_TARGET'].set('0.005')
+        self.BOUNDS_PARAMS['RCBOUNDS1']['LBOUNDS'].set('-0.02')
+        self.BOUNDS_PARAMS['RCBOUNDS1']['UBOUNDS'].set('0.02')
+        self.BOUNDS_PARAMS['RCBOUNDS2']['LE_TARGET'].set('0.02')
+        self.BOUNDS_PARAMS['RCBOUNDS2']['LBOUNDS'].set('-0.1')
+        self.BOUNDS_PARAMS['RCBOUNDS2']['UBOUNDS'].set('0.1')
+        self.BOUNDS_PARAMS['RCBOUNDS3']['LE_TARGET'].set('0.05')
+        self.BOUNDS_PARAMS['RCBOUNDS3']['LBOUNDS'].set('-0.2')
+        self.BOUNDS_PARAMS['RCBOUNDS3']['UBOUNDS'].set('0.2')
+        self.BOUNDS_PARAMS['RCBOUNDS4']['LE_TARGET'].set('0.3')
+        self.BOUNDS_PARAMS['RCBOUNDS4']['LBOUNDS'].set('-0.6')
+        self.BOUNDS_PARAMS['RCBOUNDS4']['UBOUNDS'].set('0.6')
+        self.BOUNDS_PARAMS['RCBOUNDS5']['LE_TARGET'].set('0.65')
+        self.BOUNDS_PARAMS['RCBOUNDS5']['LBOUNDS'].set('-0.8')
+        self.BOUNDS_PARAMS['RCBOUNDS5']['UBOUNDS'].set('0.8')
+        self.BOUNDS_PARAMS['RCBOUNDS6']['LE_TARGET'].set('10')
+        self.BOUNDS_PARAMS['RCBOUNDS6']['LBOUNDS'].set('1.5')
+        self.BOUNDS_PARAMS['RCBOUNDS6']['UBOUNDS'].set('3.0')
+
+        self.TR_PARAMS['LCFSTR0']['LE_TARGET'].set('0.0005')
+        self.TR_PARAMS['LCFSTR0']['DIAG'].set('2000')
+        self.TR_PARAMS['LCFSTR1']['LE_TARGET'].set('0.005')
+        self.TR_PARAMS['LCFSTR1']['DIAG'].set('200')
+        self.TR_PARAMS['LCFSTR2']['LE_TARGET'].set('0.020')
+        self.TR_PARAMS['LCFSTR2']['DIAG'].set('50')
+        self.TR_PARAMS['LCFSTR3']['LE_TARGET'].set('0.05')
+        self.TR_PARAMS['LCFSTR3']['DIAG'].set('20')
+        self.TR_PARAMS['LCFSTR4']['LE_TARGET'].set('0.30')
+        self.TR_PARAMS['LCFSTR4']['DIAG'].set('3.33')
+        self.TR_PARAMS['LCFSTR5']['LE_TARGET'].set('0.65')
+        self.TR_PARAMS['LCFSTR5']['DIAG'].set('1.54')
+        self.TR_PARAMS['LCFSTR6']['LE_TARGET'].set('10')
+        self.TR_PARAMS['LCFSTR6']['DIAG'].set('1.0')
+
+        self.BOUNDS_PARAMS['LCFSBOUNDS0']['LE_TARGET'].set('0.0005')
+        self.BOUNDS_PARAMS['LCFSBOUNDS0']['LBOUNDS'].set('-0.005')
+        self.BOUNDS_PARAMS['LCFSBOUNDS0']['UBOUNDS'].set('0.005')
+        self.BOUNDS_PARAMS['LCFSBOUNDS1']['LE_TARGET'].set('0.005')
+        self.BOUNDS_PARAMS['LCFSBOUNDS1']['LBOUNDS'].set('-0.02')
+        self.BOUNDS_PARAMS['LCFSBOUNDS1']['UBOUNDS'].set('0.02')
+        self.BOUNDS_PARAMS['LCFSBOUNDS2']['LE_TARGET'].set('0.020')
+        self.BOUNDS_PARAMS['LCFSBOUNDS2']['LBOUNDS'].set('-0.1')
+        self.BOUNDS_PARAMS['LCFSBOUNDS2']['UBOUNDS'].set('0.1')
+        self.BOUNDS_PARAMS['LCFSBOUNDS3']['LE_TARGET'].set('0.05')
+        self.BOUNDS_PARAMS['LCFSBOUNDS3']['LBOUNDS'].set('-0.2')
+        self.BOUNDS_PARAMS['LCFSBOUNDS3']['UBOUNDS'].set('0.2')
+        self.BOUNDS_PARAMS['LCFSBOUNDS4']['LE_TARGET'].set('0.30')
+        self.BOUNDS_PARAMS['LCFSBOUNDS4']['LBOUNDS'].set('-0.6')
+        self.BOUNDS_PARAMS['LCFSBOUNDS4']['UBOUNDS'].set('0.6')
+        self.BOUNDS_PARAMS['LCFSBOUNDS5']['LE_TARGET'].set('0.65')
+        self.BOUNDS_PARAMS['LCFSBOUNDS5']['LBOUNDS'].set('-0.8')
+        self.BOUNDS_PARAMS['LCFSBOUNDS5']['UBOUNDS'].set('0.8')
+        self.BOUNDS_PARAMS['LCFSBOUNDS6']['LE_TARGET'].set('10')
+        self.BOUNDS_PARAMS['LCFSBOUNDS6']['LBOUNDS'].set('1.0')
+        self.BOUNDS_PARAMS['LCFSBOUNDS6']['UBOUNDS'].set('3.0')
+
+            
+        self.regcoil_bounds_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="REGCOIL Bounds\nFinal index is for (0,0)",
+                                   font=('Helvetica', '14'))
+
+        self.regcoil_bounds_frame.grid(row=1,
+                        rowspan=1,
+                        column=1,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        self.regcoil_tr_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="REGCOIL Trust Region\nFinal index is for (0,0)",
+                                   font=('Helvetica', '14'))
+
+        self.regcoil_tr_frame.grid(row=1,
+                        rowspan=1,
+                        column=2,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        self.lcfs_bounds_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="LCFS Bounds\nFinal index is for (0,0)",
+                                   font=('Helvetica', '14'))
+
+        self.lcfs_bounds_frame.grid(row=1,
+                        rowspan=1,
+                        column=3,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        self.lcfs_tr_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="LCFS Trust Region\nFinal index is for (0,0)",
+                                   font=('Helvetica', '14'))
+
+        self.lcfs_tr_frame.grid(row=1,
+                        rowspan=1,
+                        column=4,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        counter = 0
+        this_key_prefix = 'RCBOUNDS'
+        for ii in range(0,10):
+           this_key = this_key_prefix + str(ii)
+           counter += 1
+           self.add_boundary_entry_to_frame(counter, this_key,
+                                          self.BOUNDS_PARAMS,
+                                          self.regcoil_bounds_frame)
+        counter = 0
+        this_key_prefix = 'RCTR'
+        for ii in range(0,10):
+           this_key = this_key_prefix + str(ii)
+           counter += 1
+           self.add_trust_region_entry_to_frame(counter, this_key,
+                                          self.TR_PARAMS,
+                                          self.regcoil_tr_frame)
+        counter = 0
+        this_key_prefix = 'LCFSBOUNDS'
+        for ii in range(0,10):
+           this_key = this_key_prefix + str(ii)
+           counter += 1
+           self.add_boundary_entry_to_frame(counter, this_key,
+                                          self.BOUNDS_PARAMS,
+                                          self.lcfs_bounds_frame)
+        counter = 0
+        this_key_prefix = 'LCFSTR'
+        for ii in range(0,10):
+           this_key = this_key_prefix + str(ii)
+           counter += 1
+           self.add_trust_region_entry_to_frame(counter, this_key,
+                                          self.TR_PARAMS,
+                                          self.lcfs_tr_frame)
+                                               
+
+
     def make_filenames_tab(self, this_tab):
         # Store everything in a dictionary for later
         self.FILESETC = {} # FILESETC = "Files, etc"
@@ -2257,80 +2508,119 @@ class stellgen:
         
         for ii in range(0,num_fourier_modes):
             #print('<----ii: ' + str(ii) + ', rmnc: ' + str(abs(rmnc_coil[ii])))
-            if (abs(rmnc_coil[ii]) < 0.0005):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.005'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.005'
-            elif (abs(rmnc_coil[ii]) < 0.005):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.02'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(rmnc_coil[ii]) < 0.02):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.1'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.1'
-            elif (abs(rmnc_coil[ii]) < 0.05):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.2'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.2'
-            elif (abs(rmnc_coil[ii]) < 0.30):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.6'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.6'
-            elif (abs(rmnc_coil[ii]) < 0.65):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.8'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.8'
-            else:
-                #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
-                if ((m[ii] == 0) and (n[ii] == 0)):
-                    r_min00 = 0.75 * rmnc_coil[ii]
-                    r_max00 = 1.25 * rmnc_coil[ii]
-                    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                                   ', ' + str(n[ii]) + ') = ' + str(r_min00)
-                    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = ' + str(r_max00)
-                else:
-                    print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+            for jj in range(0,10):
+                this_key = 'RCBOUNDS' + str(jj)
+                #print('this_key = ' + this_key)
+                try:
+                    this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
+                    this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
+                    this_ubound = float(self.BOUNDS_PARAMS[this_key]['UBOUNDS'].get())
+                except:
+                    this_target = np.Inf
+                    this_lbound = -1.
+                    this_ubound = 1.
 
-            if (abs(zmns_coil[ii]) < 0.0005):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.005'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.005'
-            elif (abs(zmns_coil[ii]) < 0.005):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.02'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(zmns_coil[ii]) < 0.02):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.1'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.1'
-            elif (abs(zmns_coil[ii]) < 0.05):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.2'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.2'
-            elif (abs(zmns_coil[ii]) < 0.30):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.6'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.6'
-            elif (abs(zmns_coil[ii]) < 0.65):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.8'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.8'
-            else:
-                print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+                if (abs(rmnc_coil[ii]) <= this_target):
+                    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+                                   ', ' + str(n[ii]) + ') = ' + str(this_lbound)
+                    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+                                   ', ' + str(n[ii]) + ') = ' + str(this_ubound)
+                    break
+
+            for jj in range(0,10):
+                this_key = 'RCBOUNDS' + str(jj)
+                #print('this_key = ' + this_key)
+                try:
+                    this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
+                    this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
+                    this_ubound = float(self.BOUNDS_PARAMS[this_key]['UBOUNDS'].get())
+                except:
+                    this_target = np.Inf
+                    this_lbound = -1.
+                    this_ubound = 1.
+
+                if (abs(zmns_coil[ii]) <= this_target):
+                    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+                                   ', ' + str(n[ii]) + ') = ' + str(this_lbound)
+                    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+                                   ', ' + str(n[ii]) + ') = ' + str(this_ubound)
+                    break
+
+
+            # if (abs(rmnc_coil[ii]) < 0.0005):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.005'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.005'
+            #elif (abs(rmnc_coil[ii]) < 0.005):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.02'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #elif (abs(rmnc_coil[ii]) < 0.02):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.1'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.1'
+            #elif (abs(rmnc_coil[ii]) < 0.05):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.2'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.2'
+            #elif (abs(rmnc_coil[ii]) < 0.30):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.6'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.6'
+            #elif (abs(rmnc_coil[ii]) < 0.65):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.8'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.8'
+            #else:
+            #    #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
+            #    if ((m[ii] == 0) and (n[ii] == 0)):
+            #        r_min00 = 0.75 * rmnc_coil[ii]
+            #        r_max00 = 1.25 * rmnc_coil[ii]
+            #        r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                       ', ' + str(n[ii]) + ') = ' + str(r_min00)
+            #        r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = ' + str(r_max00)
+            #    else:
+            #        print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+
+            #if (abs(zmns_coil[ii]) < 0.0005):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.005'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.005'
+            #elif (abs(zmns_coil[ii]) < 0.005):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.02'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #elif (abs(zmns_coil[ii]) < 0.02):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.1'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.1'
+            #elif (abs(zmns_coil[ii]) < 0.05):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.2'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.2'
+            #elif (abs(zmns_coil[ii]) < 0.30):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.6'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.6'
+            #elif (abs(zmns_coil[ii]) < 0.65):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.8'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.8'
+            #else:
+            #    print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
                             
             bounds_text += r_bounds_min + '\n' + r_bounds_max + '\n'
             if ( (m[ii] == 0) and (n[ii] == 0) ):
@@ -2391,85 +2681,117 @@ class stellgen:
         
         for ii in range(0,num_fourier_modes):
             #print('<----ii: ' + str(ii) + ', rmnc: ' + str(abs(rmnc_coil[ii])))
-            if (abs(rmnc_coil[ii]) < 0.0005):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 800.'
+            #if (abs(rmnc_coil[ii]) < 0.0005):
+            for jj in range(0,10):
+                this_key = 'RCTR' + str(jj)
+                #print('this_key = ' + this_key)
+                try:
+                    this_target = float(self.TR_PARAMS[this_key]['LE_TARGET'].get())
+                    this_diag = float(self.TR_PARAMS[this_key]['DIAG'].get())
+                except:
+                    this_target = np.Inf
+                    this_diag = 1.0
+
+                if (abs(rmnc_coil[ii]) <= this_target):
+                    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+                                ', ' + str(n[ii]) + ') = ' + str(this_diag) 
+                    break
+                
+            for jj in range(0,10):
+                this_key = 'RCTR' + str(jj)
+                #print('this_key = ' + this_key)
+                try:
+                    this_target = float(self.TR_PARAMS[this_key]['LE_TARGET'].get())
+                    this_diag = float(self.TR_PARAMS[this_key]['DIAG'].get())
+                except:
+                    this_target = np.Inf
+                    this_diag = 1.0
+
+                if (abs(zmns_coil[ii]) <= this_target):
+                    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+                                ', ' + str(n[ii]) + ') = ' + str(this_diag) 
+                    break
+
+
+            #if (abs(rmnc_coil[ii]) < self.TR_PARAMS['RCTR1']['LE_TARGET'].get()):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 800.'
             #                   ', ' + str(n[ii]) + ') = 2000.'
             #                   ', ' + str(n[ii]) + ') = 0.0005'
-            elif (abs(rmnc_coil[ii]) < 0.005):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 80.'
+            #elif (abs(rmnc_coil[ii]) < 0.005):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 80.'
             #                   ', ' + str(n[ii]) + ') = 200.'
             #                   ', ' + str(n[ii]) + ') = 0.005'
-            elif (abs(rmnc_coil[ii]) < 0.02):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 20.'
+            #elif (abs(rmnc_coil[ii]) < 0.02):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20.'
             #                   ', ' + str(n[ii]) + ') = 50'
             #                   ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(rmnc_coil[ii]) < 0.05):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 20'
+            #elif (abs(rmnc_coil[ii]) < 0.05):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
             #                   ', ' + str(n[ii]) + ') = 50'
             #                   ', ' + str(n[ii]) + ') = 20'
             #                   ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(rmnc_coil[ii]) < 0.30):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 20'
-            #                   ', ' + str(n[ii]) + ') = 50'
+            #elif (abs(rmnc_coil[ii]) < 0.30):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
+            ##                   ', ' + str(n[ii]) + ') = 50'
             #                   ', ' + str(n[ii]) + ') = 3.33'
             #                   ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(rmnc_coil[ii]) < 0.65):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 20'
+            #elif (abs(rmnc_coil[ii]) < 0.65):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
             #                   ', ' + str(n[ii]) + ') = 50'
             #                   ', ' + str(n[ii]) + ') = 1.54'
             #                   ', ' + str(n[ii]) + ') = 0.02'
-            else:
-                #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
-                if ((m[ii] == 0) and (n[ii] == 0)):
-                    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = ' + str(1.0)
+            #else:
+            #    #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
+            #    if ((m[ii] == 0) and (n[ii] == 0)):
+            #        dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = ' + str(1.0)
             #                   ', ' + str(n[ii]) + ') = ' + str(0.01*round(100.0*rmnc_coil[ii]))
             #                   ', ' + str(n[ii]) + ') = ' + str(0.01*round(100.0/rmnc_coil[ii]))
             #                   ', ' + str(n[ii]) + ') = ' + str(rmnc_coil[ii])
-                else:
-                    print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+            #    else:
+            #        print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
 
-            if (abs(zmns_coil[ii]) < 0.0005):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 800'
+            # if (abs(zmns_coil[ii]) < 0.0005):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 800'
             #                   ', ' + str(n[ii]) + ') = 2000'
             #                   ', ' + str(n[ii]) + ') = 0.0005'
-            elif (abs(zmns_coil[ii]) < 0.005):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 80'
+            #elif (abs(zmns_coil[ii]) < 0.005):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 80'
             #                   ', ' + str(n[ii]) + ') = 200'
             #                   ', ' + str(n[ii]) + ') = 0.005'
-            elif (abs(zmns_coil[ii]) < 0.02):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 20'
+            #elif (abs(zmns_coil[ii]) < 0.02):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
             #                   ', ' + str(n[ii]) + ') = 50'
             #                   ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(zmns_coil[ii]) < 0.05):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 20'
+            #elif (abs(zmns_coil[ii]) < 0.05):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
             #                   ', ' + str(n[ii]) + ') = 50'
             #                   ', ' + str(n[ii]) + ') = 20'
             #                   ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(zmns_coil[ii]) < 0.30):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 20'
+            #elif (abs(zmns_coil[ii]) < 0.30):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
             #                   ', ' + str(n[ii]) + ') = 50'
             #                   ', ' + str(n[ii]) + ') = 3.33'
             #                   ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(zmns_coil[ii]) < 0.65):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 20'
+            #elif (abs(zmns_coil[ii]) < 0.65):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
             #                   ', ' + str(n[ii]) + ') = 50'
             #                   ', ' + str(n[ii]) + ') = 1.54'
             #                   ', ' + str(n[ii]) + ') = 0.02'
-            else:
-                print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+            #else:
+            #    print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
                             
             dbounds_text += dr_bounds + '\n'
             if ( (m[ii] == 0) and (n[ii] == 0) ):
@@ -2499,80 +2821,122 @@ class stellgen:
                 this_zbs = zbs[nn][mm+8]
                 #print('  mm=', str(mm), ' nn=', str(nn), ', rbc(mm,nn) = ', str(this_rbc))
                 #print('  mm=', str(mm), ' nn=', str(nn), ', zbs(mm,nn) = ', str(this_zbs))
-                if (abs(this_rbc) < 0.0005):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.005'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.005'
-                elif (abs(this_rbc) < 0.005):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.02'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.02'
-                elif (abs(this_rbc) < 0.02):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.1'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.1'
-                elif (abs(this_rbc) < 0.05):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.2'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.2'
-                elif (abs(this_rbc) < 0.30):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.6'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.6'
-                elif (abs(this_rbc) < 0.65):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.8'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.8'
-                else:
-                    #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
-                    if ((mm == 0) and (nn == 0)):
-                        r_min00 = 0.75 * this_rbc
-                        r_max00 = 1.25 * this_rbc
+                for jj in range(0,10):
+                    this_key = 'LCFSBOUNDS' + str(jj)
+                    #print('this_key = ' + this_key)
+                    try:
+                        this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
+                        this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
+                        this_ubound = float(self.BOUNDS_PARAMS[this_key]['UBOUNDS'].get())
+                    except:
+                        this_target = np.Inf
+                        this_lbound = -1.
+                        this_ubound = 1.
+
+                    if (abs(this_rbc) < this_target):
                         rbc_min = '  RBC_MIN(' + str(mm) + \
-                                       ', ' + str(nn) + ') = ' + str(r_min00)
+                                       ', ' + str(nn) + ') = ' + str(this_lbound)
                         rbc_max = '  RBC_MAX(' + str(mm) + \
-                                       ', ' + str(nn) + ') = ' + str(r_max00)
-                    else:
-                        print('<----Check the input file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(nn) + ')')
+                                       ', ' + str(nn) + ') = ' + str(this_ubound)
+                        break
+
+                for jj in range(0,10):
+                    this_key = 'LCFSBOUNDS' + str(jj)
+                    #print('this_key = ' + this_key)
+                    try:
+                        this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
+                        this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
+                        this_ubound = float(self.BOUNDS_PARAMS[this_key]['UBOUNDS'].get())
+                    except:
+                        this_target = np.Inf
+                        this_lbound = -1.
+                        this_ubound = 1.
+
+                    if (abs(this_zbs) < this_target):
+                        zbs_min = '  ZBC_MIN(' + str(mm) + \
+                                       ', ' + str(nn) + ') = ' + str(this_lbound)
+                        zbs_max = '  ZBC_MIN(' + str(mm) + \
+                                       ', ' + str(nn) + ') = ' + str(this_ubound)
+                        break
+
+
+
+
+
+                #if (abs(this_rbc) < 0.0005):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.005'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.005'
+                #elif (abs(this_rbc) < 0.005):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.02'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.02'
+                #elif (abs(this_rbc) < 0.02):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.1'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.1'
+                #elif (abs(this_rbc) < 0.05):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.2'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.2'
+                #elif (abs(this_rbc) < 0.30):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.6'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.6'
+                #elif (abs(this_rbc) < 0.65):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.8'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.8'
+                #else:
+                #    #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
+                #    if ((mm == 0) and (nn == 0)):
+                #        r_min00 = 0.75 * this_rbc
+                #        r_max00 = 1.25 * this_rbc
+                #        rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                       ', ' + str(nn) + ') = ' + str(r_min00)
+                #        rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                       ', ' + str(nn) + ') = ' + str(r_max00)
+                #    else:
+                #        print('<----Check the input file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(nn) + ')')
  
-                if (abs(this_zbs) < 0.0005):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.005'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.005'
-                elif (abs(this_zbs) < 0.005):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.02'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.02'
-                elif (abs(this_zbs) < 0.02):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.1'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.1'
-                elif (abs(this_zbs) < 0.05):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.2'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.2'
-                elif (abs(this_zbs) < 0.30):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.6'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.6'
-                elif (abs(this_zbs) < 0.65):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.8'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.8'
-                else:
-                    print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(mm) + ', ' + str(nn) + ')')
+                #if (abs(this_zbs) < 0.0005):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.005'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.005'
+                #elif (abs(this_zbs) < 0.005):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.02'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.02'
+                #elif (abs(this_zbs) < 0.02):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.1'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.1'
+                #elif (abs(this_zbs) < 0.05):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.2'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.2'
+                #elif (abs(this_zbs) < 0.30):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.6'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.6'
+                #elif (abs(this_zbs) < 0.65):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.8'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.8'
+                #else:
+                #    print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(mm) + ', ' + str(nn) + ')')
                                  
                 bounds_text += rbc_min + '\n' + rbc_max + '\n'
                 if ( (mm == 0) and (nn == 0) ):
@@ -2606,30 +2970,45 @@ class stellgen:
 
                 #print('  mm=', str(mm), ' nn=', str(nn), ', rbc(mm,nn) = ', str(this_rbc))
                 #print('  mm=', str(mm), ' nn=', str(nn), ', zbs(mm,nn) = ', str(this_zbs))
-                if (this_max < 0.0005):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 2000'
-                elif (this_max < 0.005):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 200'
-                elif (this_max < 0.020):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 50'
-                elif (this_max < 0.05):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 20'
-                elif (this_max < 0.30):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 3.33'
-                elif (this_max < 0.65):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 1.54'
-                else:
-                    if ((mm == 0) and (nn == 0)):
+                for jj in range(0,10):
+                    this_key = 'LCFSTR' + str(jj)
+                    #print('this_key = ' + this_key)
+                    try:
+                        this_target = float(self.TR_PARAMS[this_key]['LE_TARGET'].get())
+                        this_diag = float(self.TR_PARAMS[this_key]['DIAG'].get())
+                    except:
+                        this_target = np.Inf
+                        this_diag = 1.0
+
+                    if (this_max <= this_target):
                         dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = ' + str(round(0.01*(100.0/this_max)))
-                    else:
-                        print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(mm) + ', ' + str(nn) + ')')
+                                   ', ' + str(nn) + ') = ' + str(this_diag)
+                        break
+
+                #if (this_max < 0.0005):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 2000'
+                #elif (this_max < 0.005):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 200'
+                #elif (this_max < 0.020):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 50'
+                #elif (this_max < 0.05):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 20'
+                #elif (this_max < 0.30):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 3.33'
+                #elif (this_max < 0.65):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 1.54'
+                #else:
+                #    if ((mm == 0) and (nn == 0)):
+                #        dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = ' + str(round(0.01*(100.0/this_max)))
+                #    else:
+                #        print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(mm) + ', ' + str(nn) + ')')
                              
                 dbound_text += dbound + '\n'
                               
