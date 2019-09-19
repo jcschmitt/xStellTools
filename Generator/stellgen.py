@@ -7,6 +7,7 @@ import shutil
 import f90nml
 import numpy as np
 from numpy import iinfo
+import json
 
 
 class stellgen:
@@ -24,9 +25,9 @@ class stellgen:
         self.my_root = my_root
 
         # A list (dictionary?) of variables to  be saved/restored
-        self.my_saved_variables = {}
-        self.my_saved_variables['count'] = 0
-        self.my_saved_variables['the_list'] = {}
+        #self.my_saved_variables = {}
+        #self.my_saved_variables['count'] = 0
+        #self.my_saved_variables['the_list'] = {}
 
         #########################
         # set up the tabs(menus)
@@ -34,9 +35,9 @@ class stellgen:
 
         # For part 1 (Graphical User Interface controls and support functions)
         #Background colorscheme
-        self.bg_color_1 = "#605d20"
-        self.bg_color_2 = "#cc8888"
-        self.bg_color_3 = "#b0c4de"
+        self.bg_color_1 = "#805d20"
+        self.bg_color_2 = "#dc8888"
+        self.bg_color_3 = "#c0c4de"
         
         self.tab_control = ttk.Notebook(self.my_root)
         self.vmec_tab = ttk.Frame(self.tab_control)
@@ -80,23 +81,336 @@ class stellgen:
         the_top['menu'] = the_menu_bar
 
 
+    def get_restore_vars(self):
+        # data holds information for 'simple' data, like numbers, strings and booleans
+        data = {"vrp_delt": "self.VMEC_RUN_PARAMS['DELT']",
+                "vrp_tco0": "self.VMEC_RUN_PARAMS['TCON0']",
+                "vrp_nsarray": "self.VMEC_RUN_PARAMS['NS_ARRAY']",
+                "vrp_ftolarray": "self.VMEC_RUN_PARAMS['FTOL_ARRAY']",
+                "vrp_ntor": "self.VMEC_RUN_PARAMS['NTOR']",
+                "vrp_mpol": "self.VMEC_RUN_PARAMS['MPOL']",
+                "vrp_niterarray": "self.VMEC_RUN_PARAMS['NITER_ARRAY']",
+                "vrp_nstep": "self.VMEC_RUN_PARAMS['NSTEP']",
+                "vrp_nvacskip": "self.VMEC_RUN_PARAMS['NVACSKIP']",
+                "vrp_lforbal": "self.VMEC_RUN_PARAMS['LFORBAL']",
+                "vrp_lasym": "self.VMEC_RUN_PARAMS['LASYM']",
+                "vrp_nzeta": "self.VMEC_RUN_PARAMS['NZETA']",
+                "vrp_ntheta": "self.VMEC_RUN_PARAMS['NTHETA']",
+                "vrp_nfp": "self.VMEC_RUN_PARAMS['NFP']",
+                "vrp_phiedge": "self.VMEC_RUN_PARAMS['PHIEDGE']",
+                "vrp_ncurr": "self.VMEC_RUN_PARAMS['NCURR']",
+                "vrp_lfreeb": "self.VMEC_RUN_PARAMS['LFREEB']",
+                "vrp_mgrid_file": "self.VMEC_RUN_PARAMS['MGRID_FILE']",
+                "vrp_extcur": "self.VMEC_RUN_PARAMS['EXTCUR']",
+                "optp_nfuncmax": "self.OPTIMUM_PARAMS['NFUNC_MAX']",
+                "optp_equiltype": "self.OPTIMUM_PARAMS['EQUIL_TYPE']",
+                "optp_bootcalctype": "self.OPTIMUM_PARAMS['BOOTCALC_TYPE']",
+                "optp_opttype": "self.OPTIMUM_PARAMS['OPT_TYPE']",
+                "optp_ftol": "self.OPTIMUM_PARAMS['FTOL']",
+                "optp_xtol": "self.OPTIMUM_PARAMS['XTOL']",
+                "optp_gtol": "self.OPTIMUM_PARAMS['GTOL']",
+                "optp_factor": "self.OPTIMUM_PARAMS['FACTOR']",
+                "optp_epsfcn": "self.OPTIMUM_PARAMS['EPSFCN']",
+                "optp_mode": "self.OPTIMUM_PARAMS['MODE']",
+                "optp_lkeepmins": "self.OPTIMUM_PARAMS['LKEEP_MINS']",
+                "optargp_rc2bt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_CHI2_B']['TARGET']",
+                "optargp_rc2bs": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_CHI2_B']['SIGMA']",
+                "optargp_rc2bc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_CHI2_B']['COUNT']",
+                "optargp_rbnt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['TARGET']",
+                "optargp_rbns": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['SIGMA']",
+                "optargp_rbnc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['COUNT']",
+                "optargp_rmbnt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['TARGET']",
+                "optargp_rmbns": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['SIGMA']",
+                "optargp_rmbnc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['COUNT']",
+                "optargp_rmkt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_K']['TARGET']",
+                "optargp_rmks": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_K']['SIGMA']",
+                "optargp_rmkc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_K']['COUNT']",
+                "optargp_rrkt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_RMS_K']['TARGET']",
+                "optargp_rrks": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_RMS_K']['SIGMA']",
+                "optargp_rrkc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_RMS_K']['COUNT']",
+                "optargp_rcdmt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['TARGET']",
+                "optargp_rcdms": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['SIGMA']",
+                "optargp_rcdmc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['COUNT']",
+                "optargp_rvt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_VOLUME_COIL']['TARGET']",
+                "optargp_rvs": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_VOLUME_COIL']['SIGMA']",
+                "optargp_rvc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_VOLUME_COIL']['COUNT']",
+                "optargp_rlt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_LAMBDA']['TARGET']",
+                "optargp_rls": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_LAMBDA']['SIGMA']",
+                "optargp_rlc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_LAMBDA']['COUNT']",
+                "optargp_balloont": "self.OPTIMUM_TARGETS_PARAMS['BALLOON']['TARGET']",
+                "optargp_balloons": "self.OPTIMUM_TARGETS_PARAMS['BALLOON']['SIGMA']",
+                "optargp_balloonc": "self.OPTIMUM_TARGETS_PARAMS['BALLOON']['COUNT']",
+                "optargp_balloontheta": "self.OPTIMUM_TARGETS_PARAMS['BALLOON']['BALLOON_THETA']",
+                "optargp_balloonzeta": "self.OPTIMUM_TARGETS_PARAMS['BALLOON']['BALLOON_ZETA']",
+                "optargp_boozmboz": "self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']['MBOZ']",
+                "optargp_booznboz": "self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']['NBOZ']",
+                "optargp_magwellt": "self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['TARGET']",
+                "optargp_magwells": "self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['SIGMA']",
+                "optargp_magwellc": "self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['COUNT']",
+                "rcp_nlamba": "self.REGCOIL_PARAMS['nlambda']",
+                "rcp_nthetaplasma": "self.REGCOIL_PARAMS['ntheta_plasma']",
+                "rcp_nthetacoil": "self.REGCOIL_PARAMS['ntheta_coil']",
+                "rcp_nzetaplasma": "self.REGCOIL_PARAMS['nzeta_plasma']",
+                "rcp_nzetacoil": "self.REGCOIL_PARAMS['nzeta_coil']",
+                "rcp_mpolpotential": "self.REGCOIL_PARAMS['mpol_potential']",
+                "rcp_ntorpotential": "self.REGCOIL_PARAMS['ntor_potential']",
+                "rcp_generaloption": "self.REGCOIL_PARAMS['general_option']",
+                "rcp_geometryoptionplasma": "self.REGCOIL_PARAMS['geometry_option_plasma']",
+                "rcp_geometryoptioncoil": "self.REGCOIL_PARAMS['geometry_option_coil']",
+                "rcp_netpoloidalcurrent": "self.REGCOIL_PARAMS['net_poloidal_current_Amperes']",
+                "rcp_nettoroidalcurrent": "self.REGCOIL_PARAMS['net_toroidal_current_Amperes']",
+                "rcp_symmetryoption": "self.REGCOIL_PARAMS['symmetry_option']",
+                "rcp_taretoption": "self.REGCOIL_PARAMS['target_option']",
+                "rcp_nescinfilename": "self.REGCOIL_PARAMS['nescin_filename']",
+                "rcp_loadbnorm": "self.REGCOIL_PARAMS['load_bnorm']",
+                "rcp_bnormfilename": "self.REGCOIL_PARAMS['bnorm_filename']",
+                "bootp_bootsjenabled": "self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled']",
+                "bootp_mbuse": "self.BOOTSTRAP_PARAMS['MBUSE']",
+                "bootp_nbuse": "self.BOOTSTRAP_PARAMS['NBUSE']",
+                "bootp_zeff1": "self.BOOTSTRAP_PARAMS['ZEFF1']",
+                "bootp_dens0": "self.BOOTSTRAP_PARAMS['DENS0']",
+                "bootp_teti": "self.BOOTSTRAP_PARAMS['TETI']",
+                "bootp_tempre": "self.BOOTSTRAP_PARAMS['TEMPRES']",
+                "bootp_dampbs": "self.BOOTSTRAP_PARAMS['DAMP_BS']",
+                "bootp_isymm0": "self.BOOTSTRAP_PARAMS['ISYMM0']",
+                "bootp_ate": "self.BOOTSTRAP_PARAMS['ATE']",
+                "bootp_ati": "self.BOOTSTRAP_PARAMS['ATI']",
+                "bootp_sfincsenabled": "self.BOOTSTRAP_PARAMS['SFINCS']['Enabled']",
+                "bootp_profilesenabled": "self.BOOTSTRAP_PARAMS['PROFILES']['Enabled']",
+                "osp_rmke": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_K']['Enabled']",
+                "osp_rmkv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_K']['Values']",
+                "osp_rmks": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_K']['Sigmas']",
+                "osp_rrke": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_RMS_K']['Enabled']",
+                "osp_rrkv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_RMS_K']['Values']",
+                "osp_rrks": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_RMS_K']['Sigmas']",
+                "osp_rc2be": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_CHI2_B']['Enabled']",
+                "osp_rc2bv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_CHI2_B']['Values']",
+                "osp_rc2bs": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_CHI2_B']['Sigmas']",
+                "osp_rbnte": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_BNORMAL_TOTAL']['Enabled']",
+                "osp_rbntv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_BNORMAL_TOTAL']['Values']",
+                "osp_rbnts": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_BNORMAL_TOTAL']['Sigmas']",
+                "osp_rmbne": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_BNORMAL']['Enabled']",
+                "osp_rmbnv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_BNORMAL']['Values']",
+                "osp_rmbns": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_BNORMAL']['Sigmas']",
+                "osp_rvce": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_VOLUME_COIL']['Enabled']",
+                "osp_rvcv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_VOLUME_COIL']['Values']",
+                "osp_rvcs": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_VOLUME_COIL']['Sigmas']",
+                "osp_rcdme": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_C2P_DIST_MIN']['Enabled']",
+                "osp_rcdmv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_C2P_DIST_MIN']['Values']",
+                "osp_rcdms": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_C2P_DIST_MIN']['Sigmas']",
+                "osp_rle": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_LAMBDA']['Enabled']",
+                "osp_rlv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_LAMBDA']['Values']",
+                "osp_rls": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_LAMBDA']['Sigmas']",
+                "osp_fe": "self.OPTIMUM_SCAN_PARAMS['FACTOR']['Enabled']",
+                "osp_fv": "self.OPTIMUM_SCAN_PARAMS['FACTOR']['Values']",
+                "osp_epse": "self.OPTIMUM_SCAN_PARAMS['EPSFCN']['Enabled']",
+                "osp_epsv": "self.OPTIMUM_SCAN_PARAMS['EPSFCN']['Values']",
+                "osp_rfse": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_FOURIER_SPECTRUM']['Enabled']",
+                "osp_r2x2e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_2x2']['Enabled']",
+                "osp_r4x4e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_4x4']['Enabled']",
+                "osp_r6x6e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_6x6']['Enabled']",
+                "osp_r8x8e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_8x8']['Enabled']",
+                "osp_r10x10e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_10x10']['Enabled']",
+                "osp_r12x12e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_12x12']['Enabled']",
+                "osp_r16x16e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_16x16']['Enabled']",
+                "osp_r24x16e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_24x16']['Enabled']",
+                "osp_crtve": "self.OPTIMUM_SCAN_PARAMS['COORDINATE_REGCOIL_TARGET_VALUE']['Enabled']",
+                "osp_arbe": "self.OPTIMUM_SCAN_PARAMS['AUTOGEN_REGCOIL_BOUNDS']['Enabled']",
+                "osp_arde": "self.OPTIMUM_SCAN_PARAMS['AUTOGEN_REGCOIL_D']['Enabled']",
+                "osp_cvbre": "self.OPTIMUM_SCAN_PARAMS['CLEAR_VARS_B4_REGCOIL']['Enabled']",
+                "osp_cvbbe": "self.OPTIMUM_SCAN_PARAMS['CLEAR_VARS_B4_BOUNDARY']['Enabled']",
+                "osp_bse": "self.OPTIMUM_SCAN_PARAMS['BOUNDARY_SPECTRUM']['Enabled']",
+                "osp_b2x2e": "self.OPTIMUM_SCAN_PARAMS['BOUND_2x2']['Enabled']",
+                "osp_b4x4e": "self.OPTIMUM_SCAN_PARAMS['BOUND_4x4']['Enabled']",
+                "osp_b6x6e": "self.OPTIMUM_SCAN_PARAMS['BOUND_6x6']['Enabled']",
+                "osp_b8x8e": "self.OPTIMUM_SCAN_PARAMS['BOUND_8x8']['Enabled']",
+                "osp_able": "self.OPTIMUM_SCAN_PARAMS['AUTOGEN_BOUNDARY_LIMITS']['Enabled']",
+                "osp_abde": "self.OPTIMUM_SCAN_PARAMS['AUTOGEN_BOUNDARY_D']['Enabled']",
+                "trp_rctr0let": "self.TR_PARAMS['RCTR0']['LE_TARGET']",
+                "trp_rctr0diag": "self.TR_PARAMS['RCTR0']['DIAG']",
+                "trp_rctr1let": "self.TR_PARAMS['RCTR1']['LE_TARGET']",
+                "trp_rctr1diag": "self.TR_PARAMS['RCTR1']['DIAG']",
+                "trp_rctr2let": "self.TR_PARAMS['RCTR2']['LE_TARGET']",
+                "trp_rctr2diag": "self.TR_PARAMS['RCTR2']['DIAG']",
+                "trp_rctr3let": "self.TR_PARAMS['RCTR3']['LE_TARGET']",
+                "trp_rctr3diag": "self.TR_PARAMS['RCTR3']['DIAG']",
+                "trp_rctr4let": "self.TR_PARAMS['RCTR4']['LE_TARGET']",
+                "trp_rctr4diag": "self.TR_PARAMS['RCTR4']['DIAG']",
+                "trp_rctr5let": "self.TR_PARAMS['RCTR5']['LE_TARGET']",
+                "trp_rctr5diag": "self.TR_PARAMS['RCTR5']['DIAG']",
+                "trp_rctr6let": "self.TR_PARAMS['RCTR6']['LE_TARGET']",
+                "trp_rctr6diag": "self.TR_PARAMS['RCTR6']['DIAG']",
+                "trp_rctr7let": "self.TR_PARAMS['RCTR7']['LE_TARGET']",
+                "trp_rctr7diag": "self.TR_PARAMS['RCTR7']['DIAG']",
+                "trp_rctr8let": "self.TR_PARAMS['RCTR8']['LE_TARGET']",
+                "trp_rctr8diag": "self.TR_PARAMS['RCTR8']['DIAG']",
+                "trp_rctr9let": "self.TR_PARAMS['RCTR9']['LE_TARGET']",
+                "trp_rctr9diag": "self.TR_PARAMS['RCTR9']['DIAG']",
+                "trp_lcfs0let": "self.TR_PARAMS['LCFSTR0']['LE_TARGET']",
+                "trp_lcfs0diag": "self.TR_PARAMS['LCFSTR0']['DIAG']",
+                "trp_lcfs1let": "self.TR_PARAMS['LCFSTR1']['LE_TARGET']",
+                "trp_lcfs1diag": "self.TR_PARAMS['LCFSTR1']['DIAG']",
+                "trp_lcfs2let": "self.TR_PARAMS['LCFSTR2']['LE_TARGET']",
+                "trp_lcfs2diag": "self.TR_PARAMS['LCFSTR2']['DIAG']",
+                "trp_lcfs3let": "self.TR_PARAMS['LCFSTR3']['LE_TARGET']",
+                "trp_lcfs3diag": "self.TR_PARAMS['LCFSTR3']['DIAG']",
+                "trp_lcfs4let": "self.TR_PARAMS['LCFSTR4']['LE_TARGET']",
+                "trp_lcfs4diag": "self.TR_PARAMS['LCFSTR4']['DIAG']",
+                "trp_lcfs5let": "self.TR_PARAMS['LCFSTR5']['LE_TARGET']",
+                "trp_lcfs5diag": "self.TR_PARAMS['LCFSTR5']['DIAG']",
+                "trp_lcfs6let": "self.TR_PARAMS['LCFSTR6']['LE_TARGET']",
+                "trp_lcfs6diag": "self.TR_PARAMS['LCFSTR6']['DIAG']",
+                "trp_lcfs7let": "self.TR_PARAMS['LCFSTR7']['LE_TARGET']",
+                "trp_lcfs7diag": "self.TR_PARAMS['LCFSTR7']['DIAG']",
+                "trp_lcfs8let": "self.TR_PARAMS['LCFSTR8']['LE_TARGET']",
+                "trp_lcfs8diag": "self.TR_PARAMS['LCFSTR8']['DIAG']",
+                "trp_lcfs9let": "self.TR_PARAMS['LCFSTR9']['LE_TARGET']",
+                "trp_lcfs9diag": "self.TR_PARAMS['LCFSTR9']['DIAG']",
+                "bndp_rcb0let": "self.BOUNDS_PARAMS['RCBOUNDS0']['LE_TARGET']",
+                "bndp_rcb0lbounds": "self.BOUNDS_PARAMS['RCBOUNDS0']['LBOUNDS']",
+                "bndp_rcb0ubounds": "self.BOUNDS_PARAMS['RCBOUNDS0']['UBOUNDS']",
+                "bndp_rcb1let": "self.BOUNDS_PARAMS['RCBOUNDS1']['LE_TARGET']",
+                "bndp_rcb1lbounds": "self.BOUNDS_PARAMS['RCBOUNDS1']['LBOUNDS']",
+                "bndp_rcb1ubounds": "self.BOUNDS_PARAMS['RCBOUNDS1']['UBOUNDS']",
+                "bndp_rcb2let": "self.BOUNDS_PARAMS['RCBOUNDS2']['LE_TARGET']",
+                "bndp_rcb2lbounds": "self.BOUNDS_PARAMS['RCBOUNDS2']['LBOUNDS']",
+                "bndp_rcb2ubounds": "self.BOUNDS_PARAMS['RCBOUNDS2']['UBOUNDS']",
+                "bndp_rcb3let": "self.BOUNDS_PARAMS['RCBOUNDS3']['LE_TARGET']",
+                "bndp_rcb3lbounds": "self.BOUNDS_PARAMS['RCBOUNDS3']['LBOUNDS']",
+                "bndp_rcb3ubounds": "self.BOUNDS_PARAMS['RCBOUNDS3']['UBOUNDS']",
+                "bndp_rcb4let": "self.BOUNDS_PARAMS['RCBOUNDS4']['LE_TARGET']",
+                "bndp_rcb4lbounds": "self.BOUNDS_PARAMS['RCBOUNDS4']['LBOUNDS']",
+                "bndp_rcb4ubounds": "self.BOUNDS_PARAMS['RCBOUNDS4']['UBOUNDS']",
+                "bndp_rcb5let": "self.BOUNDS_PARAMS['RCBOUNDS5']['LE_TARGET']",
+                "bndp_rcb5lbounds": "self.BOUNDS_PARAMS['RCBOUNDS5']['LBOUNDS']",
+                "bndp_rcb5ubounds": "self.BOUNDS_PARAMS['RCBOUNDS5']['UBOUNDS']",
+                "bndp_rcb6let": "self.BOUNDS_PARAMS['RCBOUNDS6']['LE_TARGET']",
+                "bndp_rcb6lbounds": "self.BOUNDS_PARAMS['RCBOUNDS6']['LBOUNDS']",
+                "bndp_rcb6ubounds": "self.BOUNDS_PARAMS['RCBOUNDS6']['UBOUNDS']",
+                "bndp_rcb7let": "self.BOUNDS_PARAMS['RCBOUNDS7']['LE_TARGET']",
+                "bndp_rcb7lbounds": "self.BOUNDS_PARAMS['RCBOUNDS7']['LBOUNDS']",
+                "bndp_rcb7ubounds": "self.BOUNDS_PARAMS['RCBOUNDS7']['UBOUNDS']",
+                "bndp_rcb8let": "self.BOUNDS_PARAMS['RCBOUNDS8']['LE_TARGET']",
+                "bndp_rcb8lbounds": "self.BOUNDS_PARAMS['RCBOUNDS8']['LBOUNDS']",
+                "bndp_rcb8ubounds": "self.BOUNDS_PARAMS['RCBOUNDS8']['UBOUNDS']",
+                "bndp_rcb9let": "self.BOUNDS_PARAMS['RCBOUNDS9']['LE_TARGET']",
+                "bndp_rcb9lbounds": "self.BOUNDS_PARAMS['RCBOUNDS9']['LBOUNDS']",
+                "bndp_rcb9ubounds": "self.BOUNDS_PARAMS['RCBOUNDS9']['UBOUNDS']",
+                "bndp_lcfsb0let": "self.BOUNDS_PARAMS['LCFSBOUNDS0']['LE_TARGET']",
+                "bndp_lcfsb0lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS0']['LBOUNDS']",
+                "bndp_lcfsb0ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS0']['UBOUNDS']",
+                "bndp_lcfsb1let": "self.BOUNDS_PARAMS['LCFSBOUNDS1']['LE_TARGET']",
+                "bndp_lcfsb1lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS1']['LBOUNDS']",
+                "bndp_lcfsb1ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS1']['UBOUNDS']",
+                "bndp_lcfsb2let": "self.BOUNDS_PARAMS['LCFSBOUNDS2']['LE_TARGET']",
+                "bndp_lcfsb2lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS2']['LBOUNDS']",
+                "bndp_lcfsb2ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS2']['UBOUNDS']",
+                "bndp_lcfsb3let": "self.BOUNDS_PARAMS['LCFSBOUNDS3']['LE_TARGET']",
+                "bndp_lcfsb3lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS3']['LBOUNDS']",
+                "bndp_lcfsb3ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS3']['UBOUNDS']",
+                "bndp_lcfsb4let": "self.BOUNDS_PARAMS['LCFSBOUNDS4']['LE_TARGET']",
+                "bndp_lcfsb4lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS4']['LBOUNDS']",
+                "bndp_lcfsb4ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS4']['UBOUNDS']",
+                "bndp_lcfsb5let": "self.BOUNDS_PARAMS['LCFSBOUNDS5']['LE_TARGET']",
+                "bndp_lcfsb5lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS5']['LBOUNDS']",
+                "bndp_lcfsb5ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS5']['UBOUNDS']",
+                "bndp_lcfsb6let": "self.BOUNDS_PARAMS['LCFSBOUNDS6']['LE_TARGET']",
+                "bndp_lcfsb6lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS6']['LBOUNDS']",
+                "bndp_lcfsb6ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS6']['UBOUNDS']",
+                "bndp_lcfsb7let": "self.BOUNDS_PARAMS['LCFSBOUNDS7']['LE_TARGET']",
+                "bndp_lcfsb7lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS7']['LBOUNDS']",
+                "bndp_lcfsb7ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS7']['UBOUNDS']",
+                "bndp_lcfsb8let": "self.BOUNDS_PARAMS['LCFSBOUNDS8']['LE_TARGET']",
+                "bndp_lcfsb8lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS8']['LBOUNDS']",
+                "bndp_lcfsb8ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS8']['UBOUNDS']",
+                "bndp_lcfsb9let": "self.BOUNDS_PARAMS['LCFSBOUNDS9']['LE_TARGET']",
+                "bndp_lcfsb9lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS9']['LBOUNDS']",
+                "bndp_lcfsb9ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS9']['UBOUNDS']",
+                "fe_filebase": "self.FILESETC['file_base']",
+                "fe_folderbase": "self.FILESETC['folder_base']",
+                "fe_chtc": "self.FILESETC['chtc']",
+                "fe_submit": "self.FILESETC['submit']",
+                "fe_nescinenabled": "self.FILESETC['NESCIN']['Enabled']",
+                "fe_nescinfilein": "self.FILESETC['NESCIN_FILEIN']",
+                "fe_nescinfileout": "self.FILESETC['NESCIN_FILEOUT']",
+                "fe_boundinitenabled": "self.FILESETC['BOUNDARY_INIT']['Enabled']",
+                "fe_boudninitit": "self.FILESETC['BOUNDARY_INIT_IN']",
+                "fe_cobrafileenabled": "self.FILESETC['COBRA_FILE']['Enabled']",
+                "fe_cobrafilein": "self.FILESETC['COBRA_FILEIN']",
+                "fe_cobrafileout": "self.FILESETC['COBRA_FILEOUT']"}
+
+        # data2 holds the information for text boxes
+        data2= {"optp_extralines": "self.OPTIMUM_EXTRA_LINES",
+                "vrp_initposition": "self.VMEC_InitPosition",
+                "optargp_helicitytext": "self.Helicity_Text",
+                "optargp_neotext": "self.NEO_Text",
+                "optargp_gammactext": "self.GAMMA_C_Text",
+                "optargp_aspecttext": "self.ASPECT_Text",
+                "optargp_optimumvarlines": "self.OPTIMUM_VARIABLE_LINES",
+                "bootp_sfincstext": "self.SFINCS_Text",
+                "bootp_profilestext": "self.Profiles_Text",
+                "fe_readmelines": "self.README_LINES",
+                "fe_chtccontents": "self.CHTC_CONTENTS",
+                "fe_submitcontents": "self.SUBMIT_CONTENTS"}
+        return data, data2
+
     def save(self):
-        pass
-        # choose file name
-        #data = {"name": self.name,
-        #        "nodes": self.nodes,
-        #        ...
-        #       }
-        #with open('data.json', 'w') as f:
-        #    json.dump(data, f)
+        savefile = filedialog.asksaveasfilename(initialdir='./savedsessions/')
+        if (savefile.endswith('.json')):
+            pass
+        else:
+            savefile = savefile + '.json'
+
+        (data, data2) = self.get_restore_vars()
+        savedata = {}
+
+        for this_key in data:
+            getcmd = data[this_key] + '.get()'
+            #print('<----' + getcmd + '\n')
+            try:
+                savedata[this_key] = eval(getcmd)
+            except:
+                #print("<----No data?  Setting to ''")
+                savedata[this_key] = ''
+
+        for this_key in data2:
+            getcmd = data2[this_key] + '.get(1.0, "end")'
+            #print('<----' + getcmd + '\n')
+            try:
+                savedata[this_key] = eval(getcmd)
+            except:
+                #print("<----No data?  Setting to ''")
+                savedata[this_key] = ''
+ 
+        with open(savefile, 'w') as f:
+            json.dump(savedata, f)
    
  
     def load(self):
-        pass
-        #with open('data.json') as f:
-        #    data = json.load(f)
-        #self.name = data["name"]
-        #self.nodes = data["nodes"]
+        loadfile = filedialog.askopenfilename(initialdir='./savedsessions/')
+        if (loadfile.endswith('.json')):
+            pass
+        else:
+            loadfile = loadfile + '.json'
+
+        (data, data2) = self.get_restore_vars()
+
+        with open(loadfile) as f:
+            loaddata = json.load(f)
+
+        for this_key in data:
+            setcmd = data[this_key] + ".set(loaddata['" + this_key + "'])"
+            #print('<----' + setcmd + '\n')
+            eval(setcmd)
+
+        for this_key in data2:
+            delcmd = data2[this_key] + ".delete('1.0', 'end')"
+            #print('<----' + delcmd + '\n')
+            eval(delcmd)
+            insertcmd = data2[this_key] + ".insert('1.0', loaddata['" + this_key + "'])" 
+            #print('<----' + insertcmd + '\n')
+            eval(insertcmd)
+
 
 
     def add_label_and_entry_to_frame(self, position,
@@ -706,29 +1020,29 @@ class stellgen:
         self.OPTIMUM_PARAMS['Extra_Lines'].set(extra_lines_str)
 
        # These parameters need to be written out later.
-        self.OPTIMUM_PARAMS['Profile_Functions'] = tk.StringVar()
-        extra_lines_str = ("!---------------------------\n" + 
-                           "!       Profile Functions   \n" + 
-                           "!---------------------------\n\n" + 
-                           "  ! Note that ne_opt is normalized to 1e18 meters^{-3}.\n" + 
-                           "  ! n = (0.7e20/m^3) * (1 - s^5)\n" + 
-                           "  NE_TYPE = 'power_series'\n" + 
-                           "  NE_OPT = 70.0 0.0 0.0 0.0 0.0 -70.0\n\n" + 
-                           "! TE_OPT and TI_OPT are in units of 1 eV.\n" + 
-                           " ! T  = 2 keV * (1 - s)\n" + 
-                           "  TE_TYPE = 'power_series'\n" + 
-                           "  TE_OPT = 2e3 -2e3\n" + 
-                           "  TI_TYPE = 'power_series'\n" + 
-                           "  TI_OPT = 2e3 -2e3\n\n" + 
-                           "bootj_type='power_series'\n" + 
-                           "! The number of nonzero entries in bootj_aux_f sets the degree of the polynomial fit!\n" + 
-                           "bootj_aux_f = 16*1.0e-10\n\n" + 
-                           "sfincs_s = 0.00851345, 0.0337639, 0.0748914, 0.130496, 0.198683, 0.277131, 0.363169, 0.453866, 0.546134, 0.636831, 0.722869, 0.801317, 0.869504, 0.925109, 0.966236, 0.991487 ! 16 points\n\n" + 
-                           " sfincs_min_procs = 32\n" + 
-                           " vboot_tolerance = 1.0e-2\n" + 
-                           " sfincs_Er_option='zero'\n" + 
-                           "!  sfincs_Er_option='estimate'\n\n")
-        self.OPTIMUM_PARAMS['Profile_Functions'].set(extra_lines_str)
+       # self.OPTIMUM_PARAMS['Profile_Functions'] = tk.StringVar()
+       # extra_lines_str = ("!---------------------------\n" + 
+       #                    "!       Profile Functions   \n" + 
+       #                    "!---------------------------\n\n" + 
+       #                    "  ! Note that ne_opt is normalized to 1e18 meters^{-3}.\n" + 
+       #                    "  ! n = (0.7e20/m^3) * (1 - s^5)\n" + 
+       #                    "  NE_TYPE = 'power_series'\n" + 
+       #                    "  NE_OPT = 70.0 0.0 0.0 0.0 0.0 -70.0\n\n" + 
+       #                    "! TE_OPT and TI_OPT are in units of 1 eV.\n" + 
+       #                    " ! T  = 2 keV * (1 - s)\n" + 
+       #                    "  TE_TYPE = 'power_series'\n" + 
+       #                    "  TE_OPT = 2e3 -2e3\n" + 
+       #                    "  TI_TYPE = 'power_series'\n" + 
+       #                    "  TI_OPT = 2e3 -2e3\n\n" + 
+       #                    "bootj_type='power_series'\n" + 
+       #                    "! The number of nonzero entries in bootj_aux_f sets the degree of the polynomial fit!\n" + 
+       #                    "bootj_aux_f = 16*1.0e-10\n\n" + 
+       #                    "sfincs_s = 0.00851345, 0.0337639, 0.0748914, 0.130496, 0.198683, 0.277131, 0.363169, 0.453866, 0.546134, 0.636831, 0.722869, 0.801317, 0.869504, 0.925109, 0.966236, 0.991487 ! 16 points\n\n" + 
+       #                    " sfincs_min_procs = 32\n" + 
+       #                    " vboot_tolerance = 1.0e-2\n" + 
+       #                    " sfincs_Er_option='zero'\n" + 
+       #                    "!  sfincs_Er_option='estimate'\n\n")
+       # self.OPTIMUM_PARAMS['Profile_Functions'].set(extra_lines_str)
 
         # do stuff and things
         # Make two frames. One for run parameters and one for scana
@@ -879,9 +1193,9 @@ class stellgen:
         self.OPTIMUM_TARGETS_PARAMS['ASPECT'].set('\n')
 
         # 'Optimum Extras'
-        for this_key in ('BALLOON', 'BOOZER_COORD'):
-            self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
-            self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'].set(False)
+        #for this_key in ('BALLOON', 'BOOZER_COORD'):
+        #    self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
+        #    self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'].set(False)
 
 
         # do stuff and things
@@ -2003,7 +2317,7 @@ class stellgen:
         self.FILESETC['COBRA_FILEOUT'].set('in_cobra.stell0.rerun')
  
         
-        # Make two frames. 
+        # Make three frames. 
         self.filenames_frame1 = tk.LabelFrame(this_tab,
                                    bg=self.bg_color_1,
                                    bd=5,
@@ -2027,7 +2341,22 @@ class stellgen:
                                    text="Additional Filenames",
                                    font=('Helvetica', '14'))
         self.filenames_frame2.grid(row=1,
-                        rowspan=2,
+                        rowspan=1,
+                        column=2,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+
+        self.filenames_frame3 = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="Save/Restore",
+                                   font=('Helvetica', '14'))
+        self.filenames_frame3.grid(row=2,
+                        rowspan=1,
                         column=2,
                         columnspan=1,
                         padx=5, pady=5, ipadx=5, ipady=5)
@@ -2135,6 +2464,22 @@ class stellgen:
                                 text='Select COBRA File')
 
         find_cobra.grid(row=counter, rowspan=1, column=1, columnspan=1)
+
+
+        counter = 0
+        save_settings = tk.Button(self.filenames_frame3,
+                                command=self.save, # self.doit,
+                                text='Save Session')
+
+        save_settings.grid(row=counter, rowspan=1, column=1, columnspan=1)
+
+
+        counter += 1
+        load_settings = tk.Button(self.filenames_frame3,
+                                command=self.load, # self.doit,
+                                text='Restore Session')
+
+        load_settings.grid(row=counter, rowspan=1, column=1, columnspan=1)
 
 
     def find_nescin(self):
