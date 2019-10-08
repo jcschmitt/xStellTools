@@ -7,6 +7,7 @@ import shutil
 import f90nml
 import numpy as np
 from numpy import iinfo
+import json
 
 
 class stellgen:
@@ -23,15 +24,20 @@ class stellgen:
         # Set up the main window, its frames, and their components
         self.my_root = my_root
 
+        # A list (dictionary?) of variables to  be saved/restored
+        #self.my_saved_variables = {}
+        #self.my_saved_variables['count'] = 0
+        #self.my_saved_variables['the_list'] = {}
+
         #########################
         # set up the tabs(menus)
         #########################
 
         # For part 1 (Graphical User Interface controls and support functions)
         #Background colorscheme
-        self.bg_color_1 = "#605d20"
-        self.bg_color_2 = "#cc8888"
-        self.bg_color_3 = "#b0c4de"
+        self.bg_color_1 = "#805d20"
+        self.bg_color_2 = "#dc8888"
+        self.bg_color_3 = "#c0c4de"
         
         self.tab_control = ttk.Notebook(self.my_root)
         self.vmec_tab = ttk.Frame(self.tab_control)
@@ -42,6 +48,7 @@ class stellgen:
         self.bootstrap_tab = ttk.Frame(self.tab_control)
         self.scanables_tab = ttk.Frame(self.tab_control)
         self.filenames_tab = ttk.Frame(self.tab_control)
+        self.tr_tab = ttk.Frame(self.tab_control)
 
         
         #self.make_main_tab(self.main_tab)
@@ -53,6 +60,7 @@ class stellgen:
         self.make_vmec_tab(self.vmec_tab)
         self.make_regcoil_tab(self.regcoil_tab)
         self.make_bootstrap_tab(self.bootstrap_tab)
+        self.make_tr_tab(self.tr_tab)
 
         self.tab_control.add(self.filenames_tab, text='Files')
         self.tab_control.add(self.scanables_tab, text='Scan Control')
@@ -63,6 +71,7 @@ class stellgen:
                             text='VMEC')
         self.tab_control.add(self.regcoil_tab, text='Regcoil')
         self.tab_control.add(self.bootstrap_tab, text='Profiles &\nBootstrap')
+        self.tab_control.add(self.tr_tab, text='Boundaries &\nTrust Regions')
         self.tab_control.grid()
 
         my_root.title("STELLOPT Generator 0.1a")
@@ -70,6 +79,338 @@ class stellgen:
         the_top = my_root.winfo_toplevel()
         the_menu_bar = tk.Menu(the_top)
         the_top['menu'] = the_menu_bar
+
+
+    def get_restore_vars(self):
+        # data holds information for 'simple' data, like numbers, strings and booleans
+        data = {"vrp_delt": "self.VMEC_RUN_PARAMS['DELT']",
+                "vrp_tco0": "self.VMEC_RUN_PARAMS['TCON0']",
+                "vrp_nsarray": "self.VMEC_RUN_PARAMS['NS_ARRAY']",
+                "vrp_ftolarray": "self.VMEC_RUN_PARAMS['FTOL_ARRAY']",
+                "vrp_ntor": "self.VMEC_RUN_PARAMS['NTOR']",
+                "vrp_mpol": "self.VMEC_RUN_PARAMS['MPOL']",
+                "vrp_niterarray": "self.VMEC_RUN_PARAMS['NITER_ARRAY']",
+                "vrp_nstep": "self.VMEC_RUN_PARAMS['NSTEP']",
+                "vrp_nvacskip": "self.VMEC_RUN_PARAMS['NVACSKIP']",
+                "vrp_lforbal": "self.VMEC_RUN_PARAMS['LFORBAL']",
+                "vrp_lasym": "self.VMEC_RUN_PARAMS['LASYM']",
+                "vrp_nzeta": "self.VMEC_RUN_PARAMS['NZETA']",
+                "vrp_ntheta": "self.VMEC_RUN_PARAMS['NTHETA']",
+                "vrp_nfp": "self.VMEC_RUN_PARAMS['NFP']",
+                "vrp_phiedge": "self.VMEC_RUN_PARAMS['PHIEDGE']",
+                "vrp_ncurr": "self.VMEC_RUN_PARAMS['NCURR']",
+                "vrp_lfreeb": "self.VMEC_RUN_PARAMS['LFREEB']",
+                "vrp_mgrid_file": "self.VMEC_RUN_PARAMS['MGRID_FILE']",
+                "vrp_extcur": "self.VMEC_RUN_PARAMS['EXTCUR']",
+                "optp_nfuncmax": "self.OPTIMUM_PARAMS['NFUNC_MAX']",
+                "optp_equiltype": "self.OPTIMUM_PARAMS['EQUIL_TYPE']",
+                "optp_bootcalctype": "self.OPTIMUM_PARAMS['BOOTCALC_TYPE']",
+                "optp_opttype": "self.OPTIMUM_PARAMS['OPT_TYPE']",
+                "optp_ftol": "self.OPTIMUM_PARAMS['FTOL']",
+                "optp_xtol": "self.OPTIMUM_PARAMS['XTOL']",
+                "optp_gtol": "self.OPTIMUM_PARAMS['GTOL']",
+                "optp_factor": "self.OPTIMUM_PARAMS['FACTOR']",
+                "optp_epsfcn": "self.OPTIMUM_PARAMS['EPSFCN']",
+                "optp_mode": "self.OPTIMUM_PARAMS['MODE']",
+                "optp_lkeepmins": "self.OPTIMUM_PARAMS['LKEEP_MINS']",
+                "optargp_rc2bt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_CHI2_B']['TARGET']",
+                "optargp_rc2bs": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_CHI2_B']['SIGMA']",
+                "optargp_rc2bc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_CHI2_B']['COUNT']",
+                "optargp_rbnt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['TARGET']",
+                "optargp_rbns": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['SIGMA']",
+                "optargp_rbnc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['COUNT']",
+                "optargp_rmbnt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['TARGET']",
+                "optargp_rmbns": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['SIGMA']",
+                "optargp_rmbnc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['COUNT']",
+                "optargp_rmkt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_K']['TARGET']",
+                "optargp_rmks": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_K']['SIGMA']",
+                "optargp_rmkc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_K']['COUNT']",
+                "optargp_rrkt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_RMS_K']['TARGET']",
+                "optargp_rrks": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_RMS_K']['SIGMA']",
+                "optargp_rrkc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_RMS_K']['COUNT']",
+                "optargp_rcdmt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['TARGET']",
+                "optargp_rcdms": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['SIGMA']",
+                "optargp_rcdmc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['COUNT']",
+                "optargp_rvt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_VOLUME_COIL']['TARGET']",
+                "optargp_rvs": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_VOLUME_COIL']['SIGMA']",
+                "optargp_rvc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_VOLUME_COIL']['COUNT']",
+                "optargp_rlt": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_LAMBDA']['TARGET']",
+                "optargp_rls": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_LAMBDA']['SIGMA']",
+                "optargp_rlc": "self.OPTIMUM_TARGETS_PARAMS['REGCOIL_LAMBDA']['COUNT']",
+                "optargp_balloont": "self.OPTIMUM_TARGETS_PARAMS['BALLOON']['TARGET']",
+                "optargp_balloons": "self.OPTIMUM_TARGETS_PARAMS['BALLOON']['SIGMA']",
+                "optargp_balloonc": "self.OPTIMUM_TARGETS_PARAMS['BALLOON']['COUNT']",
+                "optargp_balloontheta": "self.OPTIMUM_TARGETS_PARAMS['BALLOON']['BALLOON_THETA']",
+                "optargp_balloonzeta": "self.OPTIMUM_TARGETS_PARAMS['BALLOON']['BALLOON_ZETA']",
+                "optargp_boozmboz": "self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']['MBOZ']",
+                "optargp_booznboz": "self.OPTIMUM_TARGETS_PARAMS['BOOZER_COORD']['NBOZ']",
+                "optargp_magwellt": "self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['TARGET']",
+                "optargp_magwells": "self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['SIGMA']",
+                "optargp_magwellc": "self.OPTIMUM_TARGETS_PARAMS['MAGWELL']['COUNT']",
+                "rcp_nlamba": "self.REGCOIL_PARAMS['nlambda']",
+                "rcp_nthetaplasma": "self.REGCOIL_PARAMS['ntheta_plasma']",
+                "rcp_nthetacoil": "self.REGCOIL_PARAMS['ntheta_coil']",
+                "rcp_nzetaplasma": "self.REGCOIL_PARAMS['nzeta_plasma']",
+                "rcp_nzetacoil": "self.REGCOIL_PARAMS['nzeta_coil']",
+                "rcp_mpolpotential": "self.REGCOIL_PARAMS['mpol_potential']",
+                "rcp_ntorpotential": "self.REGCOIL_PARAMS['ntor_potential']",
+                "rcp_generaloption": "self.REGCOIL_PARAMS['general_option']",
+                "rcp_geometryoptionplasma": "self.REGCOIL_PARAMS['geometry_option_plasma']",
+                "rcp_geometryoptioncoil": "self.REGCOIL_PARAMS['geometry_option_coil']",
+                "rcp_netpoloidalcurrent": "self.REGCOIL_PARAMS['net_poloidal_current_Amperes']",
+                "rcp_nettoroidalcurrent": "self.REGCOIL_PARAMS['net_toroidal_current_Amperes']",
+                "rcp_symmetryoption": "self.REGCOIL_PARAMS['symmetry_option']",
+                "rcp_taretoption": "self.REGCOIL_PARAMS['target_option']",
+                "rcp_nescinfilename": "self.REGCOIL_PARAMS['nescin_filename']",
+                "rcp_loadbnorm": "self.REGCOIL_PARAMS['load_bnorm']",
+                "rcp_bnormfilename": "self.REGCOIL_PARAMS['bnorm_filename']",
+                "bootp_bootsjenabled": "self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled']",
+                "bootp_mbuse": "self.BOOTSTRAP_PARAMS['MBUSE']",
+                "bootp_nbuse": "self.BOOTSTRAP_PARAMS['NBUSE']",
+                "bootp_zeff1": "self.BOOTSTRAP_PARAMS['ZEFF1']",
+                "bootp_dens0": "self.BOOTSTRAP_PARAMS['DENS0']",
+                "bootp_teti": "self.BOOTSTRAP_PARAMS['TETI']",
+                "bootp_tempre": "self.BOOTSTRAP_PARAMS['TEMPRES']",
+                "bootp_dampbs": "self.BOOTSTRAP_PARAMS['DAMP_BS']",
+                "bootp_isymm0": "self.BOOTSTRAP_PARAMS['ISYMM0']",
+                "bootp_ate": "self.BOOTSTRAP_PARAMS['ATE']",
+                "bootp_ati": "self.BOOTSTRAP_PARAMS['ATI']",
+                "bootp_sfincsenabled": "self.BOOTSTRAP_PARAMS['SFINCS']['Enabled']",
+                "bootp_profilesenabled": "self.BOOTSTRAP_PARAMS['PROFILES']['Enabled']",
+                "osp_rmke": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_K']['Enabled']",
+                "osp_rmkv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_K']['Values']",
+                "osp_rmks": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_K']['Sigmas']",
+                "osp_rrke": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_RMS_K']['Enabled']",
+                "osp_rrkv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_RMS_K']['Values']",
+                "osp_rrks": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_RMS_K']['Sigmas']",
+                "osp_rc2be": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_CHI2_B']['Enabled']",
+                "osp_rc2bv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_CHI2_B']['Values']",
+                "osp_rc2bs": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_CHI2_B']['Sigmas']",
+                "osp_rbnte": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_BNORMAL_TOTAL']['Enabled']",
+                "osp_rbntv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_BNORMAL_TOTAL']['Values']",
+                "osp_rbnts": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_BNORMAL_TOTAL']['Sigmas']",
+                "osp_rmbne": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_BNORMAL']['Enabled']",
+                "osp_rmbnv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_BNORMAL']['Values']",
+                "osp_rmbns": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_MAX_BNORMAL']['Sigmas']",
+                "osp_rvce": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_VOLUME_COIL']['Enabled']",
+                "osp_rvcv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_VOLUME_COIL']['Values']",
+                "osp_rvcs": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_VOLUME_COIL']['Sigmas']",
+                "osp_rcdme": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_C2P_DIST_MIN']['Enabled']",
+                "osp_rcdmv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_C2P_DIST_MIN']['Values']",
+                "osp_rcdms": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_C2P_DIST_MIN']['Sigmas']",
+                "osp_rle": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_LAMBDA']['Enabled']",
+                "osp_rlv": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_LAMBDA']['Values']",
+                "osp_rls": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_LAMBDA']['Sigmas']",
+                "osp_fe": "self.OPTIMUM_SCAN_PARAMS['FACTOR']['Enabled']",
+                "osp_fv": "self.OPTIMUM_SCAN_PARAMS['FACTOR']['Values']",
+                "osp_epse": "self.OPTIMUM_SCAN_PARAMS['EPSFCN']['Enabled']",
+                "osp_epsv": "self.OPTIMUM_SCAN_PARAMS['EPSFCN']['Values']",
+                "osp_rfse": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_FOURIER_SPECTRUM']['Enabled']",
+                "osp_r2x2e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_2x2']['Enabled']",
+                "osp_r4x4e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_4x4']['Enabled']",
+                "osp_r6x6e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_6x6']['Enabled']",
+                "osp_r8x8e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_8x8']['Enabled']",
+                "osp_r10x10e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_10x10']['Enabled']",
+                "osp_r12x12e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_12x12']['Enabled']",
+                "osp_r16x16e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_16x16']['Enabled']",
+                "osp_r24x16e": "self.OPTIMUM_SCAN_PARAMS['REGCOIL_24x16']['Enabled']",
+                "osp_crtve": "self.OPTIMUM_SCAN_PARAMS['COORDINATE_REGCOIL_TARGET_VALUE']['Enabled']",
+                "osp_arbe": "self.OPTIMUM_SCAN_PARAMS['AUTOGEN_REGCOIL_BOUNDS']['Enabled']",
+                "osp_arde": "self.OPTIMUM_SCAN_PARAMS['AUTOGEN_REGCOIL_D']['Enabled']",
+                "osp_cvbre": "self.OPTIMUM_SCAN_PARAMS['CLEAR_VARS_B4_REGCOIL']['Enabled']",
+                "osp_cvbbe": "self.OPTIMUM_SCAN_PARAMS['CLEAR_VARS_B4_BOUNDARY']['Enabled']",
+                "osp_bse": "self.OPTIMUM_SCAN_PARAMS['BOUNDARY_SPECTRUM']['Enabled']",
+                "osp_b2x2e": "self.OPTIMUM_SCAN_PARAMS['BOUND_2x2']['Enabled']",
+                "osp_b4x4e": "self.OPTIMUM_SCAN_PARAMS['BOUND_4x4']['Enabled']",
+                "osp_b6x6e": "self.OPTIMUM_SCAN_PARAMS['BOUND_6x6']['Enabled']",
+                "osp_b8x8e": "self.OPTIMUM_SCAN_PARAMS['BOUND_8x8']['Enabled']",
+                "osp_able": "self.OPTIMUM_SCAN_PARAMS['AUTOGEN_BOUNDARY_LIMITS']['Enabled']",
+                "osp_abde": "self.OPTIMUM_SCAN_PARAMS['AUTOGEN_BOUNDARY_D']['Enabled']",
+                "trp_rctr0let": "self.TR_PARAMS['RCTR0']['LE_TARGET']",
+                "trp_rctr0diag": "self.TR_PARAMS['RCTR0']['DIAG']",
+                "trp_rctr1let": "self.TR_PARAMS['RCTR1']['LE_TARGET']",
+                "trp_rctr1diag": "self.TR_PARAMS['RCTR1']['DIAG']",
+                "trp_rctr2let": "self.TR_PARAMS['RCTR2']['LE_TARGET']",
+                "trp_rctr2diag": "self.TR_PARAMS['RCTR2']['DIAG']",
+                "trp_rctr3let": "self.TR_PARAMS['RCTR3']['LE_TARGET']",
+                "trp_rctr3diag": "self.TR_PARAMS['RCTR3']['DIAG']",
+                "trp_rctr4let": "self.TR_PARAMS['RCTR4']['LE_TARGET']",
+                "trp_rctr4diag": "self.TR_PARAMS['RCTR4']['DIAG']",
+                "trp_rctr5let": "self.TR_PARAMS['RCTR5']['LE_TARGET']",
+                "trp_rctr5diag": "self.TR_PARAMS['RCTR5']['DIAG']",
+                "trp_rctr6let": "self.TR_PARAMS['RCTR6']['LE_TARGET']",
+                "trp_rctr6diag": "self.TR_PARAMS['RCTR6']['DIAG']",
+                "trp_rctr7let": "self.TR_PARAMS['RCTR7']['LE_TARGET']",
+                "trp_rctr7diag": "self.TR_PARAMS['RCTR7']['DIAG']",
+                "trp_rctr8let": "self.TR_PARAMS['RCTR8']['LE_TARGET']",
+                "trp_rctr8diag": "self.TR_PARAMS['RCTR8']['DIAG']",
+                "trp_rctr9let": "self.TR_PARAMS['RCTR9']['LE_TARGET']",
+                "trp_rctr9diag": "self.TR_PARAMS['RCTR9']['DIAG']",
+                "trp_lcfs0let": "self.TR_PARAMS['LCFSTR0']['LE_TARGET']",
+                "trp_lcfs0diag": "self.TR_PARAMS['LCFSTR0']['DIAG']",
+                "trp_lcfs1let": "self.TR_PARAMS['LCFSTR1']['LE_TARGET']",
+                "trp_lcfs1diag": "self.TR_PARAMS['LCFSTR1']['DIAG']",
+                "trp_lcfs2let": "self.TR_PARAMS['LCFSTR2']['LE_TARGET']",
+                "trp_lcfs2diag": "self.TR_PARAMS['LCFSTR2']['DIAG']",
+                "trp_lcfs3let": "self.TR_PARAMS['LCFSTR3']['LE_TARGET']",
+                "trp_lcfs3diag": "self.TR_PARAMS['LCFSTR3']['DIAG']",
+                "trp_lcfs4let": "self.TR_PARAMS['LCFSTR4']['LE_TARGET']",
+                "trp_lcfs4diag": "self.TR_PARAMS['LCFSTR4']['DIAG']",
+                "trp_lcfs5let": "self.TR_PARAMS['LCFSTR5']['LE_TARGET']",
+                "trp_lcfs5diag": "self.TR_PARAMS['LCFSTR5']['DIAG']",
+                "trp_lcfs6let": "self.TR_PARAMS['LCFSTR6']['LE_TARGET']",
+                "trp_lcfs6diag": "self.TR_PARAMS['LCFSTR6']['DIAG']",
+                "trp_lcfs7let": "self.TR_PARAMS['LCFSTR7']['LE_TARGET']",
+                "trp_lcfs7diag": "self.TR_PARAMS['LCFSTR7']['DIAG']",
+                "trp_lcfs8let": "self.TR_PARAMS['LCFSTR8']['LE_TARGET']",
+                "trp_lcfs8diag": "self.TR_PARAMS['LCFSTR8']['DIAG']",
+                "trp_lcfs9let": "self.TR_PARAMS['LCFSTR9']['LE_TARGET']",
+                "trp_lcfs9diag": "self.TR_PARAMS['LCFSTR9']['DIAG']",
+                "bndp_rcb0let": "self.BOUNDS_PARAMS['RCBOUNDS0']['LE_TARGET']",
+                "bndp_rcb0lbounds": "self.BOUNDS_PARAMS['RCBOUNDS0']['LBOUNDS']",
+                "bndp_rcb0ubounds": "self.BOUNDS_PARAMS['RCBOUNDS0']['UBOUNDS']",
+                "bndp_rcb1let": "self.BOUNDS_PARAMS['RCBOUNDS1']['LE_TARGET']",
+                "bndp_rcb1lbounds": "self.BOUNDS_PARAMS['RCBOUNDS1']['LBOUNDS']",
+                "bndp_rcb1ubounds": "self.BOUNDS_PARAMS['RCBOUNDS1']['UBOUNDS']",
+                "bndp_rcb2let": "self.BOUNDS_PARAMS['RCBOUNDS2']['LE_TARGET']",
+                "bndp_rcb2lbounds": "self.BOUNDS_PARAMS['RCBOUNDS2']['LBOUNDS']",
+                "bndp_rcb2ubounds": "self.BOUNDS_PARAMS['RCBOUNDS2']['UBOUNDS']",
+                "bndp_rcb3let": "self.BOUNDS_PARAMS['RCBOUNDS3']['LE_TARGET']",
+                "bndp_rcb3lbounds": "self.BOUNDS_PARAMS['RCBOUNDS3']['LBOUNDS']",
+                "bndp_rcb3ubounds": "self.BOUNDS_PARAMS['RCBOUNDS3']['UBOUNDS']",
+                "bndp_rcb4let": "self.BOUNDS_PARAMS['RCBOUNDS4']['LE_TARGET']",
+                "bndp_rcb4lbounds": "self.BOUNDS_PARAMS['RCBOUNDS4']['LBOUNDS']",
+                "bndp_rcb4ubounds": "self.BOUNDS_PARAMS['RCBOUNDS4']['UBOUNDS']",
+                "bndp_rcb5let": "self.BOUNDS_PARAMS['RCBOUNDS5']['LE_TARGET']",
+                "bndp_rcb5lbounds": "self.BOUNDS_PARAMS['RCBOUNDS5']['LBOUNDS']",
+                "bndp_rcb5ubounds": "self.BOUNDS_PARAMS['RCBOUNDS5']['UBOUNDS']",
+                "bndp_rcb6let": "self.BOUNDS_PARAMS['RCBOUNDS6']['LE_TARGET']",
+                "bndp_rcb6lbounds": "self.BOUNDS_PARAMS['RCBOUNDS6']['LBOUNDS']",
+                "bndp_rcb6ubounds": "self.BOUNDS_PARAMS['RCBOUNDS6']['UBOUNDS']",
+                "bndp_rcb7let": "self.BOUNDS_PARAMS['RCBOUNDS7']['LE_TARGET']",
+                "bndp_rcb7lbounds": "self.BOUNDS_PARAMS['RCBOUNDS7']['LBOUNDS']",
+                "bndp_rcb7ubounds": "self.BOUNDS_PARAMS['RCBOUNDS7']['UBOUNDS']",
+                "bndp_rcb8let": "self.BOUNDS_PARAMS['RCBOUNDS8']['LE_TARGET']",
+                "bndp_rcb8lbounds": "self.BOUNDS_PARAMS['RCBOUNDS8']['LBOUNDS']",
+                "bndp_rcb8ubounds": "self.BOUNDS_PARAMS['RCBOUNDS8']['UBOUNDS']",
+                "bndp_rcb9let": "self.BOUNDS_PARAMS['RCBOUNDS9']['LE_TARGET']",
+                "bndp_rcb9lbounds": "self.BOUNDS_PARAMS['RCBOUNDS9']['LBOUNDS']",
+                "bndp_rcb9ubounds": "self.BOUNDS_PARAMS['RCBOUNDS9']['UBOUNDS']",
+                "bndp_lcfsb0let": "self.BOUNDS_PARAMS['LCFSBOUNDS0']['LE_TARGET']",
+                "bndp_lcfsb0lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS0']['LBOUNDS']",
+                "bndp_lcfsb0ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS0']['UBOUNDS']",
+                "bndp_lcfsb1let": "self.BOUNDS_PARAMS['LCFSBOUNDS1']['LE_TARGET']",
+                "bndp_lcfsb1lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS1']['LBOUNDS']",
+                "bndp_lcfsb1ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS1']['UBOUNDS']",
+                "bndp_lcfsb2let": "self.BOUNDS_PARAMS['LCFSBOUNDS2']['LE_TARGET']",
+                "bndp_lcfsb2lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS2']['LBOUNDS']",
+                "bndp_lcfsb2ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS2']['UBOUNDS']",
+                "bndp_lcfsb3let": "self.BOUNDS_PARAMS['LCFSBOUNDS3']['LE_TARGET']",
+                "bndp_lcfsb3lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS3']['LBOUNDS']",
+                "bndp_lcfsb3ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS3']['UBOUNDS']",
+                "bndp_lcfsb4let": "self.BOUNDS_PARAMS['LCFSBOUNDS4']['LE_TARGET']",
+                "bndp_lcfsb4lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS4']['LBOUNDS']",
+                "bndp_lcfsb4ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS4']['UBOUNDS']",
+                "bndp_lcfsb5let": "self.BOUNDS_PARAMS['LCFSBOUNDS5']['LE_TARGET']",
+                "bndp_lcfsb5lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS5']['LBOUNDS']",
+                "bndp_lcfsb5ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS5']['UBOUNDS']",
+                "bndp_lcfsb6let": "self.BOUNDS_PARAMS['LCFSBOUNDS6']['LE_TARGET']",
+                "bndp_lcfsb6lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS6']['LBOUNDS']",
+                "bndp_lcfsb6ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS6']['UBOUNDS']",
+                "bndp_lcfsb7let": "self.BOUNDS_PARAMS['LCFSBOUNDS7']['LE_TARGET']",
+                "bndp_lcfsb7lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS7']['LBOUNDS']",
+                "bndp_lcfsb7ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS7']['UBOUNDS']",
+                "bndp_lcfsb8let": "self.BOUNDS_PARAMS['LCFSBOUNDS8']['LE_TARGET']",
+                "bndp_lcfsb8lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS8']['LBOUNDS']",
+                "bndp_lcfsb8ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS8']['UBOUNDS']",
+                "bndp_lcfsb9let": "self.BOUNDS_PARAMS['LCFSBOUNDS9']['LE_TARGET']",
+                "bndp_lcfsb9lbounds": "self.BOUNDS_PARAMS['LCFSBOUNDS9']['LBOUNDS']",
+                "bndp_lcfsb9ubounds": "self.BOUNDS_PARAMS['LCFSBOUNDS9']['UBOUNDS']",
+                "fe_filebase": "self.FILESETC['file_base']",
+                "fe_folderbase": "self.FILESETC['folder_base']",
+                "fe_chtc": "self.FILESETC['chtc']",
+                "fe_submit": "self.FILESETC['submit']",
+                "fe_nescinenabled": "self.FILESETC['NESCIN']['Enabled']",
+                "fe_nescinfilein": "self.FILESETC['NESCIN_FILEIN']",
+                "fe_nescinfileout": "self.FILESETC['NESCIN_FILEOUT']",
+                "fe_boundinitenabled": "self.FILESETC['BOUNDARY_INIT']['Enabled']",
+                "fe_boudninitit": "self.FILESETC['BOUNDARY_INIT_IN']",
+                "fe_cobrafileenabled": "self.FILESETC['COBRA_FILE']['Enabled']",
+                "fe_cobrafilein": "self.FILESETC['COBRA_FILEIN']",
+                "fe_cobrafileout": "self.FILESETC['COBRA_FILEOUT']"}
+
+        # data2 holds the information for text boxes
+        data2= {"optp_extralines": "self.OPTIMUM_EXTRA_LINES",
+                "vrp_initposition": "self.VMEC_InitPosition",
+                "optargp_helicitytext": "self.Helicity_Text",
+                "optargp_neotext": "self.NEO_Text",
+                "optargp_gammactext": "self.GAMMA_C_Text",
+                "optargp_aspecttext": "self.ASPECT_Text",
+                "optargp_optimumvarlines": "self.OPTIMUM_VARIABLE_LINES",
+                "bootp_sfincstext": "self.SFINCS_Text",
+                "bootp_profilestext": "self.Profiles_Text",
+                "fe_readmelines": "self.README_LINES",
+                "fe_chtccontents": "self.CHTC_CONTENTS",
+                "fe_submitcontents": "self.SUBMIT_CONTENTS"}
+        return data, data2
+
+    def save(self):
+        savefile = filedialog.asksaveasfilename(initialdir='./savedsessions/')
+        if (savefile.endswith('.json')):
+            pass
+        else:
+            savefile = savefile + '.json'
+
+        (data, data2) = self.get_restore_vars()
+        savedata = {}
+
+        for this_key in data:
+            getcmd = data[this_key] + '.get()'
+            #print('<----' + getcmd + '\n')
+            try:
+                savedata[this_key] = eval(getcmd)
+            except:
+                #print("<----No data?  Setting to ''")
+                savedata[this_key] = ''
+
+        for this_key in data2:
+            getcmd = data2[this_key] + '.get(1.0, "end")'
+            #print('<----' + getcmd + '\n')
+            try:
+                savedata[this_key] = eval(getcmd)
+            except:
+                #print("<----No data?  Setting to ''")
+                savedata[this_key] = ''
+ 
+        with open(savefile, 'w') as f:
+            json.dump(savedata, f)
+   
+ 
+    def load(self):
+        loadfile = filedialog.askopenfilename(initialdir='./savedsessions/')
+        if (loadfile.endswith('.json')):
+            pass
+        else:
+            loadfile = loadfile + '.json'
+
+        (data, data2) = self.get_restore_vars()
+
+        with open(loadfile) as f:
+            loaddata = json.load(f)
+
+        for this_key in data:
+            setcmd = data[this_key] + ".set(loaddata['" + this_key + "'])"
+            #print('<----' + setcmd + '\n')
+            eval(setcmd)
+
+        for this_key in data2:
+            delcmd = data2[this_key] + ".delete('1.0', 'end')"
+            #print('<----' + delcmd + '\n')
+            eval(delcmd)
+            insertcmd = data2[this_key] + ".insert('1.0', loaddata['" + this_key + "'])" 
+            #print('<----' + insertcmd + '\n')
+            eval(insertcmd)
+
 
 
     def add_label_and_entry_to_frame(self, position,
@@ -246,6 +587,59 @@ class stellgen:
         this_count.grid(row=position, rowspan=1, column=4, columnspan=1,
                         sticky=tk.W)
         
+    def add_trust_region_entry_to_frame(self, position,
+                                        in_key, in_dict, target_frame):
+        entry_width = 8
+
+        this_lbl = tk.Label(target_frame,
+                      bg=self.bg_color_1,
+                      anchor=tk.E,
+                      text=(in_key+":"))
+        this_lbl.grid(row=position, rowspan=1, column=1, columnspan=1,
+                      sticky=tk.E)
+
+        this_target = tk.Entry(target_frame,
+                              width=entry_width,
+                              textvariable=in_dict[in_key]['LE_TARGET'])
+        this_target.grid(row=position, rowspan=1, column=2, columnspan=1,
+                        sticky=tk.W)
+
+        this_diag = tk.Entry(target_frame,
+                              width=entry_width,
+                              textvariable=in_dict[in_key]['DIAG'])
+        this_diag.grid(row=position, rowspan=1, column=3, columnspan=1,
+                        sticky=tk.W)
+
+    def add_boundary_entry_to_frame(self, position,
+                                    in_key, in_dict, target_frame):
+        entry_width = 8
+
+        this_lbl = tk.Label(target_frame,
+                      bg=self.bg_color_1,
+                      anchor=tk.E,
+                      text=(in_key+":"))
+        this_lbl.grid(row=position, rowspan=1, column=1, columnspan=1,
+                      sticky=tk.E)
+
+        this_target = tk.Entry(target_frame,
+                              width=entry_width,
+                              textvariable=in_dict[in_key]['LE_TARGET'])
+        this_target.grid(row=position, rowspan=1, column=2, columnspan=1,
+                        sticky=tk.W)
+
+        this_diag = tk.Entry(target_frame,
+                              width=entry_width,
+                              textvariable=in_dict[in_key]['LBOUNDS'])
+        this_diag.grid(row=position, rowspan=1, column=3, columnspan=1,
+                        sticky=tk.W)
+
+        this_diag = tk.Entry(target_frame,
+                              width=entry_width,
+                              textvariable=in_dict[in_key]['UBOUNDS'])
+        this_diag.grid(row=position, rowspan=1, column=4, columnspan=1,
+                        sticky=tk.W)
+
+ 
    
     def make_vmec_tab(self, this_tab):
         # VMEC Execution parameters.
@@ -425,6 +819,43 @@ class stellgen:
                                 text='WB24')
         vmec_wb24_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
 
+        row_counter += 1 # frame 3 will be used
+        col_counter = 1
+        vmec_aten_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_aten_beta_1p7, # self.doit,
+                                text='ATEN 1.7%')
+        vmec_aten_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        vmec_mljs2_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_mljs2_beta_1p8, # self.doit,
+                                text='MLJS2 1.8%')
+        vmec_mljs2_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        vmec_mljs3_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_mljs3_beta_1p8, # self.doit,
+                                text='MLJS3 1.8%')
+        vmec_mljs3_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        vmec_mljs4_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_mljs4_beta_2p1, # self.doit,
+                                text='MLJS4 2.1%')
+        vmec_mljs4_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        vmec_ware5p2_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_ware5p2_beta_1p9, # self.doit,
+                                text='WARE5P2 1.9%')
+        vmec_ware5p2_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
+        col_counter += 1
+        vmec_wb24_b1_button = tk.Button(self.vmec_frame3,
+                                command=self.load_vmec_init_position_wb24_beta_1p6, # self.doit,
+                                text='WB24 1.6%')
+        vmec_wb24_b1_button.grid(row=row_counter, rowspan=1, column=col_counter, columnspan=1)
+
     def load_vmec_p1(self, filename):
         vmec_nml = f90nml.read(filename)
         # numeric values
@@ -486,32 +917,66 @@ class stellgen:
         self.load_vmec_p2('templates/vmec_aten_a3b25_p2')
         
 
+    def load_vmec_init_position_aten_beta_1p7(self):
+        self.load_vmec_p1('templates/vmec_aten_beta_1p7_p1')
+        self.load_vmec_p2('templates/vmec_aten_beta_1p7_p2')
+        
+
     def load_vmec_init_position_mljs2(self):
         self.load_vmec_p1('templates/vmec_mljs2_a3b25_p1')
         self.load_vmec_p2('templates/vmec_mljs2_a3b25_p2')
+
+
+    def load_vmec_init_position_mljs2_beta_1p8(self):
+        self.load_vmec_p1('templates/vmec_mljs2_beta_1p8_p1')
+        self.load_vmec_p2('templates/vmec_mljs2_beta_1p8_p2')
 
 
     def load_vmec_init_position_mljs3(self):
         self.load_vmec_p1('templates/vmec_mljs3_a3b25_p1')
         self.load_vmec_p2('templates/vmec_mljs3_a3b25_p2')
 
+
+    def load_vmec_init_position_mljs3_beta_1p8(self):
+        self.load_vmec_p1('templates/vmec_mljs3_beta_1p8_p1')
+        self.load_vmec_p2('templates/vmec_mljs3_beta_1p8_p2')
+
+
     def load_vmec_init_position_mljs4(self):
         self.load_vmec_p1('templates/vmec_mljs4_a3b25_p1')
         self.load_vmec_p2('templates/vmec_mljs4_a3b25_p2')
+
+
+    def load_vmec_init_position_mljs4_beta_2p1(self):
+        self.load_vmec_p1('templates/vmec_mljs4_beta_2p1_p1')
+        self.load_vmec_p2('templates/vmec_mljs4_beta_2p1_p2')
+
 
     def load_vmec_init_position_ware5p2(self):
         self.load_vmec_p1('templates/vmec_ware5p2_a3b25_p1')
         self.load_vmec_p2('templates/vmec_ware5p2_a3b25_p2')
 
+
+    def load_vmec_init_position_ware5p2_beta_1p9(self):
+        self.load_vmec_p1('templates/vmec_ware5p2_beta_1p9_p1')
+        self.load_vmec_p2('templates/vmec_ware5p2_beta_1p9_p2')
+
+
     def load_vmec_init_position_wb24(self):
         self.load_vmec_p1('templates/vmec_wb24_a3b25_p1')
         self.load_vmec_p2('templates/vmec_wb24_a3b25_p2')
+
+   
+    def load_vmec_init_position_wb24_beta_1p6(self):
+        self.load_vmec_p1('templates/vmec_wb24_beta_1p6_p1')
+        self.load_vmec_p2('templates/vmec_wb24_beta_1p6_p2')
+
    
     def make_optimum_tab(self, this_tab):
         # Store everything in a dictionary for later
         self.OPTIMUM_PARAMS = {}
         self.OPTIMUM_PARAMS['NFUNC_MAX'] = tk.IntVar()
-        self.OPTIMUM_PARAMS['NFUNC_MAX'].set(10000)
+        self.OPTIMUM_PARAMS['NFUNC_MAX'].set(5000)
 
         self.OPTIMUM_PARAMS['EQUIL_TYPE'] = tk.StringVar()
         self.OPTIMUM_PARAMS['EQUIL_TYPE'].set('VMEC2000_ONEEQ')
@@ -555,29 +1020,29 @@ class stellgen:
         self.OPTIMUM_PARAMS['Extra_Lines'].set(extra_lines_str)
 
        # These parameters need to be written out later.
-        self.OPTIMUM_PARAMS['Profile_Functions'] = tk.StringVar()
-        extra_lines_str = ("!---------------------------\n" + 
-                           "!       Profile Functions   \n" + 
-                           "!---------------------------\n\n" + 
-                           "  ! Note that ne_opt is normalized to 1e18 meters^{-3}.\n" + 
-                           "  ! n = (0.7e20/m^3) * (1 - s^5)\n" + 
-                           "  NE_TYPE = 'power_series'\n" + 
-                           "  NE_OPT = 70.0 0.0 0.0 0.0 0.0 -70.0\n\n" + 
-                           "! TE_OPT and TI_OPT are in units of 1 eV.\n" + 
-                           " ! T  = 2 keV * (1 - s)\n" + 
-                           "  TE_TYPE = 'power_series'\n" + 
-                           "  TE_OPT = 2e3 -2e3\n" + 
-                           "  TI_TYPE = 'power_series'\n" + 
-                           "  TI_OPT = 2e3 -2e3\n\n" + 
-                           "bootj_type='power_series'\n" + 
-                           "! The number of nonzero entries in bootj_aux_f sets the degree of the polynomial fit!\n" + 
-                           "bootj_aux_f = 16*1.0e-10\n\n" + 
-                           "sfincs_s = 0.00851345, 0.0337639, 0.0748914, 0.130496, 0.198683, 0.277131, 0.363169, 0.453866, 0.546134, 0.636831, 0.722869, 0.801317, 0.869504, 0.925109, 0.966236, 0.991487 ! 16 points\n\n" + 
-                           " sfincs_min_procs = 32\n" + 
-                           " vboot_tolerance = 1.0e-2\n" + 
-                           " sfincs_Er_option='zero'\n" + 
-                           "!  sfincs_Er_option='estimate'\n\n")
-        self.OPTIMUM_PARAMS['Profile_Functions'].set(extra_lines_str)
+       # self.OPTIMUM_PARAMS['Profile_Functions'] = tk.StringVar()
+       # extra_lines_str = ("!---------------------------\n" + 
+       #                    "!       Profile Functions   \n" + 
+       #                    "!---------------------------\n\n" + 
+       #                    "  ! Note that ne_opt is normalized to 1e18 meters^{-3}.\n" + 
+       #                    "  ! n = (0.7e20/m^3) * (1 - s^5)\n" + 
+       #                    "  NE_TYPE = 'power_series'\n" + 
+       #                    "  NE_OPT = 70.0 0.0 0.0 0.0 0.0 -70.0\n\n" + 
+       #                    "! TE_OPT and TI_OPT are in units of 1 eV.\n" + 
+       #                    " ! T  = 2 keV * (1 - s)\n" + 
+       #                    "  TE_TYPE = 'power_series'\n" + 
+       #                    "  TE_OPT = 2e3 -2e3\n" + 
+       #                    "  TI_TYPE = 'power_series'\n" + 
+       #                    "  TI_OPT = 2e3 -2e3\n\n" + 
+       #                    "bootj_type='power_series'\n" + 
+       #                    "! The number of nonzero entries in bootj_aux_f sets the degree of the polynomial fit!\n" + 
+       #                    "bootj_aux_f = 16*1.0e-10\n\n" + 
+       #                    "sfincs_s = 0.00851345, 0.0337639, 0.0748914, 0.130496, 0.198683, 0.277131, 0.363169, 0.453866, 0.546134, 0.636831, 0.722869, 0.801317, 0.869504, 0.925109, 0.966236, 0.991487 ! 16 points\n\n" + 
+       #                    " sfincs_min_procs = 32\n" + 
+       #                    " vboot_tolerance = 1.0e-2\n" + 
+       #                    " sfincs_Er_option='zero'\n" + 
+       #                    "!  sfincs_Er_option='estimate'\n\n")
+       # self.OPTIMUM_PARAMS['Profile_Functions'].set(extra_lines_str)
 
         # do stuff and things
         # Make two frames. One for run parameters and one for scana
@@ -633,6 +1098,14 @@ class stellgen:
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['TARGET'].set(0.0)
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['SIGMA'].set(1.0e-3)
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_BNORMAL_TOTAL']['COUNT'].set(4096)
+         
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL'] = {}
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['TARGET']  = tk.DoubleVar()
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['SIGMA']  = tk.DoubleVar()
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['COUNT']  = tk.IntVar()
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['TARGET'].set(0.0)
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['SIGMA'].set(1.0e-3)
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_BNORMAL']['COUNT'].set(1)
         
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_K'] = {}
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_MAX_K']['TARGET']  = tk.DoubleVar()
@@ -655,7 +1128,7 @@ class stellgen:
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['SIGMA']  = tk.DoubleVar()
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['COUNT']  = tk.IntVar()
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['TARGET'].set(0.20)
-        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['SIGMA'].set(1.0e-3)
+        self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['SIGMA'].set(1.0e-5)
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_C2P_DIST_MIN']['COUNT'].set(1)
 
         self.OPTIMUM_TARGETS_PARAMS['REGCOIL_VOLUME_COIL'] = {}
@@ -720,9 +1193,9 @@ class stellgen:
         self.OPTIMUM_TARGETS_PARAMS['ASPECT'].set('\n')
 
         # 'Optimum Extras'
-        for this_key in ('BALLOON', 'BOOZER_COORD'):
-            self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
-            self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'].set(False)
+        #for this_key in ('BALLOON', 'BOOZER_COORD'):
+        #    self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
+        #    self.OPTIMUM_TARGETS_PARAMS[this_key]['Enabled'].set(False)
 
 
         # do stuff and things
@@ -747,7 +1220,7 @@ class stellgen:
         counter = 1
         self.add_optimum_legend_to_frame(counter, self.optimum_regcoil_targets_frame)
         
-        for this_key in ('REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_K', 'REGCOIL_RMS_K',
+        for this_key in ('REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL', 'REGCOIL_MAX_K', 'REGCOIL_RMS_K',
                          'REGCOIL_C2P_DIST_MIN', 'REGCOIL_VOLUME_COIL', 'REGCOIL_LAMBDA'):
             counter += 1
             self.add_optimum_target_entry_to_frame(counter, this_key,
@@ -1318,6 +1791,9 @@ class stellgen:
         # Store everything in a dictionary for later
         # BOOTSJ
         self.BOOTSTRAP_PARAMS = {}
+        self.BOOTSTRAP_PARAMS['BOOTSJ'] = {}
+        self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'] = tk.BooleanVar()
+        self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'].set(False)
         self.BOOTSTRAP_PARAMS['MBUSE']  = tk.IntVar()
         self.BOOTSTRAP_PARAMS['MBUSE'].set(64)
         self.BOOTSTRAP_PARAMS['NBUSE']  = tk.IntVar()
@@ -1329,7 +1805,7 @@ class stellgen:
         self.BOOTSTRAP_PARAMS['TETI']  = tk.DoubleVar()
         self.BOOTSTRAP_PARAMS['TETI'].set(1.00)
         self.BOOTSTRAP_PARAMS['TEMPRES']  = tk.DoubleVar()
-        self.BOOTSTRAP_PARAMS['TEMPRES'].set(64)
+        self.BOOTSTRAP_PARAMS['TEMPRES'].set(-1.0)
         self.BOOTSTRAP_PARAMS['DAMP_BS']  = tk.DoubleVar()
         self.BOOTSTRAP_PARAMS['DAMP_BS'].set(0.1)
         self.BOOTSTRAP_PARAMS['ISYMM0']  = tk.IntVar()
@@ -1340,6 +1816,9 @@ class stellgen:
         self.BOOTSTRAP_PARAMS['ATI'].set('2.0 -2.0')
 
         # SFINCS Stuff
+        self.BOOTSTRAP_PARAMS['SFINCS'] = {}
+        self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'] = tk.BooleanVar()
+        self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'].set(False)
         self.BOOTSTRAP_PARAMS['SFINCS_Text'] = tk.StringVar()
         sfincs_file = open('templates/sfincs_init_v0.txt')
         sfincs_text = sfincs_file.read()
@@ -1347,17 +1826,20 @@ class stellgen:
         self.BOOTSTRAP_PARAMS['SFINCS_Text'].set(sfincs_text)
 
         # Profiles Stuff
-        self.BOOTSTRAP_PARAMS['PROFILES'] = tk.StringVar()
+        self.BOOTSTRAP_PARAMS['PROFILES'] = {}
+        self.BOOTSTRAP_PARAMS['PROFILES']['Enabled'] = tk.BooleanVar()
+        self.BOOTSTRAP_PARAMS['PROFILES']['Enabled'].set(False)
+        self.BOOTSTRAP_PARAMS['PROFILES_Text'] = tk.StringVar()
         sfincs_file = open('templates/profiles_init_v0.txt')
         sfincs_text = sfincs_file.read()
         sfincs_file.close()
-        self.BOOTSTRAP_PARAMS['PROFILES'].set(sfincs_text)
+        self.BOOTSTRAP_PARAMS['PROFILES_Text'].set(sfincs_text)
 
 
         # do stuff and things
         # Make two frames. 
 
-        profiles_frame = tk.LabelFrame(this_tab,
+        self.profiles_frame = tk.LabelFrame(this_tab,
                                    bg=self.bg_color_1,
                                    bd=5,
                                    padx=5,
@@ -1365,13 +1847,13 @@ class stellgen:
                                    relief=tk.RIDGE,
                                    text="Profiles",
                                    font=('Helvetica', '14'))
-        profiles_frame.grid(row=1,
+        self.profiles_frame.grid(row=1,
                         rowspan=1,
                         column=1,
                         columnspan=1,
                         padx=5, pady=5, ipadx=5, ipady=5)
 
-        bootsj_frame = tk.LabelFrame(this_tab,
+        self.bootsj_frame = tk.LabelFrame(this_tab,
                                    bg=self.bg_color_1,
                                    bd=5,
                                    padx=5,
@@ -1379,13 +1861,13 @@ class stellgen:
                                    relief=tk.RIDGE,
                                    text="BOOTSJ Parameters",
                                    font=('Helvetica', '14'))
-        bootsj_frame.grid(row=1,
+        self.bootsj_frame.grid(row=1,
                         rowspan=1,
                         column=2,
                         columnspan=1,
                         padx=5, pady=5, ipadx=5, ipady=5)
 
-        sfincs_frame = tk.LabelFrame(this_tab,
+        self.sfincs_frame = tk.LabelFrame(this_tab,
                                    bg=self.bg_color_1,
                                    bd=5,
                                    padx=5,
@@ -1393,7 +1875,7 @@ class stellgen:
                                    relief=tk.RIDGE,
                                    text="SFINCS Parameters",
                                    font=('Helvetica', '14'))
-        sfincs_frame.grid(row=3,
+        self.sfincs_frame.grid(row=3,
                         rowspan=1,
                         column=1,
                         columnspan=1,
@@ -1401,25 +1883,37 @@ class stellgen:
 
 
         counter = 0
+        counter2 = 1
+        self.add_selectables_line_to_frame(counter, counter2, 'BOOTSJ',
+                                           self.BOOTSTRAP_PARAMS, self.bootsj_frame)
+
         for this_key in ('MBUSE', 'NBUSE', 'ZEFF1', 'DENS0', 'TETI', 'TEMPRES',
                          'DAMP_BS', 'ISYMM0', 'ATE', 'ATI'):
             counter += 1
             self.add_label_and_entry_to_frame(counter, this_key,
                                               self.BOOTSTRAP_PARAMS,
-                                              bootsj_frame)
+                                              self.bootsj_frame)
 
         row_counter = 0 # frame 2 will be used
+        col_counter = 0
+        self.add_selectables_line_to_frame(row_counter, col_counter, 'SFINCS',
+                                           self.BOOTSTRAP_PARAMS, self.sfincs_frame)
+        row_counter += 1 # frame 2 will be used
         self.SFINCS_Text = self.add_text_entry_to_frame(row_counter,
                                     'SFINCS_Text',
                                     self.BOOTSTRAP_PARAMS,
-                                    sfincs_frame, entry_width=80)
+                                    self.sfincs_frame, entry_width=80)
 
 
-        row_counter = 1 # frame 3 will be used
+        row_counter = 0 # frame 2 will be used
+        col_counter = 0
+        self.add_selectables_line_to_frame(row_counter, col_counter, 'PROFILES',
+                                           self.BOOTSTRAP_PARAMS, self.profiles_frame)
+        row_counter += 1 # frame 3 will be used
         self.Profiles_Text = self.add_text_entry_to_frame(row_counter,
-                                    'PROFILES',
+                                    'PROFILES_Text',
                                     self.BOOTSTRAP_PARAMS,
-                                    profiles_frame, entry_width=80)
+                                    self.profiles_frame, entry_width=80)
 
 
         
@@ -1429,7 +1923,7 @@ class stellgen:
         self.OPTIMUM_SCAN_PARAMS = {}
         #  Options with sigmas, or weights that are synced individually
         for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 
-                         'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_VOLUME_COIL',
+                         'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL', 'REGCOIL_VOLUME_COIL',
                         'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA'):
             self.OPTIMUM_SCAN_PARAMS[this_key] = {}
             self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'] = tk.BooleanVar()
@@ -1495,7 +1989,7 @@ class stellgen:
         counter2 += 1
         self.add_selectables_line_to_frame(counter, counter2, this_key, self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
         
-        for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 
+        for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL',
                          'REGCOIL_VOLUME_COIL', 'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA'):
             counter += 1
             self.add_label_and_scan_line_to_frame(counter, this_key,
@@ -1547,6 +2041,201 @@ class stellgen:
 
         counter2 += 1
         self.add_selectables_line_to_frame(counter, counter2, 'AUTOGEN_BOUNDARY_D', self.OPTIMUM_SCAN_PARAMS, self.optimum_scan_frame)
+
+
+    def make_tr_tab(self, this_tab):
+        # Store everything in a dictionary for later
+        self.TR_PARAMS = {}
+        self.BOUNDS_PARAMS = {}
+        #  
+        for this_key_prefix in ('RCTR', 'LCFSTR'):
+            for ii in range(0,10):
+               this_key = this_key_prefix + str(ii)
+               self.TR_PARAMS[this_key] = {}
+               self.TR_PARAMS[this_key]['LE_TARGET'] = tk.StringVar()
+               self.TR_PARAMS[this_key]['LE_TARGET'].set('')
+               self.TR_PARAMS[this_key]['DIAG'] = tk.StringVar()
+               self.TR_PARAMS[this_key]['DIAG'].set('')
+        for this_key_prefix in ('RCBOUNDS', 'LCFSBOUNDS'):
+            for ii in range(0,10):
+               this_key = this_key_prefix + str(ii)
+               self.BOUNDS_PARAMS[this_key] = {}
+               self.BOUNDS_PARAMS[this_key]['LE_TARGET'] = tk.StringVar()
+               self.BOUNDS_PARAMS[this_key]['LE_TARGET'].set('')
+               self.BOUNDS_PARAMS[this_key]['LBOUNDS'] = tk.StringVar()
+               self.BOUNDS_PARAMS[this_key]['LBOUNDS'].set('')
+               self.BOUNDS_PARAMS[this_key]['UBOUNDS'] = tk.StringVar()
+               self.BOUNDS_PARAMS[this_key]['UBOUNDS'].set('')
+
+
+        self.TR_PARAMS['RCTR0']['LE_TARGET'].set('0.0005')
+        self.TR_PARAMS['RCTR0']['DIAG'].set('2000')
+        self.TR_PARAMS['RCTR1']['LE_TARGET'].set('0.005')
+        self.TR_PARAMS['RCTR1']['DIAG'].set('200')
+        self.TR_PARAMS['RCTR2']['LE_TARGET'].set('0.02')
+        self.TR_PARAMS['RCTR2']['DIAG'].set('50')
+        self.TR_PARAMS['RCTR3']['LE_TARGET'].set('0.05')
+        self.TR_PARAMS['RCTR3']['DIAG'].set('50')
+        self.TR_PARAMS['RCTR4']['LE_TARGET'].set('0.3')
+        self.TR_PARAMS['RCTR4']['DIAG'].set('50')
+        self.TR_PARAMS['RCTR5']['LE_TARGET'].set('0.65')
+        self.TR_PARAMS['RCTR5']['DIAG'].set('50')
+        self.TR_PARAMS['RCTR6']['LE_TARGET'].set('10')
+        self.TR_PARAMS['RCTR6']['DIAG'].set('1.0')
+
+        self.BOUNDS_PARAMS['RCBOUNDS0']['LE_TARGET'].set('0.0005')
+        self.BOUNDS_PARAMS['RCBOUNDS0']['LBOUNDS'].set('-0.005')
+        self.BOUNDS_PARAMS['RCBOUNDS0']['UBOUNDS'].set('0.005')
+        self.BOUNDS_PARAMS['RCBOUNDS1']['LE_TARGET'].set('0.005')
+        self.BOUNDS_PARAMS['RCBOUNDS1']['LBOUNDS'].set('-0.02')
+        self.BOUNDS_PARAMS['RCBOUNDS1']['UBOUNDS'].set('0.02')
+        self.BOUNDS_PARAMS['RCBOUNDS2']['LE_TARGET'].set('0.02')
+        self.BOUNDS_PARAMS['RCBOUNDS2']['LBOUNDS'].set('-0.1')
+        self.BOUNDS_PARAMS['RCBOUNDS2']['UBOUNDS'].set('0.1')
+        self.BOUNDS_PARAMS['RCBOUNDS3']['LE_TARGET'].set('0.05')
+        self.BOUNDS_PARAMS['RCBOUNDS3']['LBOUNDS'].set('-0.2')
+        self.BOUNDS_PARAMS['RCBOUNDS3']['UBOUNDS'].set('0.2')
+        self.BOUNDS_PARAMS['RCBOUNDS4']['LE_TARGET'].set('0.3')
+        self.BOUNDS_PARAMS['RCBOUNDS4']['LBOUNDS'].set('-0.6')
+        self.BOUNDS_PARAMS['RCBOUNDS4']['UBOUNDS'].set('0.6')
+        self.BOUNDS_PARAMS['RCBOUNDS5']['LE_TARGET'].set('0.65')
+        self.BOUNDS_PARAMS['RCBOUNDS5']['LBOUNDS'].set('-0.8')
+        self.BOUNDS_PARAMS['RCBOUNDS5']['UBOUNDS'].set('0.8')
+        self.BOUNDS_PARAMS['RCBOUNDS6']['LE_TARGET'].set('10')
+        self.BOUNDS_PARAMS['RCBOUNDS6']['LBOUNDS'].set('1.5')
+        self.BOUNDS_PARAMS['RCBOUNDS6']['UBOUNDS'].set('3.0')
+
+        self.TR_PARAMS['LCFSTR0']['LE_TARGET'].set('0.0005')
+        self.TR_PARAMS['LCFSTR0']['DIAG'].set('2000')
+        self.TR_PARAMS['LCFSTR1']['LE_TARGET'].set('0.005')
+        self.TR_PARAMS['LCFSTR1']['DIAG'].set('200')
+        self.TR_PARAMS['LCFSTR2']['LE_TARGET'].set('0.020')
+        self.TR_PARAMS['LCFSTR2']['DIAG'].set('50')
+        self.TR_PARAMS['LCFSTR3']['LE_TARGET'].set('0.05')
+        self.TR_PARAMS['LCFSTR3']['DIAG'].set('20')
+        self.TR_PARAMS['LCFSTR4']['LE_TARGET'].set('0.30')
+        self.TR_PARAMS['LCFSTR4']['DIAG'].set('3.33')
+        self.TR_PARAMS['LCFSTR5']['LE_TARGET'].set('0.65')
+        self.TR_PARAMS['LCFSTR5']['DIAG'].set('1.54')
+        self.TR_PARAMS['LCFSTR6']['LE_TARGET'].set('10')
+        self.TR_PARAMS['LCFSTR6']['DIAG'].set('1.0')
+
+        self.BOUNDS_PARAMS['LCFSBOUNDS0']['LE_TARGET'].set('0.0005')
+        self.BOUNDS_PARAMS['LCFSBOUNDS0']['LBOUNDS'].set('-0.005')
+        self.BOUNDS_PARAMS['LCFSBOUNDS0']['UBOUNDS'].set('0.005')
+        self.BOUNDS_PARAMS['LCFSBOUNDS1']['LE_TARGET'].set('0.005')
+        self.BOUNDS_PARAMS['LCFSBOUNDS1']['LBOUNDS'].set('-0.02')
+        self.BOUNDS_PARAMS['LCFSBOUNDS1']['UBOUNDS'].set('0.02')
+        self.BOUNDS_PARAMS['LCFSBOUNDS2']['LE_TARGET'].set('0.020')
+        self.BOUNDS_PARAMS['LCFSBOUNDS2']['LBOUNDS'].set('-0.1')
+        self.BOUNDS_PARAMS['LCFSBOUNDS2']['UBOUNDS'].set('0.1')
+        self.BOUNDS_PARAMS['LCFSBOUNDS3']['LE_TARGET'].set('0.05')
+        self.BOUNDS_PARAMS['LCFSBOUNDS3']['LBOUNDS'].set('-0.2')
+        self.BOUNDS_PARAMS['LCFSBOUNDS3']['UBOUNDS'].set('0.2')
+        self.BOUNDS_PARAMS['LCFSBOUNDS4']['LE_TARGET'].set('0.30')
+        self.BOUNDS_PARAMS['LCFSBOUNDS4']['LBOUNDS'].set('-0.6')
+        self.BOUNDS_PARAMS['LCFSBOUNDS4']['UBOUNDS'].set('0.6')
+        self.BOUNDS_PARAMS['LCFSBOUNDS5']['LE_TARGET'].set('0.65')
+        self.BOUNDS_PARAMS['LCFSBOUNDS5']['LBOUNDS'].set('-0.8')
+        self.BOUNDS_PARAMS['LCFSBOUNDS5']['UBOUNDS'].set('0.8')
+        self.BOUNDS_PARAMS['LCFSBOUNDS6']['LE_TARGET'].set('10')
+        self.BOUNDS_PARAMS['LCFSBOUNDS6']['LBOUNDS'].set('1.0')
+        self.BOUNDS_PARAMS['LCFSBOUNDS6']['UBOUNDS'].set('3.0')
+
+            
+        self.regcoil_bounds_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="REGCOIL Bounds\nFinal index is for (0,0)",
+                                   font=('Helvetica', '14'))
+
+        self.regcoil_bounds_frame.grid(row=1,
+                        rowspan=1,
+                        column=1,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        self.regcoil_tr_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="REGCOIL Trust Region\nFinal index is for (0,0)",
+                                   font=('Helvetica', '14'))
+
+        self.regcoil_tr_frame.grid(row=1,
+                        rowspan=1,
+                        column=2,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        self.lcfs_bounds_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="LCFS Bounds\nFinal index is for (0,0)",
+                                   font=('Helvetica', '14'))
+
+        self.lcfs_bounds_frame.grid(row=1,
+                        rowspan=1,
+                        column=3,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        self.lcfs_tr_frame = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="LCFS Trust Region\nFinal index is for (0,0)",
+                                   font=('Helvetica', '14'))
+
+        self.lcfs_tr_frame.grid(row=1,
+                        rowspan=1,
+                        column=4,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+        counter = 0
+        this_key_prefix = 'RCBOUNDS'
+        for ii in range(0,10):
+           this_key = this_key_prefix + str(ii)
+           counter += 1
+           self.add_boundary_entry_to_frame(counter, this_key,
+                                          self.BOUNDS_PARAMS,
+                                          self.regcoil_bounds_frame)
+        counter = 0
+        this_key_prefix = 'RCTR'
+        for ii in range(0,10):
+           this_key = this_key_prefix + str(ii)
+           counter += 1
+           self.add_trust_region_entry_to_frame(counter, this_key,
+                                          self.TR_PARAMS,
+                                          self.regcoil_tr_frame)
+        counter = 0
+        this_key_prefix = 'LCFSBOUNDS'
+        for ii in range(0,10):
+           this_key = this_key_prefix + str(ii)
+           counter += 1
+           self.add_boundary_entry_to_frame(counter, this_key,
+                                          self.BOUNDS_PARAMS,
+                                          self.lcfs_bounds_frame)
+        counter = 0
+        this_key_prefix = 'LCFSTR'
+        for ii in range(0,10):
+           this_key = this_key_prefix + str(ii)
+           counter += 1
+           self.add_trust_region_entry_to_frame(counter, this_key,
+                                          self.TR_PARAMS,
+                                          self.lcfs_tr_frame)
+                                               
 
 
     def make_filenames_tab(self, this_tab):
@@ -1619,8 +2308,16 @@ class stellgen:
         self.FILESETC['BOUNDARY_INIT_IN'] = tk.StringVar()
         self.FILESETC['BOUNDARY_INIT_IN'].set('/Users/schmittj/src/xStellTools/Generator/templates/vmec_mljs4_a3b25_p2_nml')
 
+        self.FILESETC['COBRA_FILE'] = {}
+        self.FILESETC['COBRA_FILE']['Enabled'] = tk.BooleanVar()
+        self.FILESETC['COBRA_FILE']['Enabled'].set(False)
+        self.FILESETC['COBRA_FILEIN'] = tk.StringVar()
+        self.FILESETC['COBRA_FILEIN'].set('')
+        self.FILESETC['COBRA_FILEOUT'] = tk.StringVar()
+        self.FILESETC['COBRA_FILEOUT'].set('in_cobra.stell0.rerun')
+ 
         
-        # Make two frames. 
+        # Make three frames. 
         self.filenames_frame1 = tk.LabelFrame(this_tab,
                                    bg=self.bg_color_1,
                                    bd=5,
@@ -1644,7 +2341,22 @@ class stellgen:
                                    text="Additional Filenames",
                                    font=('Helvetica', '14'))
         self.filenames_frame2.grid(row=1,
-                        rowspan=2,
+                        rowspan=1,
+                        column=2,
+                        columnspan=1,
+                        padx=5, pady=5, ipadx=5, ipady=5)
+
+
+        self.filenames_frame3 = tk.LabelFrame(this_tab,
+                                   bg=self.bg_color_1,
+                                   bd=5,
+                                   padx=5,
+                                   pady=5,
+                                   relief=tk.RIDGE,
+                                   text="Save/Restore",
+                                   font=('Helvetica', '14'))
+        self.filenames_frame3.grid(row=2,
+                        rowspan=1,
                         column=2,
                         columnspan=1,
                         padx=5, pady=5, ipadx=5, ipady=5)
@@ -1732,11 +2444,55 @@ class stellgen:
 
         find_boundary.grid(row=counter, rowspan=1, column=1, columnspan=1)
         
+        
+        counter += 1
+        counter2 = 1
+        self.add_selectables_line_to_frame(counter, counter2, 'COBRA_FILE',
+                                           self.FILESETC, self.filenames_frame2)
+        counter += 1
+        self.add_label_and_entry_to_frame(counter, 'COBRA_FILEIN',
+                                          self.FILESETC,
+                                          self.filenames_frame2)
+        counter += 1
+        self.add_label_and_entry_to_frame(counter, 'COBRA_FILEOUT',
+                                          self.FILESETC,
+                                          self.filenames_frame2)
+
+        counter += 1
+        find_cobra = tk.Button(self.filenames_frame2,
+                                command=self.find_cobra, # self.doit,
+                                text='Select COBRA File')
+
+        find_cobra.grid(row=counter, rowspan=1, column=1, columnspan=1)
+
+
+        counter = 0
+        save_settings = tk.Button(self.filenames_frame3,
+                                command=self.save, # self.doit,
+                                text='Save Session')
+
+        save_settings.grid(row=counter, rowspan=1, column=1, columnspan=1)
+
+
+        counter += 1
+        load_settings = tk.Button(self.filenames_frame3,
+                                command=self.load, # self.doit,
+                                text='Restore Session')
+
+        load_settings.grid(row=counter, rowspan=1, column=1, columnspan=1)
+
+
     def find_nescin(self):
         # Use input as the intial guess
         importFile = filedialog.askopenfilename(
             initialdir=os.path.dirname('./input/'))
         self.FILESETC['NESCIN_FILEIN'].set(importFile)
+
+    def find_cobra(self):
+        # Use input as the intial guess
+        importFile = filedialog.askopenfilename(
+            initialdir=os.path.dirname('./input/'))
+        self.FILESETC['COBRA_FILEIN'].set(importFile)
 
     def find_boundary(self):
         # Use input as the intial guess
@@ -1762,7 +2518,7 @@ class stellgen:
         total_variations = 1
         self.variation_list = []
         self.variation_count = []
-        for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL',
+        for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL',
                          'REGCOIL_VOLUME_COIL', 'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA'):
             if (self.OPTIMUM_SCAN_PARAMS[this_key]['Enabled'].get()):
                 selected_values = np.array(self.OPTIMUM_SCAN_PARAMS[this_key]['Values'].get().replace(',', ' ').split(), 'float')
@@ -1894,15 +2650,17 @@ class stellgen:
             self.write_indata_nml()
             self.write_optimum_nml()
             self.write_regcoil_nml()
-            self.write_bootsj_nml()
-            self.write_sfincs_nml()
+            if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'].get() is True):
+               self.write_bootsj_nml()
+            if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'].get() is True):
+               self.write_sfincs_nml()
             self.create_files(the_foldername_in,the_filename_in)
         else: 
             # pop a variation of the list
             my_scan_item = variation_list_in.pop()
             my_scan_count = variation_count_in.pop()
             # depending on the type, do different things
-            if (my_scan_item in('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL',
+            if (my_scan_item in('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL',
                          'REGCOIL_VOLUME_COIL', 'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA')):
                 print('Scan over ' + my_scan_item + ' with ' + str(my_scan_count) + ' steps')
                 # Loop over number of variations
@@ -1919,6 +2677,8 @@ class stellgen:
                         fext = '_RC2B'
                     elif (my_scan_item == 'REGCOIL_BNORMAL_TOTAL'):
                         fext = '_RCBNT'
+                    elif (my_scan_item == 'REGCOIL_MAX_BNORMAL'):
+                        fext = '_RCMBN'
                     elif (my_scan_item == 'REGCOIL_VOLUME_COIL'):
                         fext = '_RVC'
                     elif (my_scan_item == 'REGCOIL_C2P_DIST_MIN'):
@@ -2093,80 +2853,119 @@ class stellgen:
         
         for ii in range(0,num_fourier_modes):
             #print('<----ii: ' + str(ii) + ', rmnc: ' + str(abs(rmnc_coil[ii])))
-            if (abs(rmnc_coil[ii]) < 0.0005):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.005'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.005'
-            elif (abs(rmnc_coil[ii]) < 0.005):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.02'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(rmnc_coil[ii]) < 0.02):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.1'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.1'
-            elif (abs(rmnc_coil[ii]) < 0.05):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.2'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.2'
-            elif (abs(rmnc_coil[ii]) < 0.30):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.6'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.6'
-            elif (abs(rmnc_coil[ii]) < 0.65):
-                r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.8'
-                r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.8'
-            else:
-                #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
-                if ((m[ii] == 0) and (n[ii] == 0)):
-                    r_min00 = 0.75 * rmnc_coil[ii]
-                    r_max00 = 1.25 * rmnc_coil[ii]
-                    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
-                                   ', ' + str(n[ii]) + ') = ' + str(r_min00)
-                    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = ' + str(r_max00)
-                else:
-                    print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+            for jj in range(0,10):
+                this_key = 'RCBOUNDS' + str(jj)
+                #print('this_key = ' + this_key)
+                try:
+                    this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
+                    this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
+                    this_ubound = float(self.BOUNDS_PARAMS[this_key]['UBOUNDS'].get())
+                except:
+                    this_target = np.Inf
+                    this_lbound = -1.
+                    this_ubound = 1.
 
-            if (abs(zmns_coil[ii]) < 0.0005):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.005'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.005'
-            elif (abs(zmns_coil[ii]) < 0.005):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.02'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(zmns_coil[ii]) < 0.02):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.1'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.1'
-            elif (abs(zmns_coil[ii]) < 0.05):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.2'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.2'
-            elif (abs(zmns_coil[ii]) < 0.30):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.6'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.6'
-            elif (abs(zmns_coil[ii]) < 0.65):
-                z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = -0.8'
-                z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.8'
-            else:
-                print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+                if (abs(rmnc_coil[ii]) <= this_target):
+                    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+                                   ', ' + str(n[ii]) + ') = ' + str(this_lbound)
+                    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+                                   ', ' + str(n[ii]) + ') = ' + str(this_ubound)
+                    break
+
+            for jj in range(0,10):
+                this_key = 'RCBOUNDS' + str(jj)
+                #print('this_key = ' + this_key)
+                try:
+                    this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
+                    this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
+                    this_ubound = float(self.BOUNDS_PARAMS[this_key]['UBOUNDS'].get())
+                except:
+                    this_target = np.Inf
+                    this_lbound = -1.
+                    this_ubound = 1.
+
+                if (abs(zmns_coil[ii]) <= this_target):
+                    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+                                   ', ' + str(n[ii]) + ') = ' + str(this_lbound)
+                    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+                                   ', ' + str(n[ii]) + ') = ' + str(this_ubound)
+                    break
+
+
+            # if (abs(rmnc_coil[ii]) < 0.0005):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.005'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.005'
+            #elif (abs(rmnc_coil[ii]) < 0.005):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.02'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #elif (abs(rmnc_coil[ii]) < 0.02):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.1'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.1'
+            #elif (abs(rmnc_coil[ii]) < 0.05):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.2'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.2'
+            #elif (abs(rmnc_coil[ii]) < 0.30):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.6'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.6'
+            #elif (abs(rmnc_coil[ii]) < 0.65):
+            #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.8'
+            #    r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.8'
+            #else:
+            #    #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
+            #    if ((m[ii] == 0) and (n[ii] == 0)):
+            #        r_min00 = 0.75 * rmnc_coil[ii]
+            #        r_max00 = 1.25 * rmnc_coil[ii]
+            #        r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
+            #                       ', ' + str(n[ii]) + ') = ' + str(r_min00)
+            #        r_bounds_max = '  REGCOIL_RCWS_RBOUND_C_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = ' + str(r_max00)
+            #    else:
+            #        print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+
+            #if (abs(zmns_coil[ii]) < 0.0005):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.005'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.005'
+            #elif (abs(zmns_coil[ii]) < 0.005):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.02'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #elif (abs(zmns_coil[ii]) < 0.02):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.1'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.1'
+            #elif (abs(zmns_coil[ii]) < 0.05):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.2'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.2'
+            #elif (abs(zmns_coil[ii]) < 0.30):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.6'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.6'
+            #elif (abs(zmns_coil[ii]) < 0.65):
+            #    z_bounds_min = '  REGCOIL_RCWS_ZBOUND_S_MIN(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = -0.8'
+            #    z_bounds_max = '  REGCOIL_RCWS_ZBOUND_S_MAX(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 0.8'
+            #else:
+            #    print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
                             
             bounds_text += r_bounds_min + '\n' + r_bounds_max + '\n'
             if ( (m[ii] == 0) and (n[ii] == 0) ):
@@ -2222,57 +3021,122 @@ class stellgen:
         # be nice and close the file            
         nescin_file.close()
 
-        # Generate bounds.
+        # Generate trust regions.
         dbounds_text = ''
         
         for ii in range(0,num_fourier_modes):
             #print('<----ii: ' + str(ii) + ', rmnc: ' + str(abs(rmnc_coil[ii])))
-            if (abs(rmnc_coil[ii]) < 0.0005):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.005'
-            elif (abs(rmnc_coil[ii]) < 0.005):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(rmnc_coil[ii]) < 0.02):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.1'
-            elif (abs(rmnc_coil[ii]) < 0.05):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.2'
-            elif (abs(rmnc_coil[ii]) < 0.30):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.6'
-            elif (abs(rmnc_coil[ii]) < 0.65):
-                dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.8'
-            else:
-                #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
-                if ((m[ii] == 0) and (n[ii] == 0)):
-                    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = ' + str(rmnc_coil[ii])
-                else:
-                    print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+            #if (abs(rmnc_coil[ii]) < 0.0005):
+            for jj in range(0,10):
+                this_key = 'RCTR' + str(jj)
+                #print('this_key = ' + this_key)
+                try:
+                    this_target = float(self.TR_PARAMS[this_key]['LE_TARGET'].get())
+                    this_diag = float(self.TR_PARAMS[this_key]['DIAG'].get())
+                except:
+                    this_target = np.Inf
+                    this_diag = 1.0
 
-            if (abs(zmns_coil[ii]) < 0.0005):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.005'
-            elif (abs(zmns_coil[ii]) < 0.005):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.02'
-            elif (abs(zmns_coil[ii]) < 0.02):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.1'
-            elif (abs(zmns_coil[ii]) < 0.05):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.2'
-            elif (abs(zmns_coil[ii]) < 0.30):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.6'
-            elif (abs(zmns_coil[ii]) < 0.65):
-                dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
-                               ', ' + str(n[ii]) + ') = 0.8'
-            else:
-                print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+                if (abs(rmnc_coil[ii]) <= this_target):
+                    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+                                ', ' + str(n[ii]) + ') = ' + str(this_diag) 
+                    break
+                
+            for jj in range(0,10):
+                this_key = 'RCTR' + str(jj)
+                #print('this_key = ' + this_key)
+                try:
+                    this_target = float(self.TR_PARAMS[this_key]['LE_TARGET'].get())
+                    this_diag = float(self.TR_PARAMS[this_key]['DIAG'].get())
+                except:
+                    this_target = np.Inf
+                    this_diag = 1.0
+
+                if (abs(zmns_coil[ii]) <= this_target):
+                    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+                                ', ' + str(n[ii]) + ') = ' + str(this_diag) 
+                    break
+
+
+            #if (abs(rmnc_coil[ii]) < self.TR_PARAMS['RCTR1']['LE_TARGET'].get()):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 800.'
+            #                   ', ' + str(n[ii]) + ') = 2000.'
+            #                   ', ' + str(n[ii]) + ') = 0.0005'
+            #elif (abs(rmnc_coil[ii]) < 0.005):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 80.'
+            #                   ', ' + str(n[ii]) + ') = 200.'
+            #                   ', ' + str(n[ii]) + ') = 0.005'
+            #elif (abs(rmnc_coil[ii]) < 0.02):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20.'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #elif (abs(rmnc_coil[ii]) < 0.05):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #elif (abs(rmnc_coil[ii]) < 0.30):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
+            ##                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 3.33'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #elif (abs(rmnc_coil[ii]) < 0.65):
+            #    dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 1.54'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #else:
+            #    #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
+            #    if ((m[ii] == 0) and (n[ii] == 0)):
+            #        dr_bounds = '  DREGCOIL_RCWS_RBOUND_C_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = ' + str(1.0)
+            #                   ', ' + str(n[ii]) + ') = ' + str(0.01*round(100.0*rmnc_coil[ii]))
+            #                   ', ' + str(n[ii]) + ') = ' + str(0.01*round(100.0/rmnc_coil[ii]))
+            #                   ', ' + str(n[ii]) + ') = ' + str(rmnc_coil[ii])
+            #    else:
+            #        print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
+
+            # if (abs(zmns_coil[ii]) < 0.0005):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 800'
+            #                   ', ' + str(n[ii]) + ') = 2000'
+            #                   ', ' + str(n[ii]) + ') = 0.0005'
+            #elif (abs(zmns_coil[ii]) < 0.005):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 80'
+            #                   ', ' + str(n[ii]) + ') = 200'
+            #                   ', ' + str(n[ii]) + ') = 0.005'
+            #elif (abs(zmns_coil[ii]) < 0.02):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #elif (abs(zmns_coil[ii]) < 0.05):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #elif (abs(zmns_coil[ii]) < 0.30):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 3.33'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #elif (abs(zmns_coil[ii]) < 0.65):
+            #    dz_bounds = '  DREGCOIL_RCWS_ZBOUND_S_OPT(' + str(m[ii]) + \
+            #                   ', ' + str(n[ii]) + ') = 20'
+            #                   ', ' + str(n[ii]) + ') = 50'
+            #                   ', ' + str(n[ii]) + ') = 1.54'
+            #                   ', ' + str(n[ii]) + ') = 0.02'
+            #else:
+            #    print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(m[ii]) + ', ' + str(n[ii]) + ')')
                             
             dbounds_text += dr_bounds + '\n'
             if ( (m[ii] == 0) and (n[ii] == 0) ):
@@ -2302,80 +3166,122 @@ class stellgen:
                 this_zbs = zbs[nn][mm+8]
                 #print('  mm=', str(mm), ' nn=', str(nn), ', rbc(mm,nn) = ', str(this_rbc))
                 #print('  mm=', str(mm), ' nn=', str(nn), ', zbs(mm,nn) = ', str(this_zbs))
-                if (abs(this_rbc) < 0.0005):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.005'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.005'
-                elif (abs(this_rbc) < 0.005):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.02'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.02'
-                elif (abs(this_rbc) < 0.02):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.1'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.1'
-                elif (abs(this_rbc) < 0.05):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.2'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.2'
-                elif (abs(this_rbc) < 0.30):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.6'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.6'
-                elif (abs(this_rbc) < 0.65):
-                    rbc_min = '  RBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.8'
-                    rbc_max = '  RBC_MAX(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.8'
-                else:
-                    #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
-                    if ((mm == 0) and (nn == 0)):
-                        r_min00 = 0.75 * this_rbc
-                        r_max00 = 1.25 * this_rbc
+                for jj in range(0,10):
+                    this_key = 'LCFSBOUNDS' + str(jj)
+                    #print('this_key = ' + this_key)
+                    try:
+                        this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
+                        this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
+                        this_ubound = float(self.BOUNDS_PARAMS[this_key]['UBOUNDS'].get())
+                    except:
+                        this_target = np.Inf
+                        this_lbound = -1.
+                        this_ubound = 1.
+
+                    if (abs(this_rbc) < this_target):
                         rbc_min = '  RBC_MIN(' + str(mm) + \
-                                       ', ' + str(nn) + ') = ' + str(r_min00)
+                                       ', ' + str(nn) + ') = ' + str(this_lbound)
                         rbc_max = '  RBC_MAX(' + str(mm) + \
-                                       ', ' + str(nn) + ') = ' + str(r_max00)
-                    else:
-                        print('<----Check the input file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(nn) + ')')
+                                       ', ' + str(nn) + ') = ' + str(this_ubound)
+                        break
+
+                for jj in range(0,10):
+                    this_key = 'LCFSBOUNDS' + str(jj)
+                    #print('this_key = ' + this_key)
+                    try:
+                        this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
+                        this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
+                        this_ubound = float(self.BOUNDS_PARAMS[this_key]['UBOUNDS'].get())
+                    except:
+                        this_target = np.Inf
+                        this_lbound = -1.
+                        this_ubound = 1.
+
+                    if (abs(this_zbs) < this_target):
+                        zbs_min = '  ZBC_MIN(' + str(mm) + \
+                                       ', ' + str(nn) + ') = ' + str(this_lbound)
+                        zbs_max = '  ZBC_MIN(' + str(mm) + \
+                                       ', ' + str(nn) + ') = ' + str(this_ubound)
+                        break
+
+
+
+
+
+                #if (abs(this_rbc) < 0.0005):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.005'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.005'
+                #elif (abs(this_rbc) < 0.005):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.02'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.02'
+                #elif (abs(this_rbc) < 0.02):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.1'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.1'
+                #elif (abs(this_rbc) < 0.05):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.2'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.2'
+                #elif (abs(this_rbc) < 0.30):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.6'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.6'
+                #elif (abs(this_rbc) < 0.65):
+                #    rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.8'
+                #    rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.8'
+                #else:
+                #    #print('m = ' + str(m[ii]) + ', n = ' + str(n[ii]))
+                #    if ((mm == 0) and (nn == 0)):
+                #        r_min00 = 0.75 * this_rbc
+                #        r_max00 = 1.25 * this_rbc
+                #        rbc_min = '  RBC_MIN(' + str(mm) + \
+                #                       ', ' + str(nn) + ') = ' + str(r_min00)
+                #        rbc_max = '  RBC_MAX(' + str(mm) + \
+                #                       ', ' + str(nn) + ') = ' + str(r_max00)
+                #    else:
+                #        print('<----Check the input file.  Large RMNC Mode? (m,n) = (' + str(m[ii]) + ', ' + str(nn) + ')')
  
-                if (abs(this_zbs) < 0.0005):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.005'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.005'
-                elif (abs(this_zbs) < 0.005):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.02'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.02'
-                elif (abs(this_zbs) < 0.02):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.1'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.1'
-                elif (abs(this_zbs) < 0.05):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.2'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.2'
-                elif (abs(this_zbs) < 0.30):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.6'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.6'
-                elif (abs(this_zbs) < 0.65):
-                    zbs_min = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = -0.8'
-                    zbs_max = '  ZBC_MIN(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.8'
-                else:
-                    print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(mm) + ', ' + str(nn) + ')')
+                #if (abs(this_zbs) < 0.0005):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.005'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.005'
+                #elif (abs(this_zbs) < 0.005):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.02'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.02'
+                #elif (abs(this_zbs) < 0.02):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.1'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.1'
+                #elif (abs(this_zbs) < 0.05):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.2'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.2'
+                #elif (abs(this_zbs) < 0.30):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.6'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.6'
+                #elif (abs(this_zbs) < 0.65):
+                #    zbs_min = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = -0.8'
+                #    zbs_max = '  ZBC_MIN(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 0.8'
+                #else:
+                #    print('<----Check the nescin file.  Large ZMNS Mode? (m,n) = (' + str(mm) + ', ' + str(nn) + ')')
                                  
                 bounds_text += rbc_min + '\n' + rbc_max + '\n'
                 if ( (mm == 0) and (nn == 0) ):
@@ -2409,30 +3315,45 @@ class stellgen:
 
                 #print('  mm=', str(mm), ' nn=', str(nn), ', rbc(mm,nn) = ', str(this_rbc))
                 #print('  mm=', str(mm), ' nn=', str(nn), ', zbs(mm,nn) = ', str(this_zbs))
-                if (this_max < 0.0005):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.005'
-                elif (this_max < 0.005):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.02'
-                elif (this_max < 0.020):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.1'
-                elif (this_max < 0.05):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.2'
-                elif (this_max < 0.30):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.6'
-                elif (this_max < 0.65):
-                    dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = 0.8'
-                else:
-                    if ((mm == 0) and (nn == 0)):
+                for jj in range(0,10):
+                    this_key = 'LCFSTR' + str(jj)
+                    #print('this_key = ' + this_key)
+                    try:
+                        this_target = float(self.TR_PARAMS[this_key]['LE_TARGET'].get())
+                        this_diag = float(self.TR_PARAMS[this_key]['DIAG'].get())
+                    except:
+                        this_target = np.Inf
+                        this_diag = 1.0
+
+                    if (this_max <= this_target):
                         dbound = '  DBOUND(' + str(mm) + \
-                                   ', ' + str(nn) + ') = ' + str(this_max)
-                    else:
-                        print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(mm) + ', ' + str(nn) + ')')
+                                   ', ' + str(nn) + ') = ' + str(this_diag)
+                        break
+
+                #if (this_max < 0.0005):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 2000'
+                #elif (this_max < 0.005):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 200'
+                #elif (this_max < 0.020):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 50'
+                #elif (this_max < 0.05):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 20'
+                #elif (this_max < 0.30):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 3.33'
+                #elif (this_max < 0.65):
+                #    dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = 1.54'
+                #else:
+                #    if ((mm == 0) and (nn == 0)):
+                #        dbound = '  DBOUND(' + str(mm) + \
+                #                   ', ' + str(nn) + ') = ' + str(round(0.01*(100.0/this_max)))
+                #    else:
+                #        print('<----Check the nescin file.  Large RMNC Mode? (m,n) = (' + str(mm) + ', ' + str(nn) + ')')
                              
                 dbound_text += dbound + '\n'
                               
@@ -2553,7 +3474,7 @@ class stellgen:
             # now write targets
             
             # REGCOIL
-            for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL',
+            for this_key in ('REGCOIL_MAX_K', 'REGCOIL_RMS_K', 'REGCOIL_CHI2_B', 'REGCOIL_BNORMAL_TOTAL', 'REGCOIL_MAX_BNORMAL',
                              'REGCOIL_VOLUME_COIL', 'REGCOIL_C2P_DIST_MIN', 'REGCOIL_LAMBDA'):
                 count = self.OPTIMUM_TARGETS_PARAMS[this_key]['COUNT'].get()
                 target = self.OPTIMUM_TARGETS_PARAMS[this_key]['TARGET'].get()
@@ -2647,7 +3568,8 @@ class stellgen:
             input_file.write(self.ASPECT_Text.get(1.0, "end"))
 
             # Profiles
-            input_file.write(self.Profiles_Text.get(1.0, "end"))
+            if (self.BOOTSTRAP_PARAMS['PROFILES']['Enabled'].get() is True):
+               input_file.write(self.Profiles_Text.get(1.0, "end"))
 
             # Write the variable lines to the files
             input_file.write(self.OPTIMUM_VARIABLE_LINES.get(1.0, "end"))  
@@ -2756,20 +3678,22 @@ class stellgen:
         for this_line in file_text:
             input_file.write(this_line)
 
-        temp_file = open(self.my_tempfile4, 'r')
+        if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'].get() is True):
+           temp_file = open(self.my_tempfile4, 'r')
         
-        file_text = temp_file.readlines()
-        temp_file.close()
-        for this_line in file_text:
-            input_file.write(this_line)
+           file_text = temp_file.readlines()
+           temp_file.close()
+           for this_line in file_text:
+               input_file.write(this_line)
 
-        temp_file = open(self.my_tempfile5, 'r')
+        if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'].get() is True):
+           temp_file = open(self.my_tempfile5, 'r')
         
-        file_text = temp_file.readlines()
-        temp_file.close()
-        for this_line in file_text:
-            input_file.write(this_line)
-            
+           file_text = temp_file.readlines()
+           temp_file.close()
+           for this_line in file_text:
+               input_file.write(this_line)
+               
         
         input_file.write('\n&END\n')
             
@@ -2780,8 +3704,10 @@ class stellgen:
         os.remove(self.my_tempfile1)
         os.remove(self.my_tempfile2)
         os.remove(self.my_tempfile3)
-        os.remove(self.my_tempfile4)
-        os.remove(self.my_tempfile5)
+        if (self.BOOTSTRAP_PARAMS['BOOTSJ']['Enabled'].get() is True):
+          os.remove(self.my_tempfile4)
+        if (self.BOOTSTRAP_PARAMS['SFINCS']['Enabled'].get() is True):
+          os.remove(self.my_tempfile5)
 
         # generate filename for the README file, and open it for writing
         readme_fn_complete = os.path.join(output_directory, 'README.txt')
@@ -2808,6 +3734,11 @@ class stellgen:
         if (self.FILESETC['NESCIN']['Enabled'].get() is True):
             source_file = self.FILESETC['NESCIN_FILEIN'].get()
             destination_file = os.path.join(output_directory, self.FILESETC['NESCIN_FILEOUT'].get())
+            shutil.copyfile(source_file, destination_file)
+
+        if (self.FILESETC['COBRA_FILE']['Enabled'].get() is True):
+            source_file = self.FILESETC['COBRA_FILEIN'].get()
+            destination_file = os.path.join(output_directory, self.FILESETC['COBRA_FILEOUT'].get())
             shutil.copyfile(source_file, destination_file)
                      
 # This is where the magic happens

@@ -1,0 +1,21 @@
+!----- Runtime Parameters -----
+&INDATA
+  DELT =    8.000000000000E-001
+  NITER = 10000
+  NSTEP = 200
+  TCON0 =    1.000000000000E+000
+  NS_ARRAY =                51
+  FTOL_ARRAY =    1.000000E-11
+  NITER_ARRAY =          10000
+  PRECON_TYPE = 'NONE'
+  PREC2D_THRESHOLD =   1.000000E-30
+!----- Grid Parameters -----
+  LASYM = F
+  NFP = 0005
+  MPOL = 0008
+  NTOR = 0008
+  NZETA = 50
+  PHIEDGE =    4.850778488483E-001
+!----- Free Boundary Parameters -----
+  LFREEB = F
+/
