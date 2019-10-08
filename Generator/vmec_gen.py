@@ -5,11 +5,12 @@ import f90nml
 gen = {}  # make a dictionary
 
 gen['vmec_ext'] = 'aten_a3b25'
-gen['vmec_input_in'] = 'input.' + gen['vmec_ext']
-gen['vmec_input_out'] = gen['vmec_input_in']
+gen['vmec_input_in'] =  'input/' + 'input.' + gen['vmec_ext']
+gen['vmec_input_out'] = 'input.' + gen['vmec_ext']
 gen['boozer_input_out'] = 'in_booz.' + gen['vmec_ext']
 
-gen['slurm_file'] = 'slurm_vmec.sh'
+gen['slurm_file_in'] = 'input/slurm_vmec.sh'
+gen['slurm_file_out'] = 'slurm_vmec.sh'
 
 gen['mpol'] = (6, 8, 10, 12, 14, 16)
 gen['ntor'] = (8, 10, 12, 14, 16, 18, 20, 24)
@@ -27,14 +28,14 @@ my_parser.default_start_index = 0
 nml_in = my_parser.read(gen['vmec_input_in'])
 
 # directory structure and name(s)
-# aten_a3b25_mpol#_ntor#_ns#_ftol#_mboz#_nboz#/input.*
+# aten_a3b25_mpol#_ntor#_ns#_ftol#/input.*, in-booz.*_mboz#_nboz#
 
 # loop over target values, generate output directory names and filenames, write files, close files
 for i_mpol, mpol in zip(range(0, len(gen['mpol'])), gen['mpol']):
   for i_ntor, ntor in zip(range(0, len(gen['ntor'])), gen['ntor']):
     for i_nsiterftol, ns, niter, ftol in zip(range(0, len(gen['ns'])), gen['ns'], gen['niter'], gen['ftol']):
 
-      dir_out = ( gen['vmec_ext'] + '_mpol' + str(i_mpol) + '_ntor' + str(i_ntor) +
+      dir_out = ( 'output/' + gen['vmec_ext'] + '_mpol' + str(i_mpol) + '_ntor' + str(i_ntor) +
                   '_nsiterftol' + str(i_nsiterftol) ) 
       vmec_out = gen['vmec_input_out']
 
@@ -77,6 +78,11 @@ for i_mpol, mpol in zip(range(0, len(gen['mpol'])), gen['mpol']):
           nextline = (vmec_out + '\n')
           theboozfile.write(nextline)
           theboozfile.close()
+
+      # copy the slurm file
+      source_file = gen['slur_file_in']
+      destination_file = os.path.join(dir_out, gen['slur_file_out'])
+      shutil.copyfile(soure_file, destination_file)
 
 print("<---end generator.py")
 
