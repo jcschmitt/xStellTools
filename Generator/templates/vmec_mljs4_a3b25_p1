@@ -7,9 +7,9 @@
   NITER = 10000
   NSTEP =  200
   TCON0 =   2.00E+00
-  NS_ARRAY    =      16       32       51      !128  !Use 64 for start
-  NITER_ARRAY =    2000     4000     8000      !10000  ! Increase NITER for 16 surfaces
-  FTOL_ARRAY  = 1.0E-06  1.0E-08  1.0E-10      !1.0E-12
+  NS_ARRAY    =     51   
+  NITER_ARRAY =  10000  
+  FTOL_ARRAY  =  1.0E-11
   PRECON_TYPE = 'none'
   PREC2D_THRESHOLD =   1.000000E-19
 !----- Grid Parameters -----
@@ -17,6 +17,7 @@
   NFP = 0005
   MPOL = 008
   NTOR = 008
+  NZETA = 50
    PHIEDGE = 0.48507784884833904
 !----- Free Boundary Parameters -----
   LFREEB = F
@@ -24,13 +25,13 @@
   GAMMA =    0.000000000000E+000
   BLOAT =    1.000000000000E+000
   SPRES_PED =    1.000000000000E+000
-  PRES_SCALE =    1.000000000000E+003
+  PRES_SCALE =    0.0
   PMASS_TYPE = 'power_series'
   AM =   1.00000000000000E+00 -1.00000000000000E+00  0.00000000000000E+00  0.00000000000000E+00
 !----- Current/Iota Parameters -----
   CURTOR =    0.000000000000E+000
   NCURR = 1
   PCURR_TYPE = 'power_series'
-  AC =    1.000000000000E+000   0.000000000000E+000   0.000000000000E+000   0.000000000000E+000
+  AC =   0.0 1.0 -1.0
 /
 
