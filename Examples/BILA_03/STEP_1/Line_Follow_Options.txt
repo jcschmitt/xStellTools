@@ -19,7 +19,7 @@ coilset_bila_03
 320
 
 <===Phi increment (in degrees) Also, 360 / Number of field periods
-90
+72
 
 <===r-axis at  phi=0, z=0 
 2.3885
