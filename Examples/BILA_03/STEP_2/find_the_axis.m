@@ -1,6 +1,7 @@
 rGuess = 2.41;
+
 coilset = 'coilset_bila_03_stelsym';
-coil_current_array = 497292.;
+coil_current_array = 1.;
 
 [rAxis, current_2p5_tesla] = find_magnetic_axis(coilset, coil_current_array, rGuess)
 % 

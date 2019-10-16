@@ -1,6 +1,7 @@
 function [] = generateSpectrumSurfs(surfaceToGenerate, DEBUG)
 % sample code that uses LineFollow_QHS46_34742_v6a and Biot-Savart to
 % perform line and generate spectrum  data. 
+addpath '/p/stellopt/ANALYSIS/jschmitt/src/xStellTools/Biot_Savart/calc_b'
 
 if (nargin < 2)
     DEBUG = 0;
@@ -214,17 +215,17 @@ for ii = surfaceToGenerate
         by = bx; bz = bx;
 
         disp(['<----Total # of points: ' num2str(numPoints_alongChi)])
-        %parfor kk = 1:numPoints_alongChi
         % 5% steps
         steps_5p = round(numPoints_alongChi / 20);
-        for kk = 1:numPoints_alongChi
+        parfor kk = 1:numPoints_alongChi
+        %for kk = 1:numPoints_alongChi
             [bx(kk), by(kk), bz(kk)] = calc_b_QHS46_RPhiZ(r_FFT(kk), ...
                 phi_FFT(kk), z_FFT(kk), current);
-            if (mod(kk, steps_5p) == 0)
-                disp(['<----Finished ' ...
-                    num2str(round(100*kk/numPoints_alongChi)) ...
-                    '% of the points']);
-            end
+            %if (mod(kk, steps_5p) == 0)
+            %    disp(['<----Finished ' ...
+            %        num2str(round(100*kk/numPoints_alongChi)) ...
+            %        '% of the points']);
+            %end
         end
         
         modB = sqrt(bx.^2 + by.^2 + bz.^2);
