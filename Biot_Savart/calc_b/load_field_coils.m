@@ -11,7 +11,7 @@ if nargin < 1
 end
 
 % this can be modified based on the local directory structre
-in_foldername = '/Users/schmittj/src/xStellTools/Biot_Savart/coilsets/';
+in_foldername = '/p/stellopt/ANALYSIS/jschmitt/src/xStellTools/Biot_Savart/coilsets/';
 
 in_filename = [field_coilset_id '.mat'];   
 

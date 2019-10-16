@@ -20,9 +20,9 @@ Boozer
 51
 
 <===Chi end
-300
+0.01
 <===Chi Density. chiInc = 2^(-1*(Chi Density)) 6 for Hamada, 8 for Boozer
-8
+23
 
 <===r-axis at  phi=0, z=0 
 2.3885

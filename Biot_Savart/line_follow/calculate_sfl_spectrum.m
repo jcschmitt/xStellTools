@@ -1,5 +1,5 @@
 function [nm_amp, pk_n_sorted, pk_m_sorted, pk_pos_sorted, nm_avail, nm_error, nm_next_best_error, n_values, m_values, iota_best] = ...
-    calculateSpectrum(chi, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp, DEBUG);
+    calculate_sfl_spectrum(chi, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp, DEBUG);
 %               Apply a Gaussian window function to the data
 %               Rearrange the data to guarantee that the modB curve has even symmetry
 %               (so that the FFT has only real components)
@@ -12,40 +12,42 @@ function [nm_amp, pk_n_sorted, pk_m_sorted, pk_pos_sorted, nm_avail, nm_error, n
 if (nargin < 7)
     DEBUG = 0;
 end
-PAUSE_TIME_FACTOR = 0.00;  % 0 is fastest, 1 is fast, 100 is sloow.
+DEBUG = 1
+PAUSE_TIME_FACTOR = 1.00;  % 0 is fastest, 1 is fast, 100 is sloow.
 % make the gaussian window to smooth the ends of the B-curve.
 eta = 4;  % Sets the width of the applied window
+eta = 10;  % Sets the width of the applied window
 chi_length = max(chi);  % the length of the chi (in each direction, almost)
 % gauss_window = (  eta / ( chi_length * sqrt(2*pi) ) ) * exp( - eta^2 * chi.^2 / (2 * chi_length^2) );
 gauss_window = (  eta / ( 1 * sqrt(2*pi) ) ) * exp( - eta^2 * chi.^2 / (2 * chi_length^2) );
 %               Apply a Gaussian window function to the data
-modB_window = modB .* gauss_window;
+modB_gw_window_filt = modB .* gauss_window;
 
 %               Rearrange the data to guarantee that the modB curve has even symmetry
 %               (so that the FFT has only real components)
-midpoint = length(modB_window) / 2;
-modB_even = [modB_window((midpoint+1):end) modB_window(1:midpoint)];
+midpoint = length(modB_gw_window_filt) / 2;
+modB_gw_filt_even = [modB_gw_window_filt((midpoint+1):end) modB_gw_window_filt(1:midpoint)];
 modB_orig_even = [modB((midpoint+1):end) modB(1:midpoint)];
 gw_even = [gauss_window((midpoint+1):end) gauss_window(1:midpoint)];
 %               FFT the curve
-B_FFT_complex = eta*fft(modB_even) / length(modB_even); % fft w normalization
+B_FFT_gw_filt_complex = eta*fft(modB_gw_filt_even) / length(modB_gw_filt_even); % fft w normalization
 B_FFT_orig_complex = fft(modB_orig_even) / length(modB_orig_even); % fft w/o normalization
-B_FFT_gw_complex = fft(gw_even) / length(gw_even); % fft w/o normalization
-B_FFT_real = real(B_FFT_complex);  % the imaginary portion is pretty small-plot it and check to make sure, tho.
+B_FFT_gw_even_complex = fft(gw_even) / length(gw_even); % fft w/o normalization
+B_FFT_gw_filt_real = real(B_FFT_gw_filt_complex);  % the imaginary portion is pretty small-plot it and check to make sure, tho.
 B_FFT_orig_real = abs(B_FFT_orig_complex);  % the imaginary portion is pretty small-plot it and check to make sure, tho.
-B_FFT_gw_real = real(B_FFT_gw_complex);  % the imaginary portion is pretty small-plot it and check to make sure, tho.
-B_FFT = B_FFT_real(1:midpoint);
-B_FFT_orig = B_FFT_orig_real(1:midpoint) * B_FFT(1)/B_FFT_orig_real(1);
-B_FFT_gw = B_FFT_gw_real(1:midpoint);
+B_FFT_gw_even_real = real(B_FFT_gw_even_complex);  % the imaginary portion is pretty small-plot it and check to make sure, tho.
+B_FFT_gw_filt_real_half = B_FFT_gw_filt_real(1:midpoint);
+B_FFT_orig_half = B_FFT_orig_real(1:midpoint) * B_FFT_gw_filt_real_half(1)/B_FFT_orig_real(1);
+B_FFT_gw_even_real_half = B_FFT_gw_even_real(1:midpoint);
 
 % discrepency between SPGs code and this code in the following section---please fix!!!
 % create frequency range of fft
 dchi = chi(2) - chi(1);
 omega = 2 * pi * ([1:midpoint] - 1) / (2*midpoint * dchi);
 
-if strcmp(lower(spectrumType), 'hamada')
+if strcmpi(spectrumType, 'hamada')
     n_minus_miota = omega * dV_dPsi / (2 * pi);
-elseif strcmp(lower(spectrumType), 'boozer')
+elseif strcmpi(spectrumType, 'boozer')
     n_minus_miota = omega * g_Boozer;
 else
     error('Unknown spectrum request');
@@ -81,13 +83,13 @@ disp('Seeking peaks in FFT');
 toc
 
 peak_position(1) = n_minus_miota(1);
-peak_amplitude(1) = B_FFT(1)/2; % The (0,0)-peak 
+peak_amplitude(1) = B_FFT_gw_filt_real_half(1)/2; % The (0,0)-peak 
 ii = seek_window_start;
 
 while ii <= midpoint - seek_window_width * 2;  % Set the last start point of the seek window
     seek_window = ii:(ii + seek_window_width - 1);  % Set the seek window
     x_seek = n_minus_miota(seek_window);
-    y_seek = B_FFT(seek_window);
+    y_seek = B_FFT_gw_filt_real_half(seek_window);
     [max_val, index] = max(abs(y_seek));
     if max_val < hyper * peak_amplitude(1)  % Slightly different than SPG's.  My threshold is lower-SPG's is a factor of two higher
         ii = ii + 2;  % slide forward if threshold isn't met
@@ -95,20 +97,22 @@ while ii <= midpoint - seek_window_width * 2;  % Set the last start point of the
         % Make a fit window and and try to slide it so that that peak is centered
         fit_window = [(ii + index - fit_window_width):(ii + index + fit_window_width - 1 )];
         x_fit = n_minus_miota(fit_window);
-        y_fit = B_FFT(fit_window);
+        y_fit = B_FFT_gw_filt_real_half(fit_window);
         if DEBUG*PAUSE_TIME_FACTOR
             % Do something debuggy
             if (~(exist('plotWindowOpen')))
                 h = figure;
-                plot(n_minus_miota, B_FFT_orig, 'c+');
+                plot(n_minus_miota, B_FFT_orig_half, 'c+');
                 hold on
-                plot(n_minus_miota, B_FFT, 'r+');
-                plot(n_minus_miota, B_FFT_gw, 'g:');
+                plot(n_minus_miota, B_FFT_gw_filt_real_half, 'r+');
+                plot(n_minus_miota, B_FFT_gw_even_real_half, 'g:');
                 plotWindowOpen = 1;
+                legend('B_{FFT, orig}', 'B_{FFT}', 'B_{FFT,gw}')
             else
                 figure(h);
             end
             widnow_h = plot(x_fit, zeros(size(x_fit)), 'ko');
+            legend('B_{FFT, orig}', 'B_{FFT}', 'B_{FFT,gw}', 'zeros')
             x_width_seek = max(x_fit)-min(x_fit);
             cur_axis = axis;
             axis([min(x_fit)-5*x_width_seek max(x_fit)+5*x_width_seek cur_axis(3) cur_axis(4) ]);
@@ -128,10 +132,11 @@ while ii <= midpoint - seek_window_width * 2;  % Set the last start point of the
             end
             % update the values and repeat the loop
             x_fit = n_minus_miota(fit_window);
-            y_fit = B_FFT(fit_window);
+            y_fit = B_FFT_gw_filt_real_half(fit_window);
             if DEBUG*PAUSE_TIME_FACTOR
                 delete(widnow_h);
                 widnow_h = plot(x_fit, zeros(size(x_fit)), 'ko');
+                legend('zeros vs x\_fit')
                 pause(.1*PAUSE_TIME_FACTOR);
             end
             mean_ind = mean(x_fit);
@@ -153,6 +158,7 @@ while ii <= midpoint - seek_window_width * 2;  % Set the last start point of the
             y_guess_dense = gaussCurveFit(gauss_init_guess, x_dense);
             plot(x_dense, y_guess_dense, 'b:');
             ph = plot(x_dense, y_dense, 'b');
+            legend('B_{FFT, orig}', 'B_{FFT}', 'B_{FFT,gw}', 'y_{guess,dense}', 'y_{dense}')
             x_width = max(x_dense)-min(x_dense); y_height = max(y_dense)-min(y_dense);
             axis([min(x_dense)-5*x_width max(x_dense)+5*x_width min(y_dense)-1.5*y_height max(y_dense)+1.5*y_height ]);
             pause(.2*PAUSE_TIME_FACTOR)
@@ -347,6 +353,7 @@ if DEBUG
     plot(chi, modB_recon, 'b');
     subplot(2,1,2);
     plot(chi, (modB-modB_recon)./modB, 'r');
+    legend('modB vs chi', 'modB(recon) vs chi', 'err')
 
 end
 % returning the following variables:
