@@ -25,7 +25,7 @@ Boozer
 23
 
 <===r-axis at  phi=0, z=0 
-2.3889
+2.3881
 
 <===Starting coordinates for each surface
 <===r-coords
