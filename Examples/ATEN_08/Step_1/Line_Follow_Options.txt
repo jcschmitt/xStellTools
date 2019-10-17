@@ -2,7 +2,7 @@
 ATEN_08
 
 <===Coilset ID
-coilset_aten_08
+coilset_aten25t_08
 
 <===Coil Currents
 1
@@ -19,7 +19,7 @@ coilset_aten_08
 320
 
 <===Phi increment (in degrees) Also, 360 / Number of field periods
-72
+90
 
 <===r-axis at  phi=0, z=0 
 2.4416

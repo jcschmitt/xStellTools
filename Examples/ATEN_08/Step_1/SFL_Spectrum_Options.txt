@@ -2,7 +2,7 @@
 ATEN_08
 
 <===Coilset ID
-coilset_aten_08
+coilset_aten25t_08
 
 <===Coil Currents
 1
