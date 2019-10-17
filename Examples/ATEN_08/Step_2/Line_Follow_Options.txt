@@ -2,7 +2,7 @@
 ATEN_08_STELSYM
 
 <===Coilset ID
-coilset_aten_08_stelsym
+coilset_aten25t_08_stelsym
 
 <===Coil Currents
 1
