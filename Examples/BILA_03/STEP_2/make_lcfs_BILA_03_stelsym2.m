@@ -1,4 +1,4 @@
-function fd
+function make_lcfs_BILA_03_stelsym2
 
 % definitions
 coilsetID = 'coilset_bila_03_stelsym';
@@ -33,13 +33,12 @@ end
 
 % Make poincare plots near edge.
 if 1
-    for ii = 1:num_launch_pts
-        this_R = Rlaunch(ii);
+    parfor ii = 1:num_launch_pts
         [surf_x, surf_y, surf_z, surf_phi] = ...
-            calc_descur_RZ_points(coilsetID, this_R, nphi_step1, ntheta_step1, coilCurrents);
+            calc_descur_RZ_points(coilsetID, Rlaunch(ii), nphi_step1, ntheta_step1, coilCurrents);
         save(LCFS_filename{ii}, 'Rlaunch', 'coilCurrents', ...
             'coilsetID', 'configuration_name', 'nphi_step1', 'ntheta_step1', ...
-            'surf_x', 'surf_y', 'surf_z', 'surf_phi', 'this_R');
+            'surf_x', 'surf_y', 'surf_z', 'surf_phi');
     end
 end
 
@@ -82,7 +81,7 @@ if 1
     
 end
 
-if 1
+if 0
     % Run descur and move files
     for ii = 1:num_launch_pts
         cmd1 = ['~/src/stellinstall/trunk/build/bin/xdescur < ' ...
@@ -93,7 +92,7 @@ if 1
     end
 end
 
-if 1
+if 0
     % Check descur
     for ii = 1:num_launch_pts
         check_descur_output(LCFS_filename{ii}, outcurve_filename{ii}, ...
