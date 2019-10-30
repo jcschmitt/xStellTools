@@ -17,6 +17,8 @@ nphi_step2 = 60;
 ntheta_step2 = 1000;
 
 
+%=====
+
 % make filenames for LCFS and more
 fluxout_filename = ['Flux_' configuration_name];
 
