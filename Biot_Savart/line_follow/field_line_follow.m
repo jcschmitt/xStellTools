@@ -1,11 +1,11 @@
 function [phi, coords] = ... 
-    field_line_follow(coilset, coilCurrents, rStart, zStart, phiStart, phiInc, phiEnd, relTol, absTol)
+    field_line_follow(coilset, coilCurrents, rStart, zStart, phiStart, ...
+    phiInc, phiEnd, relTol, absTol)
 % function [phi, coords] = ... 
-%     LineFollow_QHS46_34742_v6a(current, rStart, zStart, phiStart,
+%     field_line_follow(coilset, coilCurrents, rStart, zStart, phiStart,
 %     phiInc, phiEnd, relTol, absTol)
 % 
-% 1) Generates data to help determine the values of Iota (rotational
-%       transform) of the magnetic field  of HSX.
+% 1) Follows a field line in a background magnetic field.
 %
 % --------------
 %   Input
@@ -88,3 +88,4 @@ br = bx*cos(phi) + by*sin(phi);
 bphi_over_r = ( -bx*sin(phi) + by*cos(phi) ) / r;
 % r_over_bphi = r / bphi;  % This is dl/B
 dcoords_dphi = [br bz 1]' / bphi_over_r;
+
