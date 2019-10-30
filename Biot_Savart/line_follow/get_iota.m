@@ -1,4 +1,4 @@
-function [rStart, iota, Psi_toroidal] = getIotaPsi_tor(mode, surfaceIndices, VIEW_PLOTS)
+function [rStart, iota, Psi_toroidal] = get_iota(mode, surfaceIndices, VIEW_PLOTS, LCFS_index)
 % function [rStart, iotaProfile, Psi_toroidal] = getIotaPsi_tor(mode, surfaceIndices, VIEW_PLOTS);
 % view the results of the calculations of HSC Iota Profile Toroidal FLux
 
@@ -7,6 +7,10 @@ function [rStart, iota, Psi_toroidal] = getIotaPsi_tor(mode, surfaceIndices, VIE
 
 %IOTA_DIRECTORY_PATH = 'Y:\CODES\HSX Iota Profile Toroidal Flux'
 %IOTA_DIRECTORY_PATH = '/Users/schmittj/Documents/MATLAB/HSX Iota Profile Toroidal Flux'
+
+if (nargin < 4)
+    LCFS_index = length(surfaceIndices);
+end
 
 
 if (nargin < 3)
@@ -44,9 +48,9 @@ for ii = 1:numFiles
         %catch
             %disp('It bombed');
             
-            rStart(ii) = 0;
-            iota(ii) = 0.99;
-            Psi_toroidal = .01;
+            rStart(ii) = NaN;
+            iota(ii) = NaN;
+            Psi_toroidal(ii) = NaN;
         %end
     end
 end
@@ -60,7 +64,7 @@ if VIEW_PLOTS
     subplot(3,1,1);
     plot(surfaceIndices, iota, '+');
     hold on
-    plot(surfaceIndices, -iota, 'r+');
+    %plot(surfaceIndices, -iota, 'r+');
     ylabel('\iota/2\pi');
     title(mode);
     subplot(3,1,2);
@@ -80,7 +84,8 @@ if VIEW_PLOTS
     xlabel('r_{eff}');
     h = figure;
     subplot(2,1,1);
-    plot(surfaceIndices, r_eff/r_eff(end), '+');
+    %plot(surfaceIndices, r_eff/r_eff(end), '+');
+    plot(surfaceIndices, r_eff/r_eff(LCFS_index), '+');
     ylabel('\rho');
     xlabel('Index #');
     title(mode);

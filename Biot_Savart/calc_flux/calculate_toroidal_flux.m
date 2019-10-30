@@ -10,7 +10,10 @@ end
 % 1e-9 seems to be a good value for convergence. Should be checked for each
 % configuration.
 % 1e-9 works in most cases
-TOL_FLUX = 1e-9;
+TOL_FLUX = 1e-4;
+%TOL_FLUX = 1e-9;
+%TOL_FLUX = 1e-14;
+
 % trying to improve the EIM edge island situation
 %TOL_FLUX = 1e-4;
 % A 40th order polynomial usually works, unless the surface is very
@@ -52,7 +55,7 @@ max_pa = max(poloidal_angle);
 min_pa = min(poloidal_angle);
 % tolerance of +/1 degree
 angle_tolerance = pi/180;
-if ( ( (pi - max_pa) > angle_tolerance) & ...
+if ( ( (pi - max_pa) > angle_tolerance) && ...
      ( (pi + min_pa) > angle_tolerance) )
     % 'center' not enclosed'
     % try to find points near the poloidal_angle = 0 that have different radii
@@ -72,7 +75,7 @@ R_sorted = R(ind_sorted);
 % New way ends here
 
 % New(er) way starts here
-% Assum 1st point has z=0
+% Assume 1st point has z=0
 if (Z(1) ~= 0)
     disp('<----Problem with new(er) method.')
 else
@@ -117,13 +120,27 @@ R_apex = R(index_apex);
 %index_outboard = index_bottom:index_apex;
 
 % for the 'New(er) way'
-index_inboard = [1:index_apex index_bottom:length(Z_sorted)];
-index_outboard = index_apex:index_bottom;
+% Check to make sure sets are ordered the correct way
+if (index_apex < index_bottom) 
+    index_inboard = [1:index_apex index_bottom:length(Z_sorted)];
+    index_outboard = index_apex:index_bottom;
+else 
+    index_inboard = index_bottom:index_apex;
+    index_outboard = [index_apex:length(Z_sorted) 1:index_bottom];
+end
 
-R_inboard = R_sorted(index_inboard);
-R_outboard = R_sorted(index_outboard);
-Z_inboard = Z_sorted(index_inboard);
-Z_outboard = Z_sorted(index_outboard);
+% use the mean value of the two sets to determine inboard/outboard
+if (mean(R_sorted(index_inboard)) < mean(R_sorted(index_outboard)))
+    R_inboard = R_sorted(index_inboard);
+    R_outboard = R_sorted(index_outboard);
+    Z_inboard = Z_sorted(index_inboard);
+    Z_outboard = Z_sorted(index_outboard);
+else
+    R_inboard = R_sorted(index_outboard);
+    R_outboard = R_sorted(index_inboard);
+    Z_inboard = Z_sorted(index_outboard);
+    Z_outboard = Z_sorted(index_inboard);    
+end
 
 
 
@@ -153,18 +170,18 @@ end
 
 % Step 2: Calculate the surface integral to determine the flux through the
 % surface. A buffer of 5e-4 meters seems to work well.
-flux = dblquad(@flux_integrand, Z_bottom - 5e-4, Z_apex + 5e-4, ...
-    min(R) - 5e-4, max(R) + 5e-4, TOL_FLUX, [], ...
-    poly_inboard, poly_outboard, R_apex, coilsetID, current);
-%flux = integral2(@flux_integrand, Z_bottom - 5e-4, Z_apex + 5e-4, ...
+%flux = dblquad(@flux_integrand, Z_bottom - 5e-4, Z_apex + 5e-4, ...
 %    min(R) - 5e-4, max(R) + 5e-4, TOL_FLUX, [], ...
 %    poly_inboard, poly_outboard, R_apex, coilsetID, current);
+flux_helper = @(Z, R) flux_integrand2(Z, R, poly_inboard, poly_outboard, R_apex, coilsetID, current);
+flux = integral2(flux_helper, Z_bottom - 5e-4, Z_apex + 5e-4, ...
+    min(R) - 5e-4, max(R) + 5e-4, 'AbsTol', 1e-12, 'RelTol', 1e-8);
 flux
 
 
-% +++++++++++++++
-% Helper function
-% +++++++++++++++
+% ++++++++++++++++
+% Helper functions
+% ++++++++++++++++
 
 function dflux = flux_integrand(Z, R, poly_inboard, poly_outboard, ...
     R_apex, coilsetID, current)
@@ -174,7 +191,6 @@ function dflux = flux_integrand(Z, R, poly_inboard, poly_outboard, ...
 % surface integral. Points outside of these boundaries do not contribute to
 % the integral.
 % R_apex is the radius of the 'peak' or 'apex' of the flux surface.
-% This function is intended or HSX.
 
 % Initialize values
 dflux = zeros(size(Z)); 
@@ -203,6 +219,43 @@ if ( ~isempty(index_in) )
     end
 end
 
+function dflux = flux_integrand2(Z, R, poly_inboard, poly_outboard, ...
+    R_apex, coilsetID, current)
+% This function calculates the field at points given by the matrices 'Z'
+% and 'R'. The two polynomial coefficent arrays, poly_inboard and
+% poly_outboard, define the 'inboard' and 'outboard' boundaries of the
+% surface integral. Points outside of these boundaries do not contribute to
+% the integral.
+% R_apex is the radius of the 'peak' or 'apex' of the flux surface.
+
+% Initialize values
+dflux = zeros(size(Z)); 
+
+% Assume the points are at the box-port 'D' shaped region.
+Phi = 0;
+
+% if (R < R_apex)  % Consider the inboard points
+R_fitline_ib = polyval(poly_inboard, Z);    
+index_in1 = find(R >= R_fitline_ib);   % points inside the flux surface
+% else  % Consider the outboard points
+R_fitline_ob = polyval(poly_outboard, Z);    
+index_in2 = find(R <= R_fitline_ob); % points inside the flux surface
+index_in = intersect(index_in1, index_in2);
+%end
+
+% Points (R, Z(index_in)) are 'inside' the flux surface.
+% Loop over these points and calculate the field at these points.
+if ( ~isempty(index_in) )
+    for ii = 1:length(index_in)
+        % [~, B_y, ~] = calc_b_HSX_RPhiZ(R, ...
+        %     Phi, Z(index_in(ii)), current, taper);
+        % dflux(index_in(ii)) = B_y;
+        %[~, dflux(index_in(ii)), ~] = calc_b_HSX_RPhiZ(R, ...
+        %    Phi, Z(index_in(ii)), current, taper);
+        [~, dflux(index_in(ii)), ~, ~, ~] = calc_b_RPhiZ(coilsetID, ...
+            R(index_in(ii)), Phi, Z(index_in(ii)), current);
+    end
+end
 
 
 function ind_nearest_orig = find_nearest(R, Z, R_avail, Z_avail, ...

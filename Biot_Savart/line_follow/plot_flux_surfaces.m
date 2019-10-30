@@ -1,7 +1,20 @@
-function [fig_handle, r, z] = plot_flux_surfaces(surfaceIndices, indexInc)
+function [figureHandleOut, r, z] = plot_flux_surfaces(surfaceIndices, ...
+    indexStart, indexInc, indexEnd, figureHandleIn, colorin)
 
-if nargin < 2
+if nargin < 6
+    colorin = 'b';
+end
+if nargin < 5
+    figureHandleIn = NaN;
+end
+if nargin < 4
+    indexEnd = NaN;
+end
+if nargin < 3
     indexInc = 1;
+end
+if nargin < 1
+    indexStart = 1;
 end
 
 surfaceIndices = sort(surfaceIndices);
@@ -24,8 +37,11 @@ for ii = 1:numFiles
             %    error('what the heck are you doing?  phiInc ~= 90');
             %end
         end
-        r{ii} = filedata.coords(1:indexInc:end,1);
-        z{ii} = filedata.coords(1:indexInc:end,2);
+        if (isnan(indexEnd))
+            indexEnd = length(filedata.coords(:,1));
+        end
+        r{ii} = filedata.coords(indexStart:indexInc:indexEnd,1);
+        z{ii} = filedata.coords(indexStart:indexInc:indexEnd,2);
         
     catch
         warning(['Failed to load '  filenames{ii}]);
@@ -34,16 +50,20 @@ for ii = 1:numFiles
     end
 end
 
-fig_handle = figure;
+if (isnan(figureHandleIn))
+    figureHandleOut = figure;
+else
+    figureHandleOut= figure(figureHandleIn);end
+
 for ii = 1:numFiles
-    figure(fig_handle);
-    plot(r{ii}, z{ii}, 'b.', 'MarkerSize', 8);
+    figure(figureHandleOut);
+    plot(r{ii}, z{ii}, 'Color', colorin, 'Marker', '.', 'MarkerSize', 8, ...
+        'LineStyle', 'None');
     hold on;
 end
-figure(fig_handle);
+figure(figureHandleOut);
 ylabel('Z');
 xlabel('R');
-    
+
 axis equal
-    
-    
+
