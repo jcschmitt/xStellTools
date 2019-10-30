@@ -96,7 +96,8 @@ if VIEW_PLOTS
 
     figure;
     plot(r_eff/r_eff(end), iota, '+');
-    ylabel('Rotational Transform');
+    %ylabel('Rotational Transform');
+    ylabel('\iota / 2\pi');
     xlabel('\rho');
     title(mode);
 

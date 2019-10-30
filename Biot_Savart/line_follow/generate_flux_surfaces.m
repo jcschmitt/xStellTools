@@ -192,11 +192,15 @@ iota = calculate_iota(rAxis, coords(:, 1:2), phiIncInDegrees);
 
 % 	break; % break out of this for testing purposes
 disp(['Now calculating the enclosed flux based on puncture plot ']);
-%flux_startLoc = calculateFlux(current, phi(1:phiIndexInc:end), coords(1:phiIndexInc:end,1:2));
-%flux_startLoc = calculateFlux_W7X(current, phi(1:phiIndexInc:end), coords(1:phiIndexInc:end,1:2), 40, 1);
-%flux_startLoc = -1;
-flux_startLoc = calculate_toroidal_flux(coilsetID, current,  coords(1:phiIndexInc:end,1),  coords(1:phiIndexInc:end,2), 1);
-
+%if ~(exist('flux_startLoc'))
+    
+    %flux_startLoc = calculateFlux(current, phi(1:phiIndexInc:end), coords(1:phiIndexInc:end,1:2));
+    %flux_startLoc = calculateFlux_W7X(current, phi(1:phiIndexInc:end), coords(1:phiIndexInc:end,1:2), 40, 1);
+    %flux_startLoc = -1;
+    flux_startLoc = calculate_toroidal_flux(coilsetID, current,  coords(1:phiIndexInc:end,1),  coords(1:phiIndexInc:end,2), 1);
+%else
+%    disp('<----Flux found. Skipping the flux calculation.')
+%end
 IntdldB = coords(:, 3); % The line-integral of (dPhi r/Bphi)
 coordsRZ = coords(:, 1:2);
 save(filename, ...

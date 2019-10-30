@@ -113,9 +113,14 @@ dcoords_dchi = [br bphi_over_r bz]';
 
 function [dcoords_dchi] = LineFollowDerivs_Boozer(chi, coords, coilset, coilCurrents)
 % need to return drdphi and dzdphi (which are cylindrical coordinates...)
+
+
 r = coords(1);
 phi = coords(2);
 z = coords(3);
+
+%disp([num2str(chi) '  ' num2str(r)  '  ' num2str(phi) '  ' num2str(z)])
+
 % The following line calls a modified version of bs_dervs_aux_mex that
 % includes the Earth's magnetic field.  Not yet implemented correctly in
 % this revision
