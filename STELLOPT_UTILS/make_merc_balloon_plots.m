@@ -10,22 +10,24 @@ plot_index = [];
 for ii = 1:num_configs
     ii
     try
-        vmec_data{ii} = load_mercier(VMEC_FILENAME{ii});
+        vmec_data{ii} = load_vmec(VMEC_FILENAME{ii});
+
+        
+        s{ii} = vmec_data{ii}.phi ./ vmec_data{ii}.phi(end);
+        rho{ii} = sqrt(s{ii});
+        ns = length(s{ii});
+        % [~,nsm1]=size(cobradata{ii}.grate);
+        sall{ii} = linspace(0,1,ns);
+        splot{ii} = sall{ii}(2:end);
+        rhoplot{ii} = sqrt(splot{ii});
+        plot_index = [plot_index ii];
+
         COMMENTS{ii} = ['\beta = ' num2str(vmec_data{ii}.betatot * 100) ' %'];
         jdotbCOMMENTS{ii} = ['\beta = ' num2str(vmec_data{ii}.betatot * 100) ' %, ' ...
                              'Itor = ' num2str(vmec_data{ii}.ctor/1e3) ' kA'];
         
         cobradata{ii} = read_cobra(COBRA_FILENAME{ii});
         
-        s{ii} = vmec_data{ii}.phi ./ vmec_data{ii}.phi(end);
-        rho{ii} = sqrt(s{ii});
-        
-        [~,nsm1]=size(cobradata{ii}.grate);
-        ns = nsm1+1;
-        sall{ii} = linspace(0,1,ns);
-        splot{ii} = sall{ii}(2:end);
-        rhoplot{ii} = sqrt(splot{ii});
-        plot_index = [plot_index ii];
     catch
         disp(['<----Did not find some data for index #' num2str(ii)]);
     end
@@ -62,7 +64,7 @@ for ii = plot_index
     %keyboard
     plot_indices = [2:(length(rho{ii})-1)];
     
-    subplot(2,3,1);box on;hold on;
+    subplot(2,3,1);box on;hold on; grid on;
     plot(rho{ii}(plot_indices), vmec_data{ii}.DCurr(plot_indices),  'Linewidth', linewidth);
     ylim(scale_yaxis*[-1.5 1]);
     title('DCurr');
@@ -226,8 +228,10 @@ fh3 = figure;
 sqr_grid_dim = ceil(sqrt(length(plot_index)));
 cols = sqr_grid_dim;
 rows = ceil(length(plot_index) / cols);
+%keyboard; % modify cols, rows, as neccessary.
 
 counter = 0;
+legend_str = {};
 for ii = plot_index
     counter = counter +1;
     plot_indices = [1:(length(rhoplot{ii})-1)];
@@ -235,13 +239,23 @@ for ii = plot_index
     subplot(rows, cols, counter)
     
     
-    plot(rhoplot{ii}(plot_indices), cobradata{ii}.grate(:,plot_indices)', 'Marker', 'o', 'Linewidth', linewidth);
+    plot(rhoplot{ii}(plot_indices), cobradata{ii}.grate(:,plot_indices)', '--', 'Marker', 'None', 'Linewidth', linewidth);
     ylabel('\gamma \tau_A');
     title(COMMENTS{ii})
     xlabel('$\rho = \sqrt{\psi_{tor} / \psi_{tor,LCFS}}$', 'Interpreter', 'latex')
-    
+     grid on;
+     for jj = 1:length(cobradata{ii}.grate(:,1))
+     if jj == 1
+         legend_str{jj} = ['(\zeta = ' num2str(cobradata{ii}.zeta(jj)) ...
+             ', \theta = ' num2str(cobradata{ii}.theta(jj)) ')'];
+     else
+         legend_str{jj} = ['(' num2str(cobradata{ii}.zeta(jj)) ...
+             ', ' num2str(cobradata{ii}.theta(jj)) ')'];
+     end
+     end
+     
 end
-
+legend(legend_str);
 
 fh4 = figure;
 
@@ -253,12 +267,13 @@ for ii = plot_index
     subplot(rows, cols, counter)
     
     
-    plot(splot{ii}(plot_indices), cobradata{ii}.grate(:,plot_indices)', 'Marker', 'o', 'Linewidth', linewidth);
+    plot(splot{ii}(plot_indices), cobradata{ii}.grate(:,plot_indices)', '--', 'Marker', 'None', 'Linewidth', linewidth);
     ylabel('\gamma \tau_A');
     title(COMMENTS{ii})
-    
+     grid on;
     xlabel('$s = \psi_{tor} / \psi_{tor,LCFS}$', 'Interpreter', 'latex')
 end
+legend(legend_str);
 
 
 figure;
