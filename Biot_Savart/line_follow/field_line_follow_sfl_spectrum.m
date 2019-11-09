@@ -89,13 +89,14 @@ elseif strcmpi(spectrumType, 'boozer')
 else
     error('Unknown spectrum request');
 end
+%keyboard
     
 
 %==========================================================================
 %==========================================================================
 
 function [dcoords_dchi] = LineFollowDerivs_Hamada(chi, coords, coilset, coilCurrents)
-% need to return drdphi and dzdphi (which are cylindrical coordinates...)
+% need to return drdchi, dphidchi and dzdchi (which are cylindrical coordinates...)
 r = coords(1);
 phi = coords(2);
 z = coords(3);
@@ -111,9 +112,9 @@ br = bx*cos(phi) + by*sin(phi);
 bphi_over_r = (-bx*sin(phi) + by*cos(phi)) / r;
 dcoords_dchi = [br bphi_over_r bz]';
 
-function [dcoords_dchi] = LineFollowDerivs_Boozer(chi, coords, coilset, coilCurrents)
-% need to return drdphi and dzdphi (which are cylindrical coordinates...)
 
+function [dcoords_dchi] = LineFollowDerivs_Boozer(chi, coords, coilset, coilCurrents)
+% need to return drdchi, dphidchi and dzdchi (which are cylindrical coordinates...)
 
 r = coords(1);
 phi = coords(2);
@@ -121,15 +122,11 @@ z = coords(3);
 
 %disp([num2str(chi) '  ' num2str(r)  '  ' num2str(phi) '  ' num2str(z)])
 
-% The following line calls a modified version of bs_dervs_aux_mex that
-% includes the Earth's magnetic field.  Not yet implemented correctly in
-% this revision
 % Biot-Savart code
-[bx, by, bz] = calc_b_RPhiZ(coilset, r, phi, z, coilCurrents);
-% Grid-Interpolation code
-% [bx, by, bz] = hsxfield_grid_interp(r, phi, z, current, taper);
+[bx, by, bz, br, bphi] = calc_b_RPhiZ(coilset, r, phi, z, coilCurrents);
 
 B_squared = bx.^2 + by.^2 + bz.^2;
-br = bx*cos(phi) + by*sin(phi);
-bphi_over_r = (-bx*sin(phi) + by*cos(phi)) / r;
+%br = bx*cos(phi) + by*sin(phi);
+%bphi_over_r = (-bx*sin(phi) + by*cos(phi)) / r;
+bphi_over_r = bphi / r;
 dcoords_dchi = [br bphi_over_r bz]' / B_squared;

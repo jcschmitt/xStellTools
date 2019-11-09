@@ -8,7 +8,7 @@ DEBUG=0
 % surfaceToGenerate = surfaceToGenerate + 1;
 
 % determine OS.  If *nix, set the path to include Biot-Savart code and grid
-% interpolation paths.  Useful for Condor jobs 
+% interpolation paths.  Useful for Condor jobs
 % if (isunix)
 %     path(path,'~/HSX/');
 %end
@@ -47,6 +47,10 @@ coilsetID = fgetl(fid_input);
 fillerLine = fgetl(fid_input);
 fillerLine = fgetl(fid_input);
 coilCurrents = fscanf(fid_input, '%f');
+
+fillerLine = fgetl(fid_input);
+fillerLine = fgetl(fid_input);
+stellaratorSymmetry = fscanf(fid_input, '%f');
 
 fillerLine = fgetl(fid_input);
 spectrumType = lower(fgetl(fid_input));
@@ -95,7 +99,7 @@ fclose(fid_input);
 
 for ii = surfaceToGenerate
     
-    chiSkip = 1;  % This sets a length (in chi) the line following code will follow before saving the data to a file. 
+    chiSkip = 1;  % This sets a length (in chi) the line following code will follow before saving the data to a file.
     % Useful if the process may be interrupted (such as with Condor, or a reboot)
     if (chiEnd > chiSkip)
         chiEnd = (chiSkip:chiSkip:chiEnd);
@@ -124,31 +128,55 @@ for ii = surfaceToGenerate
             zStartBlock = zStart(ii);
             phiStartBlock = phiStart(ii);
             chiStartBlock = 0;
+            rStartBlock2 = rStart(ii);
+            zStartBlock2 = zStart(ii);
+            phiStartBlock2 = phiStart(ii);
+            chiStartBlock2 = 0;
         else
             rStartBlock = coords(end,1);
             zStartBlock = coords(end,3);
             phiStartBlock = coords(end,2);
             chiStartBlock = chi(end);
+            rStartBlock2 = coords2(end,1);
+            zStartBlock2 = coords2(end,3);
+            phiStartBlock2 = coords2(end,2);
+            chiStartBlock2 = chi2(end);
         end
         chiEndBlock = chiEnd(jj);
+        chiEndBlock2 = chiEnd(jj);
         
         startTime(jj,:) = clock;
         
         % Aiight.  Let's do the calculation!
-        [chiBlock, coordsBlock] = ... 
+        [chiBlock, coordsBlock] = ...
             field_line_follow_sfl_spectrum(coilsetID, coilCurrents, ...
             spectrumType, ...
             rStartBlock, phiStartBlock, ...
             zStartBlock, chiStartBlock, chiInc, chiEndBlock, relTol, absTol);
+        
+        if (stellaratorSymmetry)
+            chiBlock2 = chiBlock;
+            coordsBlock2 = coordsBlock;
+        else
+            [chiBlock2, coordsBlock2] = ...
+                field_line_follow_sfl_spectrum(coilsetID, -1*coilCurrents, ...
+                spectrumType, ...
+                rStartBlock2, phiStartBlock2, ...
+                zStartBlock2, chiStartBlock2, chiInc, chiEndBlock2, relTol, absTol);
+        end
         
         stopTime(jj,:) = clock;
         
         if ~(exist('coords'))
             chi = chiBlock;
             coords = coordsBlock;
+            chi2 = chiBlock2;
+            coords2 = coordsBlock2;
         else
             chi = [chi ; chiBlock(2:end) ];
             coords = [coords ; coordsBlock(2:end,:) ];
+            chi2 = [chi2 ; chiBlock2(2:end) ];
+            coords2 = [coords2 ; coordsBlock2(2:end,:) ];
         end
         
         % Save the data to file
@@ -156,93 +184,7 @@ for ii = surfaceToGenerate
             'magneticConfiguration', ...
             'coilsetID', ...
             'coilCurrents', ...
-            'spectrumType', ...
-            'relTol', ...
-            'absTol', ...
-            'numSurfaces', ...
-            'startTime', ...
-            'stopTime', ...
-            'rStart', ...
-            'zStart', ...
-            'phiStart', ...
-            'chiEnd', ...
-            'chiDensity', ...
-            'surfaceToGenerate', ...
-            'currentBlock', ...
-            'chi', ...
-            'coords');
-%             '-v6');
-    end  % for jj = startingBlock:transitBlocks
-    
-    totalTime = sum(stopTime - startTime);    
-    if (length(totalTime) == 1)
-        totalTime = stopTime - startTime;
-    end
-
-    if strcmpi(spectrumType, 'hamada')
-        disp('<---entering an un-verirfied part of the code!!!!');
-        disp('<---entering an un-verirfied part of the code!!!!');
-        disp('<---entering an un-verirfied part of the code!!!!');
-        len_chi = length(chi);
-        len_chi_90 = round( 0.9 * len_chi );
-        dV_dPsi_all = (chi - chi(1)) ./ ( (coords(:, 2) - coords(1, 2)) / (2*pi) );
-        dV_dPsi = mean( dV_dPsi_all(len_chi_90:end) );
-        g_Boozer = -1; % The Boozer g factor is not needed for Hamada spectrum calculations
-    elseif strcmpi(spectrumType, 'boozer')
-        dV_dPsi = -1;  % Does it matter, if you're not doing the Hamada spectrum calculation?
-         if ~(exist('g_Boozer'))
-             g_Boozer = calculate_sfl_gFactor(coilsetID, coilCurrents, rStart(1), relTol, absTol);  % rStart(1) should be the magnetic axis
-         else
-             disp('value of g_Boozer already found--going with it.')
-         end
-    else error('Unknown spectrum request');
-    end
-    
-    disp(['Times around the machine: ' num2str(( (coords(end, 2) - coords(1, 2)) / (2*pi) )) ]);
-
-    disp(['Total time for line following is: ',  num2str(totalTime(3)), ':', num2str(totalTime(4)), ':', ...
-            num2str(totalTime(5)), ':', num2str(totalTime(6))]);
-    
-    
-    if ~(exist('modB'))
-        disp(['Doubling up the chi and coordinate data.']);
-
-        chi_1 = -chi(1:end)';  % the first half of the doubled data array
-        chi_1 = fliplr(chi_1);
-        r_1 = coords(1:end, 1)';      r_1 = fliplr(r_1);
-        phi_1 = coords(1:end, 2)';    phi_1 = fliplr(phi_1);
-        z_1 = coords(1:end, 3)';      z_1 = fliplr(z_1);
-        
-        chi_2 = chi(2:(end-1))'; % the second half of the doubled data array
-        r_2 = coords((2:(end-1)), 1)';
-        phi_2 = coords((2:(end-1)), 2)';
-        z_2 = coords((2:(end-1)), 3)';
-        
-        chi_FFT = [chi_1 chi_2];    % Build the double length arrays
-        r_FFT = [r_1 r_2];
-        phi_FFT = [phi_1 phi_2];
-        z_FFT = [z_1 z_2];
-        
-        disp(['Now calculating |B| along the entire chi-curve']);
-        % Calculate the values of the |B| for each of the points specified by
-        % by *_FFT
-        tic
-        numPoints_alongChi = length(r_FFT);
-        % preallocate memory for B components
-        bx = zeros(1,numPoints_alongChi);
-        by = bx; bz = bx;
-        for kk = 1:numPoints_alongChi
-            [bx(kk), by(kk), bz(kk)] = calc_b_RPhiZ(coilsetID, r_FFT(kk), phi_FFT(kk), z_FFT(kk), coilCurrents);
-        end
-
-        modB = sqrt(bx.^2 + by.^2 + bz.^2);
-        toc
-        
-        % Save the data to file
-        save(filename, ...
-            'magneticConfiguration', ...
-            'coilsetID', ...
-            'coilCurrents', ...
+            'stellaratorSymmetry', ...
             'spectrumType', ...
             'relTol', ...
             'absTol', ...
@@ -258,11 +200,103 @@ for ii = surfaceToGenerate
             'currentBlock', ...
             'chi', ...
             'coords', ...
+            'chi2', ...
+            'coords2');
+        %             '-v6');
+    end  % for jj = startingBlock:transitBlocks
+    
+    totalTime = sum(stopTime - startTime);
+    if (length(totalTime) == 1)
+        totalTime = stopTime - startTime;
+    end
+    
+    if strcmpi(spectrumType, 'hamada')
+        disp('<---entering an un-verirfied part of the code!!!!');
+        disp('<---entering an un-verirfied part of the code!!!!');
+        disp('<---entering an un-verirfied part of the code!!!!');
+        len_chi = length(chi);
+        len_chi_90 = round( 0.9 * len_chi );
+        dV_dPsi_all = (chi - chi(1)) ./ ( (coords(:, 2) - coords(1, 2)) / (2*pi) );
+        dV_dPsi = mean( dV_dPsi_all(len_chi_90:end) );
+        g_Boozer = -1; % The Boozer g factor is not needed for Hamada spectrum calculations
+    elseif strcmpi(spectrumType, 'boozer')
+        dV_dPsi = -1;  % Does it matter, if you're not doing the Hamada spectrum calculation?
+        if ~(exist('g_Boozer'))
+            g_Boozer = calculate_sfl_gFactor(coilsetID, coilCurrents, rStart(1), relTol, absTol);  % rStart(1) should be the magnetic axis
+        else
+            disp('value of g_Boozer already found--going with it.')
+        end
+    else error('Unknown spectrum request');
+    end
+    
+    disp(['Times around the machine: ' num2str(( (coords(end, 2) - coords(1, 2)) / (2*pi) )) ]);
+    
+    disp(['Total time for line following is: ',  num2str(totalTime(3)), ':', num2str(totalTime(4)), ':', ...
+        num2str(totalTime(5)), ':', num2str(totalTime(6))]);
+    
+    
+    if ~(exist('modB'))
+        disp(['Doubling up the chi and coordinate data.']);
+        chi_L = -chi2(1:end)';  % the first half of the doubled data array
+        chi_L = fliplr(chi_L);
+        r_L = coords2(1:end, 1)';      r_L = fliplr(r_L);
+        phi_L = coords2(1:end, 2)';    phi_L = fliplr(phi_L);
+        z_L = coords2(1:end, 3)';      z_L = fliplr(z_L);
+        
+        % skipping the 1st point since it is shared with chi_L
+        chi_R = chi(2:(end-1))'; % the second half of the doubled data array
+        r_R = coords((2:(end-1)), 1)';
+        phi_2 = coords((2:(end-1)), 2)';
+        z_R = coords((2:(end-1)), 3)';
+        
+        chi_FFT = [chi_L chi_R];    % Build the double length arrays
+        r_FFT = [r_L r_R];
+        phi_FFT = [phi_L phi_2];
+        z_FFT = [z_L z_R];
+        
+        disp(['Now calculating |B| along the entire chi-curve']);
+        % Calculate the values of the |B| for each of the points specified by
+        % by *_FFT
+        tic
+        numPoints_alongChi = length(r_FFT);
+        % preallocate memory for B components
+        bx = zeros(1,numPoints_alongChi);
+        by = bx; bz = bx;
+        for kk = 1:numPoints_alongChi
+            [bx(kk), by(kk), bz(kk)] = calc_b_RPhiZ(coilsetID, r_FFT(kk), phi_FFT(kk), z_FFT(kk), coilCurrents);
+        end
+        
+        modB = sqrt(bx.^2 + by.^2 + bz.^2);
+        toc
+        
+        % Save the data to file
+        save(filename, ...
+            'magneticConfiguration', ...
+            'coilsetID', ...
+            'coilCurrents', ...
+            'stellaratorSymmetry', ...
+            'spectrumType', ...
+            'relTol', ...
+            'absTol', ...
+            'numSurfaces', ...
+            'startTime', ...
+            'stopTime', ...
+            'rStart', ...
+            'zStart', ...
+            'phiStart', ...
+            'chiEnd', ...
+            'chiDensity', ...
+            'surfaceToGenerate', ...
+            'currentBlock', ...
+            'chi', ...
+            'coords', ...
+            'chi2', ...
+            'coords2', ...
             'dV_dPsi', ...
             'g_Boozer', ...
             'chi_FFT', ...
             'modB');
-%             '-v6');    
+        %             '-v6');
         
         disp('Done calculating |B|');
     else
@@ -271,17 +305,18 @@ for ii = surfaceToGenerate
     
     % load the iota from the iota/toroidal flux calculation
     [rStart, iota_pp, psi_tor] = get_iota(magneticConfiguration, ii);
-     
+    
     % determine the fourier spectrum from modB and chi_FFT
     % %     [nm_amp, pk_n_sorted, pk_m_sorted, nm_avail, nm_error, nm_next_best_error] = calculateSpectrum(chi_FFT, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp);
     [nm_amp, pk_n_sorted, pk_m_sorted, pk_pos_sorted, nm_avail, nm_error, nm_next_best_error, n_values, m_values, iota_best] = ...
-        calculate_sfl_spectrum(chi_FFT, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp, DEBUG);
+        calculate_sfl_spectrum2(chi_FFT, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp, DEBUG);
     
     % Save the data to file
     save(filename, ...
         'magneticConfiguration', ...
         'coilsetID', ...
         'coilCurrents', ...
+        'stellaratorSymmetry', ...
         'spectrumType', ...
         'relTol', ...
         'absTol', ...
@@ -300,7 +335,7 @@ for ii = surfaceToGenerate
         'dV_dPsi', ...
         'g_Boozer', ...
         'chi_FFT', ...
-        'modB', ...        
+        'modB', ...
         'nm_amp', ...
         'pk_n_sorted', ...
         'pk_m_sorted', ...
@@ -311,7 +346,7 @@ for ii = surfaceToGenerate
         'n_values', ...
         'm_values', ...
         'iota_best');
-%         '-v6');    
+    %         '-v6');
 end  % for ii = surfaceToGenerate
 
 
