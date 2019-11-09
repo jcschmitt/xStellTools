@@ -31,10 +31,11 @@ end
 for ii = 1:numFiles
     try
         filedata = load([foldername '/' filenames{ii}]);
-        disp(['ii:' num2str(ii)])
+        disp(['ii:' num2str(ii)]);
         rStart(ii) = filedata.rStart(surfaceIndices(ii));
         iota(ii) = filedata.iota;
         Psi_toroidal(ii) = filedata.flux_startLoc;
+        dV_dPsi_toroidal(ii) = (filedata.IntdldB(end)) / filedata.transits;
     catch
         warning(['Unable to load data for ' filenames{ii}]);
         %try
@@ -51,6 +52,7 @@ for ii = 1:numFiles
             rStart(ii) = NaN;
             iota(ii) = NaN;
             Psi_toroidal(ii) = NaN;
+            dV_dPsi_toroidal(ii) = NaN;
         %end
     end
 end
@@ -58,6 +60,13 @@ end
 %r_eff = sqrt( abs(Psi_toroidal) / (0.5 * pi) );  % Assuming 0.5 Tesla on axis
 % r_eff = sqrt( abs(Psi_toroidal) / (1.0 * pi) );  % Assuming 1 Tesla on axis
 r_eff = sqrt( abs(Psi_toroidal) / (2.5 * pi) );  % Assuming 2.5 Tesla on axis
+
+try
+Volume = cumtrapz(Psi_toroidal, dV_dPsi_toroidal);
+catch
+Volume = 0;
+end
+%Volume = cumtrapz(Psi_toroidal, dV_dPsi_toroidal);
 
 if VIEW_PLOTS
     h = figure;
@@ -96,10 +105,37 @@ if VIEW_PLOTS
 
     figure;
     plot(r_eff/r_eff(end), iota, '+');
+    %plot(r_eff/r_eff(end), iota, '--');
     %ylabel('Rotational Transform');
     ylabel('\iota / 2\pi');
     xlabel('\rho');
     title(mode);
+
+    figure;
+    plot(r_eff/r_eff(end), dV_dPsi_toroidal, '+');
+    %plot(r_eff/r_eff(end), iota, '--');
+    %ylabel('Rotational Transform');
+    ylabel('dV / d\psi');
+    xlabel('\rho');
+    title(mode);
+
+    figure;
+    plot(r_eff/r_eff(end), (dV_dPsi_toroidal(1) - dV_dPsi_toroidal)/dV_dPsi_toroidal(1), '+');
+    %plot(r_eff/r_eff(end), iota, '--');
+    %ylabel('Rotational Transform');
+    ylabel('Well Depth');
+    xlabel('\rho');
+    title(mode);
+
+
+    figure;
+    plot(r_eff/r_eff(end), Volume, '+');
+    %plot(r_eff/r_eff(end), iota, '--');
+    %ylabel('Rotational Transform');
+    ylabel('Volume');
+    xlabel('\rho');
+    title(mode);
+
 
 end
     

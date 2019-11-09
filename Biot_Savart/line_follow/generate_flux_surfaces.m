@@ -114,7 +114,8 @@ for ii = surfaceToGenerate
     
     for jj = startingBlock:transitBlocks
         currentBlock = jj;
-        disp(['Starting transit block ', num2str(currentBlock), ' of ', num2str(transitBlocks)]);
+        disp(['Starting transit block ', num2str(currentBlock), ' of ', ...
+            num2str(transitBlocks), ' on surface #',  num2str(ii)]);
         
         % Set up the line following parameters (starting, ending location) for
         % current transit block
@@ -184,14 +185,14 @@ for ii = surfaceToGenerate
 end
 
 % Calculate the rotational transform.
-disp(['Now calculating iota based on puncture plot']);
+disp(['Now calculating iota based on puncture plot' , ' on surface #',  num2str(ii)]);
 % Use the puncture plot of the surface at the starting location (usually the phi=0 plane)
 phiIndexInc = round(360 / phiIncInDegrees);
 
 iota = calculate_iota(rAxis, coords(:, 1:2), phiIncInDegrees);
 
 % 	break; % break out of this for testing purposes
-disp(['Now calculating the enclosed flux based on puncture plot ']);
+disp(['Now calculating the enclosed flux based on puncture plot ', ' on surface #',  num2str(ii)]);
 %if ~(exist('flux_startLoc'))
     
     %flux_startLoc = calculateFlux(current, phi(1:phiIndexInc:end), coords(1:phiIndexInc:end,1:2));

@@ -32,11 +32,12 @@ r = coords(1);
 z = coords(2);
 
 % Biot-Savart code
-[bx, by, bz] = calc_b_RPhiZ(coilsetID, r, phi, z, coilCurrents);
+[bx, by, bz, br, bphi] = calc_b_RPhiZ(coilsetID, r, phi, z, coilCurrents);
 
 B_squared = bx.^2 + by.^2 + bz.^2;
-br = bx*cos(phi) + by*sin(phi);
-bphi_over_r = (-bx*sin(phi) + by*cos(phi)) / r;
+%br = bx*cos(phi) + by*sin(phi);
+%bphi_over_r = (-bx*sin(phi) + by*cos(phi)) / r;
+bphi_over_r = (bphi) / r;
 dr_dphi = br / bphi_over_r;
 dz_dphi = bz / bphi_over_r;
 dg_dphi = B_squared / bphi_over_r;
