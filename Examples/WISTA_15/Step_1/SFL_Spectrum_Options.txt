@@ -23,9 +23,9 @@ Boozer
 51
 
 <===Chi end  0.04 for 1st try.  0.001 for debug
-.001
+4200
 <===Chi Density. chiInc = 2^(-1*(Chi Density)) 6 for Hamada, 8 for Boozer?
-22
+6
 
 <===r-axis at  phi=0, z=0 
 2.4415
