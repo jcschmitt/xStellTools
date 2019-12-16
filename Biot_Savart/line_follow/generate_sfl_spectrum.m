@@ -2,7 +2,9 @@ function [] = generate_sfl_spectrum(surfaceToGenerate)
 % sample code that uses HSXLineFollow and bs_derics_aux_me to perform line
 % following and generate puncture plot data.  Events are enabled in this
 % demo.
-DEBUG=0
+
+DEBUG = 0
+
 % This is incremented because the Condor system starts counting from 0, not
 % from 1.
 % surfaceToGenerate = surfaceToGenerate + 1;
@@ -48,7 +50,6 @@ fillerLine = fgetl(fid_input);
 fillerLine = fgetl(fid_input);
 coilCurrents = fscanf(fid_input, '%f');
 
-fillerLine = fgetl(fid_input);
 fillerLine = fgetl(fid_input);
 stellaratorSymmetry = fscanf(fid_input, '%f');
 
@@ -244,10 +245,10 @@ for ii = surfaceToGenerate
         z_L = coords2(1:end, 3)';      z_L = fliplr(z_L);
         
         % skipping the 1st point since it is shared with chi_L
-        chi_R = chi(2:(end-1))'; % the second half of the doubled data array
-        r_R = coords((2:(end-1)), 1)';
-        phi_2 = coords((2:(end-1)), 2)';
-        z_R = coords((2:(end-1)), 3)';
+        chi_R = chi(2:(end))'; % the second half of the doubled data array
+        r_R = coords((2:(end)), 1)';
+        phi_2 = coords((2:(end)), 2)';
+        z_R = coords((2:(end)), 3)';
         
         chi_FFT = [chi_L chi_R];    % Build the double length arrays
         r_FFT = [r_L r_R];
@@ -308,7 +309,8 @@ for ii = surfaceToGenerate
     
     % determine the fourier spectrum from modB and chi_FFT
     % %     [nm_amp, pk_n_sorted, pk_m_sorted, nm_avail, nm_error, nm_next_best_error] = calculateSpectrum(chi_FFT, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp);
-    if 0
+    if 1
+        %keyboard
         [nm_amp, pk_n_sorted, pk_m_sorted, pk_pos_sorted, nm_avail, nm_error, nm_next_best_error, n_values, m_values, iota_best] = ...
             calculate_sfl_spectrum2(chi_FFT, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp, DEBUG);
         
