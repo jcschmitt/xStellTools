@@ -7,7 +7,7 @@ coilCurrents = 632955.5;
 %coilCurrents = 1.;
 title_str='WISTA 15';
 
-Rlaunch = 2.58 + 0.002 * (0:13);
+Rlaunch = 2.58 + 0.001 * (0:23);
 
 num_field_periods = 4;
 nphi_step1 = 240;
