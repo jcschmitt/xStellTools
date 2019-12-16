@@ -120,10 +120,10 @@ if VIEW_PLOTS
     title(mode);
 
     figure;
-    plot(r_eff/r_eff(end), (dV_dPsi_toroidal(1) - dV_dPsi_toroidal)/dV_dPsi_toroidal(1), '+');
+    plot(r_eff/r_eff(end), 100* (dV_dPsi_toroidal(1) - dV_dPsi_toroidal)/dV_dPsi_toroidal(1), '+');
     %plot(r_eff/r_eff(end), iota, '--');
     %ylabel('Rotational Transform');
-    ylabel('Well Depth');
+    ylabel('Well Depth, %');
     xlabel('\rho');
     title(mode);
 
