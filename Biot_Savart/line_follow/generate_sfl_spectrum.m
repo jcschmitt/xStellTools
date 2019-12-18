@@ -51,6 +51,9 @@ fillerLine = fgetl(fid_input);
 coilCurrents = fscanf(fid_input, '%f');
 
 fillerLine = fgetl(fid_input);
+numFieldPeriods = fscanf(fid_input, '%f');
+
+fillerLine = fgetl(fid_input);
 stellaratorSymmetry = fscanf(fid_input, '%f');
 
 fillerLine = fgetl(fid_input);
@@ -312,7 +315,7 @@ for ii = surfaceToGenerate
     if 1
         %keyboard
         [nm_amp, pk_n_sorted, pk_m_sorted, pk_pos_sorted, nm_avail, nm_error, nm_next_best_error, n_values, m_values, iota_best] = ...
-            calculate_sfl_spectrum2(chi_FFT, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp, DEBUG);
+            calculate_sfl_spectrum2(chi_FFT, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp, numFieldPeriods, DEBUG);
         
         % Save the data to file
         save(filename, ...

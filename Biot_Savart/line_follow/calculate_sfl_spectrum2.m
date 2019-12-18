@@ -1,5 +1,8 @@
-function [nm_amp, pk_n_sorted, pk_m_sorted, pk_pos_sorted, nm_avail, nm_error, nm_next_best_error, n_values, m_values, iota_best] = ...
-    calculate_sfl_spectrum(chi, modB, spectrumType, dV_dPsi, g_Boozer, iota_pp, DEBUG)
+function [nm_cos_amp, pk_cos_n_sorted, pk_cos_m_sorted, ...
+    pk_pos_sym_sorted, nm_cos_avail, nm_cos_error, ...
+    nm_cos_next_best_error, n_values, m_values, iota_best] = ...
+    calculate_sfl_spectrum(chi, modB, spectrumType, dV_dPsi, ...
+    g_Boozer, iota_pp, numFieldPeriods, DEBUG)
 %               Apply a Gaussian window function to the data
 %               Rearrange the data to guarantee that the modB curve has
 %               even symmetry. This usually means that the FFT has only
@@ -11,23 +14,23 @@ function [nm_amp, pk_n_sorted, pk_m_sorted, pk_pos_sorted, nm_avail, nm_error, n
 %               go find n, m
 %               done!
 
-if (nargin < 7)
+if (nargin < 8)
     DEBUG = 0;
 end
-DEBUG = 1
+DEBUG = 0
 
-min_sym_mode = 1e-12;
-min_asym_mode = 1e-12;
+%min_sym_mode = 1e-12;
+%min_asym_mode = 1e-12;
 
-min_sym_mode = 4e-3;
-min_asym_mode = 1e-11;
+min_sym_mode = 1e-8;
+min_asym_mode = 1e-8 ;
 
 PAUSE_TIME_FACTOR = 1.00;  % 0 is fastest, 1 is fast, 100 is sloow.
 % make the gaussian window to smooth the ends of the B-curve.
 %eta = 4;  % Sets the width of the applied window
 eta = 6;  % Sets the width of the applied window
 mask_mult = 3;
-chi_length = max(chi);  % the length of the chi (in each direction, almost)
+chi_length = (max(chi) - min(chi)) / 2;  % the length of the chi (in each direction)
 % gauss_window = (  eta / ( chi_length * sqrt(2*pi) ) ) * exp( - eta^2 * chi.^2 / (2 * chi_length^2) );
 gauss_window = (  eta / ( 1 * sqrt(2*pi) ) ) * exp( - eta^2 * chi.^2 / (2 * chi_length^2) );
 %               Apply a Gaussian window function to the data
@@ -103,7 +106,7 @@ BFFT_gw_imag_scaled =  B_FFT_gw_filt_imag_half * scale_gw2orig;
 % create frequency range of fft
 dchi = chi(2) - chi(1);
 omega_s = 1/dchi;
-numchi = length(chi)
+numchi = length(chi);
 omega_full = omega_s * (0:(numchi/2) / numchi);
 omega = 2 * pi * ([1:midpoint] - 1) / (2*midpoint * dchi);
 %omega = pi * ([1:midpoint] - 1) / (midpoint * dchi);
@@ -189,7 +192,7 @@ while keep_going
             gauss_init_guess = [y_fit(1), 0, .1]; % the initial guess
             loop_index = loop_index + 1;
             [fit_results_sym{loop_index}, resnorm, residual, exitflag] = ...
-                lsqcurvefit(@gaussCurveFit, gauss_init_guess, x_fit, y_fit, [-Inf -1 0], [+Inf 1 1], gauss_fit_options);
+                lsqcurvefit(@gaussCurveFit, gauss_init_guess, x_fit, y_fit, [-Inf -1 0], [+Inf 1 1], gauss_fit_options); %#ok<*ASGLU>
             data_fit = gaussCurveFit(fit_results_sym{loop_index}, n_minus_miota);
             print_fit(loop_index, fit_results_sym{loop_index});
             
@@ -217,7 +220,8 @@ while keep_going
                 x_fit = n_minus_miota(fit_window);
                 y_fit = data_current(fit_window);
             catch
-                keyboard
+                disp('<----Issues with fit_window')
+                %keyboard
             end
             gauss_init_guess = [this_max, n_minus_miota(index_max), fit_results_sym{1}(3)]; % the initial guess
             min_nmmi = min(n_minus_miota(fit_window));
@@ -225,8 +229,8 @@ while keep_going
             
             loop_index = loop_index + 1;
             [fit_results_sym{loop_index}, resnorm, residual, exitflag] = ...
-                lsqcurvefit(@gaussCurveFit, gauss_init_guess, x_fit, y_fit, [-Inf min_nmmi 0], [+Inf max_nmmi 1], gauss_fit_options);
-            data_fit = gaussCurveFit(fit_results_sym{loop_index}, n_minus_miota);
+                lsqcurvefit(@gaussCosFit, gauss_init_guess, x_fit, y_fit, [-Inf min_nmmi 0], [+Inf max_nmmi 1], gauss_fit_options);
+            data_fit = gaussCosFit(fit_results_sym{loop_index}, n_minus_miota);
             print_fit(loop_index, fit_results_sym{loop_index});
             
             data_new = data_current - data_fit;
@@ -278,8 +282,8 @@ while keep_going
             
             loop_index = loop_index + 1;
             [fit_results_asym{loop_index}, resnorm, residual, exitflag] = ...
-                lsqcurvefit(@gaussCurveFit, gauss_init_guess, x_fit, y_fit, [-Inf min_nmmi 0], [+Inf max_nmmi 1], gauss_fit_options);
-            data_fit = gaussCurveFit(fit_results_asym{loop_index}, n_minus_miota);
+                lsqcurvefit(@gaussSinFit, gauss_init_guess, x_fit, y_fit, [-Inf min_nmmi 0], [+Inf max_nmmi 1], gauss_fit_options);
+            data_fit = gaussSinFit(fit_results_asym{loop_index}, n_minus_miota);
             print_fit(loop_index, fit_results_asym{loop_index});
             
             data_new = data_current - data_fit;
@@ -291,7 +295,7 @@ while keep_going
             
             search_mask(search_mask_min:search_mask_max) = 0;
             
-            if ( abs(fit_results_asym{loop_index}(1) / fit_results_asym{1}(1)) >= min_asym_mode)            
+            if ( abs(fit_results_asym{loop_index}(1) / fit_results_sym{1}(1)) >= min_asym_mode)            
                 next_task = 'findasym';
             else
                 next_task = 'finished';
@@ -305,15 +309,21 @@ while keep_going
     
     if DEBUG
         x_dense = linspace(x_fit(1), x_fit(end), 400);
-        switch task
-            case {'find00', 'findsym'}
+        switch task 
+            case {'find00'}
                 this_result = fit_results_sym{loop_index};
+                y_dense = gaussCurveFit(this_result, x_dense);
+                y_guess_dense = gaussCurveFit(gauss_init_guess, x_dense);
+            case {'findsym'}
+                this_result = fit_results_sym{loop_index};
+                y_dense = gaussCosFit(this_result, x_dense);
+                y_guess_dense = gaussCosFit(gauss_init_guess, x_dense);
             case 'findasym'
                 this_result = fit_results_asym{loop_index};
+                y_dense = gaussSinFit(this_result, x_dense);
+                y_guess_dense = gaussSinFit(gauss_init_guess, x_dense);
         end
         
-        y_dense = gaussCurveFit(this_result, x_dense);
-        y_guess_dense = gaussCurveFit(gauss_init_guess, x_dense);
         x_width = max(x_dense)-min(x_dense); y_height = max(y_dense)-min(y_dense);
         
         if (strcmp(task, 'find00'))
@@ -361,298 +371,190 @@ while keep_going
     
 end
 
-% 
-% if 0
-%     
-%     % To avoid the (0,0) peak, start the search a few indices into the
-%     % arrays
-%     % =====loop====
-%     % make a seek window, and slide it until a peak above the minimum threshold is reached
-%     % Once found, create a fit window around the peak, and try to slide the window to
-%     %           center the peak (slide up to 1/2 the fit window width).
-%     %           After sliding try to fit a gaussian curve to the window.
-%     %           Check the validity of the fit.  Store if it looks good
-%     %           If peak is repeated, jump ahead by (1/2 fit window width + a
-%     %           skip factor)
-%     %           If it doesn't look good, slide seek window ahead by 1/2 fit
-%     %           window width
-%     % ==end loop==
-%     hyper = .5e-4; %  Threshold on minimum peak amplitude to look for.
-%     seek_window_width = 4;  % Size of the window (in array slots) used during the peek search
-%     seek_window_start = 30; % Where to start, to avoid the (0, 0)-peak
-%     max_centroid_shifts = 10;
-%     fit_window_width = 4;  % size of window for Gaussian fits attempts, in each direction. total size = 2*fit_window_width
-%     fit_window_skip_size = 4; % SPG used 8.  Must be even #
-%     num_peaks_found = 1;  % The (0,0) peak is the first position of the array
-%     num_failed_fits = 0;  % Keep track of the number of 'failed fits'
-%     gauss_fit_options = optimset('TolX', 1e-15, 'TolFun', 1e-15, 'MaxFunEvals', 50000, 'Display', 'Off');
-%     
-%     tic
-%     disp('Seeking peaks in FFT');
-%     toc
-%     
-%     peak_position(1) = n_minus_miota(1);
-%     peak_amplitude(1) = B_FFT_gw_filt_real_half(1)/2; % The (0,0)-peak
-%     ii = seek_window_start;
-%     
-%     while ii <= midpoint - seek_window_width * 2;  % Set the last start point of the seek window
-%         seek_window = ii:(ii + seek_window_width - 1);  % Set the seek window
-%         x_seek = n_minus_miota(seek_window);
-%         y_seek = B_FFT_gw_filt_real_half(seek_window);
-%         %figure
-%         %subplot(2,1,1)
-%         %plot(fftshift(B_FFT_gw_filt_real));
-%         %ylim([-1e-7, 1e-7])
-%         %xlim(4200+[-250 250])
-%         %legend('real')
-%         %grid on
-%         %hold on
-%         %subplot(2,1,2)
-%         %plot(fftshift(B_FFT_gw_filt_imag));
-%         %ylim([-1e-9, 1e-9])
-%         %xlim(4200+[-250 250])
-%         %legend('imag')
-%         %grid on
-%         
-%         
-%         [max_val, index] = max(abs(y_seek));
-%         if max_val < hyper * peak_amplitude(1)  % Slightly different than SPG's.  My threshold is lower-SPG's is a factor of two higher
-%             ii = ii + 2;  % slide forward if threshold isn't met
-%         else
-%             % Make a fit window and and try to slide it so that that peak is centered
-%             fit_window = [(ii + index - fit_window_width):(ii + index + fit_window_width - 1 )];
-%             x_fit = n_minus_miota(fit_window);
-%             y_fit = B_FFT_gw_filt_real_half(fit_window);
-%             if DEBUG*PAUSE_TIME_FACTOR
-%                 % Do something debuggy
-%                 if (~(exist('plotWindowOpen')))
-%                     h = figure;
-%                     plot(n_minus_miota, B_FFT_orig_half, 'c+');
-%                     hold on
-%                     plot(n_minus_miota, B_FFT_gw_filt_real_half, 'r+');
-%                     plot(n_minus_miota, B_FFT_gw_even_real_half, 'g:');
-%                     plotWindowOpen = 1;
-%                     legend('B_{FFT, orig}', 'B_{FFT}', 'B_{FFT,gw}')
-%                 else
-%                     figure(h);
-%                 end
-%                 widnow_h = plot(x_fit, zeros(size(x_fit)), 'ko');
-%                 legend('B_{FFT, orig}', 'B_{FFT}', 'B_{FFT,gw}', 'zeros')
-%                 x_width_seek = max(x_fit)-min(x_fit);
-%                 cur_axis = axis;
-%                 axis([min(x_fit)-5*x_width_seek max(x_fit)+5*x_width_seek cur_axis(3) cur_axis(4) ]);
-%             end
-%             % find 'indices' of the the centroid and mean of the window--these
-%             % 'indices' may not be integers
-%             mean_ind = mean(x_fit);
-%             centroid_ind = sum(x_fit .* abs(y_fit)) / sum(abs(y_fit));
-%             
-%             % slide window to put the centroid close to the mean
-%             centroid_shifts = 0;
-%             while ( (centroid_shifts <= max_centroid_shifts) & (abs(mean_ind - centroid_ind) > (x_fit(2)-x_fit(1)) ) )
-%                 if (centroid_ind > mean_ind)  % if centroid is to the right of center, slide window right
-%                     fit_window = fit_window + 1;
-%                 else
-%                     fit_window = fit_window - 1; % otherwise, slide window to the left
-%                 end
-%                 % update the values and repeat the loop
-%                 x_fit = n_minus_miota(fit_window);
-%                 y_fit = B_FFT_gw_filt_real_half(fit_window);
-%                 if DEBUG*PAUSE_TIME_FACTOR
-%                     delete(widnow_h);
-%                     widnow_h = plot(x_fit, zeros(size(x_fit)), 'ko');
-%                     legend('zeros vs x\_fit')
-%                     pause(.1*PAUSE_TIME_FACTOR);
-%                 end
-%                 mean_ind = mean(x_fit);
-%                 centroid_ind = sum(x_fit .* abs(y_fit)) / sum(abs(y_fit));
-%                 centroid_shifts = centroid_shifts + 1;
-%             end
-%             % Try to fit a Gaussian curve to the peak
-%             if strcmp(lower(spectrumType), 'hamada')
-%                 gauss_fit_width = 0.004;
-%             elseif strcmp(lower(spectrumType), 'boozer')
-%                 gauss_fit_width = 0.001;
-%             end
-%             gauss_init_guess = [sign(mean(y_fit)) * max(abs(y_fit)), mean_ind, gauss_fit_width]; % the initial guess
-%             [fit_results, resnorm, residual, exitflag] = ...
-%                 lsqcurvefit(@gaussCurveFit, gauss_init_guess, x_fit, y_fit, [-Inf 0 0], [+Inf 600 1], gauss_fit_options);
-%             if DEBUG*PAUSE_TIME_FACTOR
-%                 x_dense = linspace(x_fit(1), x_fit(end), 100);
-%                 y_dense = gaussCurveFit(fit_results, x_dense);
-%                 y_guess_dense = gaussCurveFit(gauss_init_guess, x_dense);
-%                 plot(x_dense, y_guess_dense, 'b:');
-%                 ph = plot(x_dense, y_dense, 'b');
-%                 legend('B_{FFT, orig}', 'B_{FFT}', 'B_{FFT,gw}', 'y_{guess,dense}', 'y_{dense}')
-%                 x_width = max(x_dense)-min(x_dense); y_height = max(y_dense)-min(y_dense);
-%                 axis([min(x_dense)-5*x_width max(x_dense)+5*x_width min(y_dense)-1.5*y_height max(y_dense)+1.5*y_height ]);
-%                 pause(.2*PAUSE_TIME_FACTOR)
-%             end
-%             
-%             %         if (exitflag ~= 1)
-%             %             disp(['Fit not quite perfect near n-m*iota of ' num2str(mean(x_fit))]);
-%             %         end
-%             if ( (exitflag > 0) & (fit_results(1) < peak_amplitude(1)) ) % check to see if peak makes sense
-%                 
-%                 % check to see if it is a repeated peak
-%                 if abs( (fit_results(2) - peak_position(num_peaks_found)) ) < 0.01 % repeated peak
-%                     ii =  ii + fit_window_skip_size;
-%                     disp('Repeated fit found');
-%                     if DEBUG*PAUSE_TIME_FACTOR
-%                         set(ph, 'Color', 'Black');
-%                         pause(5*PAUSE_TIME_FACTOR);
-%                     end
-%                 else % new peak-store it
-%                     num_peaks_found = num_peaks_found + 1;
-%                     peak_position(num_peaks_found) = fit_results(2);
-%                     peak_amplitude(num_peaks_found) = fit_results(1);
-%                     ii = floor(mean(fit_window)) + floor(fit_window_width/2) + fit_window_skip_size/2;
-%                     disp(['Fit #' num2str(num_peaks_found) ' at n-m(iota) = ' num2str(peak_position(num_peaks_found))]);
-%                 end
-%             else
-%                 num_failed_fits = num_failed_fits + 1;
-%                 disp('Another fit bit the dust');
-%                 ii = ii + floor(fit_window_width/2);
-%                 if DEBUG*PAUSE_TIME_FACTOR
-%                     set(ph, 'Color','g');
-%                     pause(5*PAUSE_TIME_FACTOR)
-%                     %                 set(ph, 'Color', 'k');
-%                 end
-%             end % validity check
-%             if DEBUG*PAUSE_TIME_FACTOR
-%                 %             pause(1)
-%                 delete(widnow_h);
-%             end
-%         end  % threshold check
-%     end % seek window slide loop
-%     toc
-%     
-% end
+% put the fits data into individual arrays for easier handling
+num_sym_fits = length(fit_results_sym);
+num_asym_fits = length(fit_results_asym);
+peak_position_sym = zeros(1, num_sym_fits) ;
+peak_amplitude_sym = peak_position_sym;
+peak_position_asym = zeros(1, num_asym_fits);
+peak_amplitude_asym = peak_position_asym;
 
-% Try to adjust the peak positions so that the (48,0)-mode is exactly on
-% 48.
-[peak48, peak48_index] = min( abs( abs(peak_position) - 48) ) ;
-renorm = 48 / peak_position(peak48_index);
-if ( abs(renorm - 1) <= 0.01)
-    peak_position = peak_position * renorm;
-    disp(['Correcting spectrum by factor of: ' num2str(renorm)]);
+peak_position_sym(1) = fit_results_sym{1}(2);
+peak_amplitude_sym(1) = fit_results_sym{1}(1) / 1.0; % the (0,0) component
+
+for ii = 2:num_sym_fits
+    peak_position_sym(ii) = fit_results_sym{ii}(2);
+    peak_amplitude_sym(ii) = fit_results_sym{ii}(1);
+end
+for ii = (1:num_asym_fits)
+    peak_position_asym(ii) = fit_results_asym{ii}(2);
+    peak_amplitude_asym(ii) = fit_results_asym{ii}(1);
 end
 
-disp('Peaks found.  Assigning n, m numbers');
+% Try to adjust the peak positions so that the {(N, 0), (2*N, 0),
+% (3*N, 0), ...} modes are exactly on integers
+% 'max_mode_multiple' is motivated by the fact that the max # of
+% coils/field period will probably be 12 (or less)  
+max_mode_multiple = 12;
 
-% In HSX, we can cheat by looking for the(n,m) = (4,1) mode to determine
-% iota
-[values, nm41index] = find( (peak_position > 2.5) & (peak_position < 3.1) );
-if (length(nm41index) == 0)
-    iota_best = iota_pp;  % no candidates found, use puncture plot value
-    disp('No (4,1) candidates found.  Iota from puncture plot is used.');
+peak_fit = [];
+peak_mode = [];
+for ii = 1:max_mode_multiple
+    this_mode = numFieldPeriods * ii;
+    [~, this_peak_index] = min( abs( abs(peak_position_sym) - this_mode) );
+    this_renorm = this_mode / peak_position_sym(this_peak_index);
+    if ( abs( abs(this_renorm) - 1) <= 0.01)
+        peak_fit = [peak_fit peak_position_sym(this_peak_index)];
+        peak_mode = [peak_mode this_mode];
+    end;
+end
+
+if length(peak_mode) < 1
+    disp('<----Found no peaks that were multiples of the number of field periods.')
+    best_renorm = 1;
 else
-    peaks_41_possible = peak_position(nm41index);
-    values_41_possible = peak_amplitude(nm41index);
-    [peak_41, ind_41] = max( abs(values_41_possible));
-    iota_41 = 4 - peaks_41_possible(ind_41); % got the best guess-compare it to puncture plot
-    if abs(iota_41 - iota_pp) / iota_pp > 0.3
-        iota_best = iota_pp;    % baaad iota from iota_41: use iota_pp
-        disp('Iota from (4,1) list is not close to puncture plot.  Iota from puncture plot is used.');
-    else
-        iota_best = iota_41;  % iota_41 looks ok.
-        disp('Iota from spectrum is used.');
-    end
+    disp('<----Found peaks that were multiples of the number of field perios');
+    peak_mode
+    peak_fit
+    best_renorm = peak_fit' \ peak_mode';
 end
-toc
+
+disp(['<----Renormalizing by : ' num2str(best_renorm)]);
+peak_position_sym_renormed = peak_position_sym * best_renorm;
+peak_position_asym_renormed = peak_position_asym * best_renorm;
+
+iota_best = iota_pp; % why? (answer: in case there is better information from *somewhere* else)
+
+disp('<----Peaks found.  Assigning n, m numbers');
 
 % Find n, m.
 % sort the peak values and positions from largest to smallest
-disp('Finding (n, m) values and magnitudes.');
-toc
-[bad_pk_amp_sorted, pk_sort_order] = sort(-1 * abs(peak_amplitude));
-pk_pos_sorted = peak_position(pk_sort_order);
-pk_amp_sorted = peak_amplitude(pk_sort_order);
+disp('<----Finding (n, m) values and magnitudes.');
+
+[~, pk_sym_sort_order] = sort(-1 * abs(peak_amplitude_sym));
+pk_pos_sym_sorted = peak_position_sym_renormed(pk_sym_sort_order);
+pk_amp_sym_sorted = peak_amplitude_sym(pk_sym_sort_order);
+
+[~, pk_asym_sort_order] = sort(-1 * abs(peak_amplitude_asym));
+pk_pos_asym_sorted = peak_position_asym_renormed(pk_asym_sort_order);
+pk_amp_asym_sorted = peak_amplitude_asym(pk_asym_sort_order);
+
+% I will use the following range of acceptable n,m combinations (same as
+% BOOZ_XFORM):
+% 0 <= m <= m_max, increments of 1
+% m = (0, 1, 2, ..., m_max)
+% -n_max <= n <= n_max, inncrements of numFieldPeriods
+% n = (-n_max, -n_max+numFieldPeriods, -n_max+numFieldsPeriods*2, ..., n_max)
+% If m = 0, n must be non-negative
+
 % For each peak, find the best match of n, m numbers
-% Create 5 n by m arrays-one indicates that the (n,m) combination is
-% still available, while another keeps track of the peak amplitude that
-% goes with it.  A third m by n array keeps track of the mismatch of the
-% (n,m)-choice in percentage.  The fourth is the value of (n-m*iota) which
-% is compared to each value of pk_pos_sorted.  The fifth is the error of
-% the 'next best' (n, m) fit.
-% A one-dim array keeps track of (n, m) indices from largest to smallest.
+% Create 5 n by m matrices for each of the sin and cos components.
+% For each:
+% _avail: A mask that indicates that the (n,m) combination is still
+%         available. '1' means the (n,m) component is available, 'inf'
+%         means it is already used (or unavailable as a legitimate (n,m)
+%         value)  Note: if m = 0, n must be non-negative. So, if m=0, n<0,
+%         then the corresponding _avail component should be marked as 'inf'
+% _amp: keeps track of the peak amplitudes that goes with it.
+% _error: keeps track of the mismatch of the (n,m)-choice in percentage.
+% _pos_value: the value of (n-m*iota) which is compared to each value of
+% pk_pos_sorted.
+% _next_best_error: The fifth is the error of the 'next best' (n, m) fit.
+% Also, the following are stored
+% pk_*_sorted: A one-dim array to track the (n, m) indices from largest to
+% smallest. This points to the INDEX in pk_pos_sym_sorted and pk_s
+
+
 % n_fit_max = 23*4; m_fit_max = 15;  % Maximum on n & m numbers-are these long enough?
-n_fit_max = 33*4; m_fit_max = 25;  % Maximum on n & m numbers-are these long enough?
-num_fl_per = 4;  % Number of field periods in HSX
-% this section for n numbers that are scrictly non-negative
-nm_avail = ones(n_fit_max/num_fl_per+1,2*m_fit_max+1); % an 'Inf' value makes the (n, m) combo invalid--see below.
-nm_amp = zeros(n_fit_max/num_fl_per+1,2*m_fit_max+1);
-nm_error = zeros(n_fit_max/num_fl_per+1,2*m_fit_max+1);
-nm_next_best_error = zeros(n_fit_max/num_fl_per+1,2*m_fit_max+1);
-nm_pos_value = [0:num_fl_per:n_fit_max]' * ones(1, 2*m_fit_max+1) - iota_best * (ones(n_fit_max/num_fl_per+1, 1)) * [m_fit_max:-1:-m_fit_max];
-disp(['Maximum (n - m*iota) =' num2str(max(max(nm_pos_value))) ]);
-n_values = 0:num_fl_per:n_fit_max; m_values = m_fit_max:-1:-m_fit_max;
-pk_n_sorted = zeros(size(pk_pos_sorted));
-pk_m_sorted = zeros(size(pk_pos_sorted));
-% this section for n numbers to go from -n_fit_max:n_fit_max
-% nm_avail = ones(2*n_fit_max/num_fl_per+1,2*m_fit_max+1); % an 'Inf' value makes the (n, m) combo invalid--see below.
-% nm_amp = zeros(2*n_fit_max/num_fl_per+1,2*m_fit_max+1);
-% nm_error = zeros(2*n_fit_max/num_fl_per+1,2*m_fit_max+1);
-% nm_next_best_error = zeros(2*n_fit_max/num_fl_per+1,2*m_fit_max+1);
-% nm_pos_value = [n_fit_max:-num_fl_per:-n_fit_max]' * ones(1, 2*m_fit_max+1) - iota_best * (ones(2*n_fit_max/num_fl_per+1, 1)) * [m_fit_max:-1:-m_fit_max];
-% disp(['Maximum (n - m*iota) =' num2str(max(max(nm_pos_value))) ]);
-% n_values = n_fit_max:-num_fl_per:-n_fit_max; m_values = m_fit_max:-1:-m_fit_max;
-% pk_n_sorted = zeros(size(pk_pos_sorted));
-% pk_m_sorted = zeros(size(pk_pos_sorted));
+% Maximum on n & m numbers-are these long enough?
+num_n_harmonics = 24;
+num_m_harmonics = 24;
 
-disp('Beginning (n, m) search');
-toc
-% to match up n, m
-% (0, 0) component is automatic
-% this section for n numbers that are scrictly non-negative
-pk_n_sorted(1) = 1;
-pk_m_sorted(1) = m_fit_max+1;
-nm_error(1,m_fit_max+1) = 0;
-nm_next_best_error(1,m_fit_max+1) = -1;
-nm_amp(1,m_fit_max+1) = pk_amp_sorted(1);
-nm_avail(n_fit_max/num_fl_per+1,m_fit_max+1) = Inf;
-% this section for n numbers to go from -n_fit_max:n_fit_max
-% pk_n_sorted(1) = n_fit_max/num_fl_per+1;
-% pk_m_sorted(1) = m_fit_max+1;
-% nm_error(n_fit_max/num_fl_per+1,m_fit_max+1) = 0;
-% nm_next_best_error(n_fit_max/num_fl_per+1,m_fit_max+1) = -1;
-% nm_amp(n_fit_max/num_fl_per+1,m_fit_max+1) = pk_amp_sorted(1);
-% nm_avail(n_fit_max/num_fl_per+1,m_fit_max+1) = Inf;
+n_fit_max = num_n_harmonics * numFieldPeriods;
+m_fit_max = num_m_harmonics; 
 
-for jj = 2:length(pk_pos_sorted)  % skip first one
+% Iniitialize the arrays.
+n_values = -n_fit_max:numFieldPeriods:n_fit_max;
+m_values = 0:1:m_fit_max;
+n_matrix = n_values' * ones(1, m_fit_max+1);
+m_matrix = (ones(2*n_fit_max/numFieldPeriods+1, 1)) * m_values;
+nm_pos_value = n_matrix - iota_pp * m_matrix;
+
+nm_cos_avail = ones(2*n_fit_max/numFieldPeriods+1, m_fit_max+1);
+% mark the (n<0, m=0) components as unavailable (set them to inf)
+nm_cos_avail(1:num_n_harmonics, 1) = Inf;
+nm_cos_amp = zeros(2 * num_n_harmonics + 1, m_fit_max + 1);
+nm_cos_error = zeros(2 * num_n_harmonics + 1, m_fit_max + 1);
+nm_cos_next_best_error = zeros(2 * num_n_harmonics + 1, m_fit_max + 1);
+pk_cos_n_sorted = zeros(size(pk_pos_sym_sorted));
+pk_cos_m_sorted = zeros(size(pk_pos_sym_sorted));
+
+nm_sin_avail = ones(2*n_fit_max/numFieldPeriods+1, m_fit_max+1);
+% mark the (n<=0, m=0) components as unavailable (set them to inf)
+nm_sin_avail(1:(num_n_harmonics+1), 1) = Inf;
+nm_sin_amp = zeros(2 * num_n_harmonics + 1, m_fit_max + 1);
+nm_sin_error = zeros(2 * num_n_harmonics + 1, m_fit_max + 1);
+nm_sin_next_best_error = zeros(2 * num_n_harmonics + 1, m_fit_max + 1);
+pk_sin_n_sorted = zeros(size(pk_pos_asym_sorted));
+pk_sin_m_sorted = zeros(size(pk_pos_asym_sorted));
+
+disp(['<----Minimum (n - m*iota) = ' num2str(min(min(nm_pos_value))) ]);
+disp(['<----Maximum (n - m*iota) = ' num2str(max(max(nm_pos_value))) ]);
+
+disp('<----Beginning (n, m) search');
+
+% handle the (0, 0) component
+% the index for the (0,0) mode is (num_n_harmonics + 1, 1)
+pk_cos_n_sorted(1) = num_n_harmonics + 1;
+pk_cos_m_sorted(1) = 1;
+nm_cos_error(num_n_harmonics + 1, 1) = 0;
+nm_cos_next_best_error(num_n_harmonics + 1, 1) = -1;
+nm_cos_amp(num_n_harmonics + 1, 1) = pk_amp_sym_sorted(1);
+% and, handle the mask
+nm_cos_avail(num_n_harmonics + 1, 1) = Inf; 
+
+% handle the rest of the symmetric components
+for jj = 2:length(pk_pos_sym_sorted)  % skip first one
     % determine mismatch value for all combinations
-    nm_mismatch = abs(abs(nm_pos_value) - abs(pk_pos_sorted(jj))) .* nm_avail;  % If nm_avail(n,m) == Inf, then, mismatch = Inf
+%     nm_mismatch = abs(abs(nm_pos_value) - ...
+%                       abs(pk_pos_sym_sorted(jj))) .* nm_cos_avail; 
+    %nm_mismatch = abs(nm_pos_value - abs(pk_pos_sym_sorted(jj))) .* nm_cos_avail; 
+    nm_mismatch = abs(nm_pos_value - pk_pos_sym_sorted(jj)) .* nm_cos_avail; 
     % find the (n, m)-indices of the minimum mismatch value
     [min_per_each_m, ind_min_per_n] = min(nm_mismatch, [], 1);
     [min_of_all, ind_min_m] = min(min_per_each_m, [], 2);
     ind_min_n = ind_min_per_n(ind_min_m);
     % record value.  update both the (n by m) arrays and the sorted array
-    nm_amp(ind_min_n, ind_min_m) = pk_amp_sorted(jj);
-    nm_error(ind_min_n, ind_min_m) = min_of_all / pk_pos_sorted(jj);
-    nm_avail(ind_min_n, ind_min_m) = Inf;
-    pk_n_sorted(jj) = ind_min_n;
-    pk_m_sorted(jj) = ind_min_m;
+    nm_cos_amp(ind_min_n, ind_min_m) = pk_amp_sym_sorted(jj);
+    nm_cos_error(ind_min_n, ind_min_m) = min_of_all / pk_pos_sym_sorted(jj);
+    nm_cos_avail(ind_min_n, ind_min_m) = Inf;
+    pk_cos_n_sorted(jj) = ind_min_n;
+    pk_cos_m_sorted(jj) = ind_min_m;
     % Find 'next best' match
-    nm_mismatch_next_best = abs(nm_pos_value - pk_amp_sorted(jj)) .* nm_avail;  % If nm_avail(n,m) == Inf, then, mismatch = Inf
+    nm_mismatch_next_best = abs(nm_pos_value - pk_amp_sym_sorted(jj)) .* nm_cos_avail;  % If nm_cos_avail(n,m) == Inf, then, mismatch = Inf
     % find the (n, m)-indices of the minimum mismatch value
     [min_per_each_m_2, ind_min_per_n_2] = min(nm_mismatch_next_best, [], 1);
     [min_of_all_2, ind_min_m_2] = min(min_per_each_m_2, [], 2);
     ind_min_n_2 = ind_min_per_n_2(ind_min_m_2);
-    nm_next_best_error(ind_min_n, ind_min_m) = min_of_all_2 /pk_pos_sorted(jj);
+    nm_cos_next_best_error(ind_min_n, ind_min_m) = min_of_all_2 /pk_pos_sym_sorted(jj);
 end  % and repeat
 
-toc
+% handle the asymmetric components
+
+
 disp('All peaks are matched to (n, m) values.  Results are: ');
-disp('Peak Amplitude  n   m   error   next_best_error');
-disp('====|=========|===|====|=======|================');
-for kk = 1:length(pk_pos_sorted)
-    disp([num2str( nm_amp(pk_n_sorted(kk), pk_m_sorted(kk)) ) ' === ' ...
-        num2str( n_values(pk_n_sorted(kk)) ) ' === ' ...
-        num2str( m_values(pk_m_sorted(kk)) ) ' === ' ...
-        num2str( nm_error(pk_n_sorted(kk), pk_m_sorted(kk)) ) ' === ' ...
-        num2str( nm_next_best_error(pk_n_sorted(kk), pk_m_sorted(kk)) )]);
+disp('Peak Amplitude   n   m   error   next_best_error');
+disp('====|=========|====|====|=======|================');
+for kk = 1:length(pk_pos_sym_sorted)
+    disp([num2str( nm_cos_amp(pk_cos_n_sorted(kk), pk_cos_m_sorted(kk)) ) ' === ' ...
+        num2str( n_values(pk_cos_n_sorted(kk)) ) ' === ' ...
+        num2str( m_values(pk_cos_m_sorted(kk)) ) ' === ' ...
+        num2str( nm_cos_error(pk_cos_n_sorted(kk), pk_cos_m_sorted(kk)) ) ' === ' ...
+        num2str( nm_cos_next_best_error(pk_cos_n_sorted(kk), pk_cos_m_sorted(kk)) )]);
 end
-num_failed_fits
+%num_failed_fits
+
+DEBUG = 1
 
 if DEBUG
     % reconstitute the B-curve from its spactral components
@@ -665,9 +567,13 @@ if DEBUG
     end
     
     modB_recon = zeros(size(chi));
-    for mm = 1:length(pk_pos_sorted)
-        omega_value = (n_values(pk_n_sorted(mm)) - iota_best * m_values(pk_m_sorted(mm))) * omega_factor;
-        modB_recon = modB_recon + nm_amp( pk_n_sorted(mm), pk_m_sorted(mm) ) * cos(chi*omega_value);
+    for mm = 1:length(pk_pos_sym_sorted)
+        omega_value = (n_values(pk_cos_n_sorted(mm)) - iota_pp * m_values(pk_cos_m_sorted(mm))) * omega_factor;
+%         if pk_type_sorted(mm) == 0 % Handle cos-terms
+        modB_recon = modB_recon + nm_cos_amp( pk_cos_n_sorted(mm), pk_cos_m_sorted(mm) ) * cos(chi*omega_value);
+%         elseif pk_type_sorted(mm) == 1 % Handle sin-terms
+            %modB_recon = modB_recon + nm_cos_amp( pk_cos_n_sorted(mm), pk_cos_m_sorted(mm) ) * sin(chi*omega_value);
+%         end
     end
     %     off_factor = modB ./ modB_recon;
     %     figure
@@ -684,7 +590,7 @@ if DEBUG
     
 end
 % returning the following variables:
-% nm_avail, nm_amp, nm_error, nm_next_best_error, pk_n_sorted, pk_m_sorted
+% nm_cos_avail, nm_cos_amp, nm_cos_error, nm_cos_next_best_error, pk_cos_n_sorted, pk_cos_m_sorted
 
 %========================================================
 %========================================================
@@ -699,6 +605,26 @@ function y = gaussCurveFit(params, x)
 %
 
 y = params(1) * exp( -( (x - params(2)).^2) ./ (2*(params(3))^2) );
+
+
+function y = gaussCosFit(params, x)
+% function y = gaussCurveFit(params, x)
+%
+% y = params(1) * exp( - ( (x - params(2)).^2) ./ (2*(params(3))^2);
+%
+
+y = params(1) * (exp( -( (x - params(2)).^2) ./ (2*(params(3))^2) ) + ...
+    exp( -( (x + params(2)).^2) ./ (2*(params(3))^2) ));
+
+
+function y = gaussSinFit(params, x)
+% function y = gaussCurveFit(params, x)
+%
+% y = params(1) * exp( - ( (x - params(2)).^2) ./ (2*(params(3))^2);
+%
+
+y = params(1) * (exp( -( (x - params(2)).^2) ./ (2*(params(3))^2) ) - ...
+    exp( -( (x + params(2)).^2) ./ (2*(params(3))^2) ));
 
 
 function print_fit(loop_index, data_fit)
