@@ -5,7 +5,7 @@ QHS
 coilset_hsx_complete
 
 <===Coil Currents
-10722.0
+10722.0 0.0 0.0 0.0 0.0 0.0 0.0
 
 <===Integration Tolerances
 <===relTol
