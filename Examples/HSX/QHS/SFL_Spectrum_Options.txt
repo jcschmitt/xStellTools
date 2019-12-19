@@ -25,8 +25,8 @@ Boozer
 <===Number of surfaces
 29
 
-<===Chi end  0.04 for 1st try.  0.001 for debug
-4200
+<===Chi end  0.04 for 1st try.  0.001 for debug 4200
+1500
 <===Chi Density. chiInc = 2^(-1*(Chi Density)) 6 for Hamada, 8 for Boozer?
 6
 
