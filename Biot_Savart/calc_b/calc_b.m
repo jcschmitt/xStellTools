@@ -15,7 +15,8 @@ function [Bx,By,Bz,BR,BPhi] = calc_b(Coilset, P_x, P_y, P_z, coil_current_array)
 % on a current filament (or extremely close) the contribution from that
 % filament is ignored.
 %
-% The file 'Coilset.mat' must be available.
+% The file coilset = 'coilset_xyz.mat' must be available in the path
+% somewhere
 %
 % Example:
 % [bx, by, bz, br, bphi] = calc_b('coilset_wistell_a_004', xx, 0 ,0, 4.7e5 * 5984/4444);

@@ -175,7 +175,7 @@ end
 %    poly_inboard, poly_outboard, R_apex, coilsetID, current);
 flux_helper = @(Z, R) flux_integrand2(Z, R, poly_inboard, poly_outboard, R_apex, coilsetID, current);
 flux = integral2(flux_helper, Z_bottom - 5e-4, Z_apex + 5e-4, ...
-    min(R) - 5e-4, max(R) + 5e-4, 'AbsTol', 1e-12, 'RelTol', 1e-8);
+    min(R) - 5e-4, max(R) + 5e-4, 'AbsTol', 1e-3, 'RelTol', 1e-4);
 flux
 
 
