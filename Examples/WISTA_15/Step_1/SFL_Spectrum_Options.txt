@@ -7,6 +7,9 @@ coilset_wista_15
 <===Coil Currents
 632955.5
 
+<===Number of Field Periods
+4
+
 <===Stellarator Symmetric (1=True, 0=False)
 0
 
