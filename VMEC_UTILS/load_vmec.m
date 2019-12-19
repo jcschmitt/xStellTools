@@ -31,6 +31,8 @@ for jj = 2:(vmec_data.ns-1)
     vmec_data.vpp(jj) = (vmec_data.vp_real(jj+1) - vmec_data.vp_real(jj)) ...
         * denom;
 end
+%vmec_data.vpp(1) = 2*vmec_data.vpp(2) - vmec_data.vpp(3);
+
 vmec_data.phip_real2(vmec_data.ns ) = NaN;
 vmec_data.vpp(vmec_data.ns ) = NaN;
 
@@ -38,6 +40,8 @@ vmec_data.vpp(vmec_data.ns ) = NaN;
 
 s = vmec_data.phi ./ vmec_data.phi(end);
 rho = sqrt(s);
+
+vmec_data.welldepth =  (vmec_data.vp_real(2) - vmec_data.vp_real) / vmec_data.vp_real(2);
 
         
 figure
@@ -82,7 +86,7 @@ axis tight;
 
 ii = ii + 1;
 subplot(maxii,1,ii);
-plot(rho,  (vmec_data.vp_real(2) - vmec_data.vp_real) / vmec_data.vp_real(2), '+--');
+plot(rho,  vmec_data.welldepth, '+--');
 xlabel('rho'); ylabel('well from vp_real');
 axis tight;
 

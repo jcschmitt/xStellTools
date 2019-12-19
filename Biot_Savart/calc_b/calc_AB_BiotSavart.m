@@ -39,6 +39,7 @@ for ii = 1:coil.num_turns
     Lx = Ri_x - Rf_x;
     Ly = Ri_y - Rf_y;
     Lz = Ri_z - Rf_z;
+    % this is the magnitude of the vector along the filament squared (for speed)
     L = sqrt(Lx.^2 + Ly.^2 + Lz.^2);
     
     ex = Lx ./ L;
