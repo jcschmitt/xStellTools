@@ -389,11 +389,11 @@ peak_amplitude_sym(1) = fit_results_sym{1}(1) / 1.0; % the (0,0) component
 
 for ii = 2:num_sym_fits
     peak_position_sym(ii) = fit_results_sym{ii}(2);
-    peak_amplitude_sym(ii) = fit_results_sym{ii}(1);
+    peak_amplitude_sym(ii) = 2*fit_results_sym{ii}(1);
 end
 for ii = (1:num_asym_fits)
     peak_position_asym(ii) = fit_results_asym{ii}(2);
-    peak_amplitude_asym(ii) = fit_results_asym{ii}(1);
+    peak_amplitude_asym(ii) = 2*fit_results_asym{ii}(1);
 end
 
 % Try to adjust the peak positions so that the {(N, 0), (2*N, 0),
@@ -610,14 +610,14 @@ if MAKE_RECON_PLOTS
         if mm == 1
             modB_sym_recon = modB_sym_recon + nm_cos_amp( pk_cos_n_sorted(mm), pk_cos_m_sorted(mm) ) * cos(chi*omega_value);
         else
-            modB_sym_recon = modB_sym_recon + 2* nm_cos_amp( pk_cos_n_sorted(mm), pk_cos_m_sorted(mm) ) * cos(chi*omega_value);
+            modB_sym_recon = modB_sym_recon + nm_cos_amp( pk_cos_n_sorted(mm), pk_cos_m_sorted(mm) ) * cos(chi*omega_value);
         end
     end
     
     %  Handle sin-terms
     for mm = 1:length(pk_pos_asym_sorted)
         omega_value = (n_values(pk_sin_n_sorted(mm)) - iota_pp * m_values(pk_sin_m_sorted(mm))) * omega_factor;
-        modB_asym_recon = modB_asym_recon + 2* nm_sin_amp( pk_sin_n_sorted(mm), pk_sin_m_sorted(mm) ) * cos(chi*omega_value);
+        modB_asym_recon = modB_asym_recon + nm_sin_amp( pk_sin_n_sorted(mm), pk_sin_m_sorted(mm) ) * cos(chi*omega_value);
     end
 
     modB_recon = modB_sym_recon + modB_asym_recon;
