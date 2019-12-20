@@ -12,7 +12,8 @@ function [] = displaySpectrumProfile(folder, text_title, spectrumType, ...
 %   STYLE_SPEC: the style of the plotted data
 %   XAXIS: The x-axis to be used, 
 %   fig_handle_in: For overplotting on the figure #(fig_handle_in);
-
+%  displaySpectrumProfile('QHS', 'QHS', 'boozer', 1:26, [9 11 15 18 26 27
+%           29 40 62 74 80 91  119], 'k', '+', [1:26]/29) 
 
 if nargin < 9
     fig_handle_in = figure;

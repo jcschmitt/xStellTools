@@ -25,6 +25,8 @@ function [fig_handle_1, fig_handle_2] = ...
 %     symbols are cylced.
 %     line_cells: A cell of line styles.
 %     colormap_in: A preferred colormap. Default = 'jet'
+%  plot_Boozer_spectrum('boozmn_QHS_Rstart_1_513_32polmodes_18x24_axis_v2.nc',
+%           200, [9 11 15 18 26 27 29 40 62 74 80 91  119], 200 , 1, 1)  
 %======================================================================
 
 
