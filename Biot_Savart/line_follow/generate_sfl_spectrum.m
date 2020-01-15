@@ -110,6 +110,7 @@ fclose(fid_input);
 % Options done
 %---------------------
 
+<<<<<<< HEAD
 % Determine chi increment for one time around the machine.
 % Set Chi end to num_transits * chi_inc_singlepass
 % Set chiInc to something reasonable (1 degree increments?)
