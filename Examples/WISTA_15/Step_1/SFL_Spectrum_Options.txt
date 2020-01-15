@@ -25,10 +25,10 @@ Boozer
 <===Number of surfaces
 51
 
-<===Chi end  0.04 for 1st try.  0.001 for debug
-4200
-<===Chi Density. chiInc = 2^(-1*(Chi Density)) 6 for Hamada, 8 for Boozer?
-6
+<===Number of transits around the machine
+1000
+<===Approximate number of points per transit
+180
 
 <===r-axis at  phi=0, z=0 
 2.4415

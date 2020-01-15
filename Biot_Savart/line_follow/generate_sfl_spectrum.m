@@ -74,12 +74,22 @@ absTol = fscanf(fid_input, '%f');
 fillerLine = fgetl(fid_input);
 numSurfaces = fscanf(fid_input,'%i');
 
+% JCS Old way
+% fillerLine = fgetl(fid_input);
+% chiEnd = fscanf(fid_input,'%f');
+% 
+% fillerLine = fgetl(fid_input);
+% chiDensity = fscanf(fid_input,'%f');
+% chiInc = 1/2^chiDensity;
+% JCS New way (2020)
 fillerLine = fgetl(fid_input);
-chiEnd = fscanf(fid_input,'%f');
+numTransits = fscanf(fid_input,'%f');
 
 fillerLine = fgetl(fid_input);
-chiDensity = fscanf(fid_input,'%f');
-chiInc = 1/2^chiDensity;
+ptsPerTransit = fscanf(fid_input,'%f');
+if (ptsPerTransit < 20)
+    disp('<----ptsPerTransit too low. You might be using an old input file')
+end
 
 fillerLine = fgetl(fid_input);
 rAxis = fscanf(fid_input, '%f');
@@ -100,30 +110,61 @@ fclose(fid_input);
 % Options done
 %---------------------
 
+% Determine chi increment for one time around the machine.
+% Set Chi end to num_transits * chi_inc_singlepass
+% Set chiInc to something reasonable (1 degree increments?)
+
 
 for ii = surfaceToGenerate
+    disp(['<---Initializing surface #', num2str(ii)]);
+
+    if strcmpi(spectrumType, 'hamada')
+        disp('<---entering an un-verirfied part of the code!!!!');
+        disp('<---entering an un-verirfied part of the code!!!!');
+        disp('<---entering an un-verirfied part of the code!!!!');
+        len_chi = length(chi);
+        len_chi_90 = round( 0.9 * len_chi );
+        dV_dPsi_all = (chi - chi(1)) ./ ( (coords(:, 2) - coords(1, 2)) / (2*pi) );
+        dV_dPsi = mean( dV_dPsi_all(len_chi_90:end) );
+        g_Boozer = -1; % The Boozer g factor is not needed for Hamada spectrum calculations
+    end
+    if strcmpi(spectrumType, 'boozer')
+        dV_dPsi = -1;  % Probably dont' need it if you're not doing the Hamada spectrum calculation
+        %if ~(exist('g_Boozer'))
+        g_Boozer = calculate_sfl_gFactor(coilsetID, coilCurrents, rStart(1), relTol, absTol);  % rStart(1) should be the magnetic axis
+        chiEnd = abs(g_Boozer * numTransits);
+        chiInc = abs(g_Boozer / ptsPerTransit);
+        chiDensity = log(1/chiInc) / log(2);
+        disp(['<---value of g_Boozer = ' num2str(g_Boozer)]);
+        disp(['<---value of chiEnd = ' num2str(chiEnd)]);
+        disp(['<---value of chiInc = ' num2str(chiInc)]);
+        disp(['<---value of chiDensity = ' num2str(chiDensity)]);
+        %end
+    end
     
-    chiSkip = 10;  % This sets a length (in chi) the line following code will follow before saving the data to a file.
+    
+    % chiSkip = 10;  % This sets a length (in chi) the line following code will follow before saving the data to a file.
+    chiSkip = ceil(abs(10 * g_Boozer));  % This sets a length (in chi) the line following code will follow before saving the data to a file.
     % Useful if the process may be interrupted (such as with Condor, or a reboot)
     if (chiEnd > chiSkip)
         chiEnd = (chiSkip:chiSkip:chiEnd);
     end
     transitBlocks = length(chiEnd);
     
-    disp(['Generating surface #', num2str(ii)]);
+    disp(['<---Generating surface #', num2str(ii)]);
     filename = ['SFL_SpectrumFollow_' spectrumType '_Data_surface_' num2str(ii)];
     try
         load(filename);
-        disp('Found previous data.')
+        disp('<---Found previous data.')
         startingBlock = currentBlock + 1;
     catch
-        disp('Found no previous data.  Initialized surface data');
+        disp('<---Found no previous data.  Initialized surface data');
         startingBlock = 1;
     end
     
     for jj = startingBlock:transitBlocks
         currentBlock = jj;
-        disp(['Starting transit block ', num2str(currentBlock), ' of ', num2str(transitBlocks)]);
+        disp(['<---Starting transit block ', num2str(currentBlock), ' of ', num2str(transitBlocks)]);
         
         % Set up the line following parameters (starting, ending location) for
         % current transit block
@@ -198,6 +239,9 @@ for ii = surfaceToGenerate
             'rStart', ...
             'zStart', ...
             'phiStart', ...
+            'g_Boozer', ...
+            'numTransits', ...
+            'ptsPerTransit', ...
             'chiEnd', ...
             'chiDensity', ...
             'surfaceToGenerate', ...
@@ -214,33 +258,15 @@ for ii = surfaceToGenerate
         totalTime = stopTime - startTime;
     end
     
-    if strcmpi(spectrumType, 'hamada')
-        disp('<---entering an un-verirfied part of the code!!!!');
-        disp('<---entering an un-verirfied part of the code!!!!');
-        disp('<---entering an un-verirfied part of the code!!!!');
-        len_chi = length(chi);
-        len_chi_90 = round( 0.9 * len_chi );
-        dV_dPsi_all = (chi - chi(1)) ./ ( (coords(:, 2) - coords(1, 2)) / (2*pi) );
-        dV_dPsi = mean( dV_dPsi_all(len_chi_90:end) );
-        g_Boozer = -1; % The Boozer g factor is not needed for Hamada spectrum calculations
-    elseif strcmpi(spectrumType, 'boozer')
-        dV_dPsi = -1;  % Does it matter, if you're not doing the Hamada spectrum calculation?
-        if ~(exist('g_Boozer'))
-            g_Boozer = calculate_sfl_gFactor(coilsetID, coilCurrents, rStart(1), relTol, absTol);  % rStart(1) should be the magnetic axis
-        else
-            disp('value of g_Boozer already found--going with it.')
-        end
-    else error('Unknown spectrum request');
-    end
     
-    disp(['Times around the machine: ' num2str(( (coords(end, 2) - coords(1, 2)) / (2*pi) )) ]);
+    disp(['<---Times around the machine: ' num2str(( (coords(end, 2) - coords(1, 2)) / (2*pi) )) ]);
     
-    disp(['Total time for line following is: ',  num2str(totalTime(3)), ':', num2str(totalTime(4)), ':', ...
+    disp(['<---Total time for line following is: ',  num2str(totalTime(3)), ':', num2str(totalTime(4)), ':', ...
         num2str(totalTime(5)), ':', num2str(totalTime(6))]);
     
     
     if ~(exist('modB'))
-        disp(['Doubling up the chi and coordinate data.']);
+        disp(['<---Doubling up the chi and coordinate data.']);
         chi_L = -chi2(1:end)';  % the first half of the doubled data array
         chi_L = fliplr(chi_L);
         r_L = coords2(1:end, 1)';      r_L = fliplr(r_L);
@@ -258,7 +284,7 @@ for ii = surfaceToGenerate
         phi_FFT = [phi_L phi_2];
         z_FFT = [z_L z_R];
         
-        disp(['Now calculating |B| along the entire chi-curve']);
+        disp(['<---Now calculating |B| along the entire chi-curve']);
         % Calculate the values of the |B| for each of the points specified by
         % by *_FFT
         tic
@@ -288,6 +314,8 @@ for ii = surfaceToGenerate
             'rStart', ...
             'zStart', ...
             'phiStart', ...
+            'numTransits', ...
+            'ptsPerTransit', ...
             'chiEnd', ...
             'chiDensity', ...
             'surfaceToGenerate', ...
@@ -302,9 +330,9 @@ for ii = surfaceToGenerate
             'modB');
         %             '-v6');
         
-        disp('Done calculating |B|');
+        disp('<---Done calculating |B|');
     else
-        disp('|B| already calculated.  Moving on to the spectrum calculation.');
+        disp('<---|B| already calculated.  Moving on to the spectrum calculation.');
     end  % ~(exist('modB'))
     
     % load the iota from the iota/toroidal flux calculation
@@ -332,6 +360,8 @@ for ii = surfaceToGenerate
             'rStart', ...
             'zStart', ...
             'phiStart', ...
+            'numTransits', ...
+            'ptsPerTransit', ...
             'chiEnd', ...
             'chiDensity', ...
             'surfaceToGenerate', ...
