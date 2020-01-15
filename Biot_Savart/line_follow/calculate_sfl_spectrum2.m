@@ -3,17 +3,56 @@ function [nm_cos_amp, pk_cos_n_sorted, pk_cos_m_sorted, ...
     nm_cos_next_best_error, n_values, m_values, iota_best] = ...
     calculate_sfl_spectrum2(chi, modB, spectrumType, dV_dPsi, ...
     g_Boozer, iota_pp, numFieldPeriods, DEBUG_PLOTS)
-%               Apply a Gaussian window function to the data
-%               Rearrange the data to guarantee that the modB curve has
-%               even symmetry. This usually means that the FFT has only
-%               real components, but if there are non-stellarator symmetric
-%               terms, these will also be captured.
-%               FFT the curve
-%               find the peaks of the FFT
-%               determine best value for iota
-%               Find (n, m) values that best match each peak
-%               done!
-
+% function [nm_cos_amp, pk_cos_n_sorted, pk_cos_m_sorted, ...
+%     pk_pos_sym_sorted, nm_cos_avail, nm_cos_error, ...
+%     nm_cos_next_best_error, n_values, m_values, iota_best] = ...
+%     calculate_sfl_spectrum2(chi, modB, spectrumType, dV_dPsi, ...
+%     g_Boozer, iota_pp, numFieldPeriods, DEBUG_PLOTS)
+% Inputs
+%  chi: 1xN array of chi values
+%  modB: 1xN array of |B| values
+%  spectrumType: 'boozer' (testing) or 'hamada' (not finished)
+%  dV_dPsi: Scalar. Used for Hamada
+%  g_Boozer: Scalar. Boozer 'g' factor (poloidal current)
+%  iota_pp: Scalar. Rotational transform for the surface of interest. 'pp' refers
+%  to 'puncture plot', which is the method used in
+%  'generate_flux_surfaces.m', but any method is fine.
+%  numFieldPeriods: Scalar. Number of field periods for the devic.
+%
+% Method
+%     1. Apply a Gaussian window function to the data
+%     2. Rearrange the data to guarantee that the modB curve has
+%     even symmetry. This usually means that the FFT has only
+%     real components, but if there are non-stellarator symmetric
+%     terms, these will also be captured.
+%     3. FFT the curve
+%     4. find the peaks of the FFT
+%     5. determine best value for iota
+%     6. Find (n, m) values that best match each peak
+%     7. done!
+%
+% Outputs (out of order).  Also see lines 480-500.
+% n_values = -n_fit_max:numFieldPeriods:n_fit_max; 
+% m_values = 0:1:m_fit_max;
+% nm_cos_amp: A matrix containing the magnitude of each (n,m) combination.
+%    Values are 0, unless a peak at the (n,m) mode was found
+% pk_cos_n_sorted: Array. The index of the n-component of the modes, sorted by
+% size
+% pk_cos_m_sorted: Array. The index of the m-component of the modes, sorted by
+% size
+% pk_pos_sym_sorted: Array. The position in (n-m*iota) space for each mode, sorted
+% by amplitude
+% nm_cos_avail: Matrix. The 'mask' indicating wheter or not a particular (n,m)
+% combination was found during the search. A '1' indicates that the mode
+% was not found. A 'Inf' indicates that the mode was found (or otherwise
+% not availalbe).
+% nm_cos_error: Matrix. The error in the match to (n-m*i) for each mode
+% nm_cos_next_best_error: The 'next best error' for each mode
+% iota_best: Scalar. Same as iota_pp. In case there is a correction, it may be
+% applied, but at this point, no correction is made to iota.
+% 
+% 
+%
 if (nargin < 8)
     DEBUG_PLOTS = 0;
 end
