@@ -1,0 +1,42 @@
+Iota evolution parameters file
+Inductive decay of bootstrap current
+Susceptance Matrix File Location
+/Users/jschmitt/Documents/HSX Material/Work PC/D drive/JohnS/Plots and Notes/Susceptance/susceptance_matrix_QHS_Rstart_1_513_AXIS_v2_VMEC_8p46.mat
+Decay type: netcurrent (set by net current) or inductive (magnetic/resistive diffusion)
+netcurrent
+Pressure polynomial form (1 = polynomial in 's'=nomralized toroidal flux)
+1
+Pressure polynomial terms
+0 
+Pressure time decay form  1=exponential decay  2=ramp function
+1
+Pressure decay rate or ramp time(seconds)
+0.0023
+Breakdown delay time
+0.0015
+J_NI dot B polynomial form: 1= poly in s.  2 = double gauss.  4 = ([x] [y]) list
+2
+J_NI dot B terms (x list or poly or double gauss terms)
+0 .05 .3 0 .1
+J_NI y list (empty if using poly or double gauss)
+
+J_NI turn on time (tau)
+0.0023
+sigma_parallel poly form (1= polynomial, 2 = [x] [y] values)
+2
+sigma_parallel terms x_terms
+0       0.005        0.01       0.015        0.02       0.025        0.03       0.035        0.04       0.045        0.05       0.055        0.06       0.065        0.07       0.075        0.08       0.085       0.095         0.1       0.195       0.245       0.295       0.345       0.395       0.445       0.495       0.545       0.595       0.645       0.695       0.745       0.795       0.845       0.895       0.945           1
+sigma_parallel terms y_terms (or empty line)
+49200847.751      44739056.5783      40375286.6369      36336850.4079      32635571.5458      29320566.6777      26377218.4296      23742805.7991      21380839.6645       19266218.779      17376098.7494      15689301.4453       14187079.583      12853224.2738      11674021.6429      10637194.6123       9731312.8858      8944443.93287      7668836.85238      7148732.17529      3672253.26008      3182743.98709      2723905.55821      2295999.37767      1914247.05087      1588497.58704      1317073.06883      1097921.80394      927723.363159      802004.998394      705992.204904      632412.689212      570989.768382      517446.075473      466867.817022      414978.392182       358677.66005
+Itor form  1=exponential decay  2=ramp function
+3
+Itor steady state (@ t = inf) or values of current at time samples
+0       3.10778     -2.886004       7.30174      13.11664      21.05951      30.59491      37.44498       38.8369      57.02169      62.93146      74.04577      80.78591      90.33636      95.63839      98.81676      110.9239      120.9349      126.2324       132.364      135.7981      145.0651      142.7832       151.198      156.7103      164.2176      171.1474      179.3419      177.8927      182.6743      190.6016      190.7813      192.4234      205.7792      206.6934      205.3899      213.2703      215.5526      217.6773      223.7425      223.5236       229.517      229.8349      230.5318      235.0839      236.3409      242.2204      246.6075      247.5725      250.9832      254.2856      276.6872      282.7535      273.0366       252.721      216.2104       166.596      110.7735      67.75701      41.39804      30.99311      26.52078      25.10982      22.38762      21.90905      20.62657      20.75002      18.89709      20.12931       18.8544      19.34742 0.0 0.0
+Itor decay rate or ramp time(seconds) or times for above samples
+-2e-006    0.000998    0.001998    0.002998    0.003998    0.004998    0.005998    0.006998    0.007998    0.008998    0.009998    0.010998    0.011998    0.012998    0.013998    0.014998    0.015998    0.016998    0.017998    0.018998    0.019998    0.020998    0.021998    0.022998    0.023998    0.024998    0.025998    0.026998    0.027998    0.028998    0.029998    0.030998    0.031998    0.032998    0.033998    0.034998    0.035998    0.036998    0.037998    0.038998    0.039998    0.040998    0.041998    0.042998    0.043998    0.044998    0.045998    0.046998    0.047998    0.048998    0.049998    0.050998    0.051998    0.052998    0.053998    0.054998    0.055998    0.056998    0.057998    0.058998    0.059998    0.060998    0.061998    0.062998    0.063998    0.064998    0.065998    0.066998    0.067998    0.068998    0.069998  .07 .071
+Phi_LCFS
+0.0424
+
+
+
+

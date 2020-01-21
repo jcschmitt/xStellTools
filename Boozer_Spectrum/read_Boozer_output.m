@@ -9,7 +9,13 @@ try
     
     ns_bID = netcdf.inqVarID(ncid, 'ns_b');
     boozer_data.ns_b = netcdf.getVar(ncid, ns_bID); % number of surfs
-    
+
+    nfp_bID = netcdf.inqVarID(ncid, 'nfp_b');
+    boozer_data.nfp_b = double(netcdf.getVar(ncid, nfp_bID)); % number of surfs
+
+    lasym_ID = netcdf.inqVarID(ncid, 'lasym__logical__');
+    boozer_data.lasym = netcdf.getVar(ncid, lasym_ID); % number of surfs
+
     mboz_bID = netcdf.inqVarID(ncid, 'mboz_b');
     boozer_data.mboz_b = netcdf.getVar(ncid, 6); % something related to number of poloidal modes
     
@@ -30,6 +36,7 @@ try
         boozer_data.bmnc_b = netcdf.getVar(ncid, bmnc_bID)'; % bmn mode magnitudes (signed)
     catch
         disp('<---Did not find bmnc_b.  Looking for bmn_b')
+        error('<---where did this output file come from?')
         boozer_data.bmnc_bID = netcdf.inqVarID(ncid, 'bmn_b');
         boozer_data.bmnc_b = netcdf.getVar(ncid, bmnc_bID)'; % bmn mode magnitudes (signed)
     end
@@ -54,11 +61,25 @@ try
     buco_bID = netcdf.inqVarID(ncid, 'buco_b');
     boozer_data.buco_b = netcdf.getVar(ncid, buco_bID)'; % The Boozer I factor
 
+    if (boozer_data.lasym)
+        rmns_bID = netcdf.inqVarID(ncid, 'rmns_b');
+        boozer_data.rmns_b = netcdf.getVar(ncid, rmns_bID)'; % cos terms of r-expansion
+        
+        bmns_bID = netcdf.inqVarID(ncid, 'bmns_b');
+        boozer_data.bmns_b = netcdf.getVar(ncid, bmns_bID)'; % cos terms of r-expansion
+        
+        zmnc_bID = netcdf.inqVarID(ncid, 'zmnc_b');
+        boozer_data.zmnc_b = netcdf.getVar(ncid, zmnc_bID)'; % sin terms of z-expansion
+        
+    end
+    
     netcdf.close(ncid)
 catch
     % matlab 2008b and older
     disp('<----Warning: Using 3rd party netcdf support.');
     disp('<----Warning: Some variables may need to have a transpose applied.');
+    disp('k====Stopping');
+    stop
     boozer_data.ns_b = getnc(fname_ext, 'ns_b'); % number of surfs
     boozer_data.mboz_b = getnc(fname_ext, 'mboz_b'); % something related to number of poloidal modes
     boozer_data.nboz_b = getnc(fname_ext, 'nboz_b'); % " " of toroidal modes

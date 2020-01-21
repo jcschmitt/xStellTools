@@ -1,23 +1,65 @@
 function [nm_cos_amp, pk_cos_n_sorted, pk_cos_m_sorted, ...
     pk_pos_sym_sorted, nm_cos_avail, nm_cos_error, ...
     nm_cos_next_best_error, n_values, m_values, iota_best] = ...
-    calculate_sfl_spectrum(chi, modB, spectrumType, dV_dPsi, ...
-    g_Boozer, iota_pp, numFieldPeriods, DEBUG)
-%               Apply a Gaussian window function to the data
-%               Rearrange the data to guarantee that the modB curve has
-%               even symmetry. This usually means that the FFT has only
-%               real components, but if there are non-stellarator symmetric
-%               terms, these will also be captured.
-%               FFT the curve
-%               find the peaks of the FFT
-%               determine best value for iota
-%               go find n, m
-%               done!
-
+    calculate_sfl_spectrum2(chi, modB, spectrumType, dV_dPsi, ...
+    g_Boozer, iota_pp, numFieldPeriods, DEBUG_PLOTS)
+% function [nm_cos_amp, pk_cos_n_sorted, pk_cos_m_sorted, ...
+%     pk_pos_sym_sorted, nm_cos_avail, nm_cos_error, ...
+%     nm_cos_next_best_error, n_values, m_values, iota_best] = ...
+%     calculate_sfl_spectrum2(chi, modB, spectrumType, dV_dPsi, ...
+%     g_Boozer, iota_pp, numFieldPeriods, DEBUG_PLOTS)
+% Inputs
+%  chi: 1xN array of chi values
+%  modB: 1xN array of |B| values
+%  spectrumType: 'boozer' (testing) or 'hamada' (not finished)
+%  dV_dPsi: Scalar. Used for Hamada
+%  g_Boozer: Scalar. Boozer 'g' factor (poloidal current)
+%  iota_pp: Scalar. Rotational transform for the surface of interest. 'pp' refers
+%  to 'puncture plot', which is the method used in
+%  'generate_flux_surfaces.m', but any method is fine.
+%  numFieldPeriods: Scalar. Number of field periods for the devic.
+%
+% Method
+%     1. Apply a Gaussian window function to the data
+%     2. Rearrange the data to guarantee that the modB curve has
+%     even symmetry. This usually means that the FFT has only
+%     real components, but if there are non-stellarator symmetric
+%     terms, these will also be captured.
+%     3. FFT the curve
+%     4. find the peaks of the FFT
+%     5. determine best value for iota
+%     6. Find (n, m) values that best match each peak
+%     7. done!
+%
+% Outputs (out of order).  Also see lines 480-500.
+% n_values = -n_fit_max:numFieldPeriods:n_fit_max; 
+% m_values = 0:1:m_fit_max;
+% nm_cos_amp: A matrix containing the magnitude of each (n,m) combination.
+%    Values are 0, unless a peak at the (n,m) mode was found
+% pk_cos_n_sorted: Array. The index of the n-component of the modes, sorted by
+% size
+% pk_cos_m_sorted: Array. The index of the m-component of the modes, sorted by
+% size
+% pk_pos_sym_sorted: Array. The position in (n-m*iota) space for each mode, sorted
+% by amplitude
+% nm_cos_avail: Matrix. The 'mask' indicating wheter or not a particular (n,m)
+% combination was found during the search. A '1' indicates that the mode
+% was not found. A 'Inf' indicates that the mode was found (or otherwise
+% not availalbe).
+% nm_cos_error: Matrix. The error in the match to (n-m*i) for each mode
+% nm_cos_next_best_error: The 'next best error' for each mode
+% iota_best: Scalar. Same as iota_pp. In case there is a correction, it may be
+% applied, but at this point, no correction is made to iota.
+% 
+% 
+%
 if (nargin < 8)
-    DEBUG = 0;
+    DEBUG_PLOTS = 0;
 end
-DEBUG = 0
+
+DEBUG_PLOTS = 0;
+WHEN2STARTPLOTTING = 1;
+MAKE_RECON_PLOTS = 1;
 
 %min_sym_mode = 1e-12;
 %min_asym_mode = 1e-12;
@@ -57,9 +99,10 @@ else
     gw_even = gauss_window;
 end
 
-if DEBUG
+if DEBUG_PLOTS
+    % open figures for later
     fh0 = figure;
-    figure
+    fh1 = figure;
     subplot(2,1,1);
     plot(chi, modB, chi, modB_gw_window_filt)
     xlabel('chi'); ylabel('|B|');
@@ -116,18 +159,18 @@ if strcmpi(spectrumType, 'hamada')
 elseif strcmpi(spectrumType, 'boozer')
     n_minus_miota = omega * g_Boozer;
 else
-    error('Unknown spectrum request');
+    error('<----Unknown spectrum request');
 end
 
 % n_minus_miota = abs(n_minus_miota);  % this needs to be fixed.  maybe not?
 delta_nmmi = abs(n_minus_miota(2)-n_minus_miota(1));
-disp(['Delta in n_minus_miota: ' num2str(delta_nmmi)]);
+disp(['<----Delta in n_minus_miota: ' num2str(delta_nmmi)]);
 
 % find the peaks of the FFT
 % fit the largest modes first, remove from spectrum, and research.
 % If a repeat peak is found, alert, add new contribution to old, and
 % continue
-if DEBUG
+if DEBUG_PLOTS
     axis_current = 0; axis_max = 4; rows_max = 2; cols_max = 2;
     fh_current = figure;
     
@@ -307,7 +350,7 @@ while keep_going
             
     end
     
-    if DEBUG
+    if DEBUG_PLOTS
         x_dense = linspace(x_fit(1), x_fit(end), 400);
         switch task 
             case {'find00'}
@@ -339,7 +382,8 @@ while keep_going
             pause(.2*PAUSE_TIME_FACTOR)
         end
         
-        if 1
+        if (loop_index >= WHEN2STARTPLOTTING)
+
             figure(fh_current);
             axis_current = axis_current + 1;
             if (axis_current > axis_max)
@@ -363,7 +407,7 @@ while keep_going
             catch
                 keyboard
             end
-            title(['Loop index # ' num2str(loop_index)]);
+            title(['<----Loop index # ' num2str(loop_index)]);
             pause(.2*PAUSE_TIME_FACTOR)
         end
     end
@@ -384,11 +428,11 @@ peak_amplitude_sym(1) = fit_results_sym{1}(1) / 1.0; % the (0,0) component
 
 for ii = 2:num_sym_fits
     peak_position_sym(ii) = fit_results_sym{ii}(2);
-    peak_amplitude_sym(ii) = fit_results_sym{ii}(1);
+    peak_amplitude_sym(ii) = 2*fit_results_sym{ii}(1);
 end
 for ii = (1:num_asym_fits)
     peak_position_asym(ii) = fit_results_asym{ii}(2);
-    peak_amplitude_asym(ii) = fit_results_asym{ii}(1);
+    peak_amplitude_asym(ii) = 2*fit_results_asym{ii}(1);
 end
 
 % Try to adjust the peak positions so that the {(N, 0), (2*N, 0),
@@ -439,8 +483,8 @@ pk_amp_sym_sorted = peak_amplitude_sym(pk_sym_sort_order);
 pk_pos_asym_sorted = peak_position_asym_renormed(pk_asym_sort_order);
 pk_amp_asym_sorted = peak_amplitude_asym(pk_asym_sort_order);
 
-% I will use the following range of acceptable n,m combinations (same as
-% BOOZ_XFORM):
+% Note: The following range of acceptable n,m combinations (same as
+% BOOZ_XFORM) is:
 % 0 <= m <= m_max, increments of 1
 % m = (0, 1, 2, ..., m_max)
 % -n_max <= n <= n_max, inncrements of numFieldPeriods
@@ -536,27 +580,58 @@ for jj = 2:length(pk_pos_sym_sorted)  % skip first one
     [min_per_each_m_2, ind_min_per_n_2] = min(nm_mismatch_next_best, [], 1);
     [min_of_all_2, ind_min_m_2] = min(min_per_each_m_2, [], 2);
     ind_min_n_2 = ind_min_per_n_2(ind_min_m_2);
-    nm_cos_next_best_error(ind_min_n, ind_min_m) = min_of_all_2 /pk_pos_sym_sorted(jj);
+    nm_cos_next_best_error(ind_min_n, ind_min_m) = min_of_all_2 / pk_pos_sym_sorted(jj);
 end  % and repeat
 
 % handle the asymmetric components
+for jj = 1:length(pk_pos_asym_sorted)
+    % determine mismatch value for all combinations
+    nm_mismatch = abs(nm_pos_value - pk_pos_asym_sorted(jj)) .* nm_sin_avail; 
+    % find the (n, m)-indices of the minimum mismatch value
+    [min_per_each_m, ind_min_per_n] = min(nm_mismatch, [], 1);
+    [min_of_all, ind_min_m] = min(min_per_each_m, [], 2);
+    ind_min_n = ind_min_per_n(ind_min_m);
+    % record value.  update both the (n by m) arrays and the sorted array
+    nm_sin_amp(ind_min_n, ind_min_m) = pk_amp_asym_sorted(jj);
+    nm_sin_error(ind_min_n, ind_min_m) = min_of_all / pk_pos_asym_sorted(jj);
+    nm_sin_avail(ind_min_n, ind_min_m) = Inf;
+    pk_sin_n_sorted(jj) = ind_min_n;
+    pk_sin_m_sorted(jj) = ind_min_m;
+    % Find 'next best' match
+    nm_mismatch_next_best = abs(nm_pos_value - pk_amp_asym_sorted(jj)) .* nm_sin_avail;  % If nm_sin_avail(n,m) == Inf, then, mismatch = Inf
+    % find the (n, m)-indices of the minimum mismatch value
+    [min_per_each_m_2, ind_min_per_n_2] = min(nm_mismatch_next_best, [], 1);
+    [min_of_all_2, ind_min_m_2] = min(min_per_each_m_2, [], 2);
+    ind_min_n_2 = ind_min_per_n_2(ind_min_m_2);
+    nm_sin_next_best_error(ind_min_n, ind_min_m) = min_of_all_2 / pk_pos_asym_sorted(jj);
+end  % and repeat
 
 
-disp('All peaks are matched to (n, m) values.  Results are: ');
-disp('Peak Amplitude   n   m   error   next_best_error');
-disp('====|=========|====|====|=======|================');
+disp('<----All peaks are matched to (n, m) values.  Results are: ');
+disp('Index Cos Peak Amplitude   n   m   error   next_best_error');
+disp('=====|========|=========|====|====|=======|================');
 for kk = 1:length(pk_pos_sym_sorted)
-    disp([num2str( nm_cos_amp(pk_cos_n_sorted(kk), pk_cos_m_sorted(kk)) ) ' === ' ...
+    disp([num2str(kk) ' === ' ...
+        num2str( nm_cos_amp(pk_cos_n_sorted(kk), pk_cos_m_sorted(kk)) ) ' === ' ...
         num2str( n_values(pk_cos_n_sorted(kk)) ) ' === ' ...
         num2str( m_values(pk_cos_m_sorted(kk)) ) ' === ' ...
         num2str( nm_cos_error(pk_cos_n_sorted(kk), pk_cos_m_sorted(kk)) ) ' === ' ...
         num2str( nm_cos_next_best_error(pk_cos_n_sorted(kk), pk_cos_m_sorted(kk)) )]);
 end
-%num_failed_fits
 
-DEBUG = 1
+disp('Index  Sin Peak Amplitude   n   m   error   next_best_error');
+disp('======|========|=========|====|====|=======|================');
+for kk = 1:length(pk_pos_asym_sorted)
+    disp([num2str(kk) ' === ' ...
+        num2str( nm_sin_amp(pk_sin_n_sorted(kk), pk_sin_m_sorted(kk)) ) ' === ' ...
+        num2str( n_values(pk_sin_n_sorted(kk)) ) ' === ' ...
+        num2str( m_values(pk_sin_m_sorted(kk)) ) ' === ' ...
+        num2str( nm_sin_error(pk_sin_n_sorted(kk), pk_sin_m_sorted(kk)) ) ' === ' ...
+        num2str( nm_sin_next_best_error(pk_sin_n_sorted(kk), pk_sin_m_sorted(kk)) )]);
+end
 
-if DEBUG
+
+if MAKE_RECON_PLOTS
     % reconstitute the B-curve from its spactral components
     if strcmp(lower(spectrumType), 'hamada')
         %         n_minus_miota = omega * dV_dPsi / (2 * pi);
@@ -566,27 +641,38 @@ if DEBUG
         omega_factor = 1/g_Boozer;
     end
     
-    modB_recon = zeros(size(chi));
+    modB_sym_recon = zeros(size(chi));
+    modB_asym_recon = zeros(size(chi));
+    %  Handle cos-terms
     for mm = 1:length(pk_pos_sym_sorted)
         omega_value = (n_values(pk_cos_n_sorted(mm)) - iota_pp * m_values(pk_cos_m_sorted(mm))) * omega_factor;
-%         if pk_type_sorted(mm) == 0 % Handle cos-terms
-        modB_recon = modB_recon + nm_cos_amp( pk_cos_n_sorted(mm), pk_cos_m_sorted(mm) ) * cos(chi*omega_value);
-%         elseif pk_type_sorted(mm) == 1 % Handle sin-terms
-            %modB_recon = modB_recon + nm_cos_amp( pk_cos_n_sorted(mm), pk_cos_m_sorted(mm) ) * sin(chi*omega_value);
-%         end
+        if mm == 1
+            modB_sym_recon = modB_sym_recon + nm_cos_amp( pk_cos_n_sorted(mm), pk_cos_m_sorted(mm) ) * cos(chi*omega_value);
+        else
+            modB_sym_recon = modB_sym_recon + nm_cos_amp( pk_cos_n_sorted(mm), pk_cos_m_sorted(mm) ) * cos(chi*omega_value);
+        end
     end
-    %     off_factor = modB ./ modB_recon;
-    %     figure
-    %     plot(chi, off_factor);
+    
+    %  Handle sin-terms
+    for mm = 1:length(pk_pos_asym_sorted)
+        omega_value = (n_values(pk_sin_n_sorted(mm)) - iota_pp * m_values(pk_sin_m_sorted(mm))) * omega_factor;
+        modB_asym_recon = modB_asym_recon + nm_sin_amp( pk_sin_n_sorted(mm), pk_sin_m_sorted(mm) ) * cos(chi*omega_value);
+    end
+
+    modB_recon = modB_sym_recon + modB_asym_recon;
     
     figure
     subplot(2,1,1);
     plot(chi, modB, 'k');
     hold on;
+    plot(chi, modB_sym_recon, 'r');
     plot(chi, modB_recon, 'b');
+    legend('modB', 'modB(recon) sym terms only', 'modB(recon) total')
     subplot(2,1,2);
-    plot(chi, (modB-modB_recon)./modB, 'r');
-    legend('modB vs chi', 'modB(recon) vs chi', 'err')
+    plot(chi, 100*(modB-modB_sym_recon)./modB, 'r');
+    hold on
+    plot(chi, 100*(modB-modB_recon)./modB, 'b');
+    legend('Error (%) - Sym Terms', 'Error (%) - Total')
     
 end
 % returning the following variables:
