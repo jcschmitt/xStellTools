@@ -1,0 +1,39 @@
+Iota evolution parameters file
+15000 Ohmic Ramp W7X Ref 1
+Susceptance Matrix File Location
+/Users/schmittj/Documents/MATLAB/Susceptance/susceptance_matrix_W7X_ref_1_equiv_tok.mat
+Decay type: netcurrent (set by net current) or inductive (magnetic/resistive diffusion)
+netcurrent
+Pressure polynomial form (1 = polynomial in 's'=nomralized toroidal flux)
+1
+Pressure polynomial terms
+0 
+Pressure time decay form  1=exponential decay  2=ramp function
+1
+Pressure decay rate or ramp time(seconds)
+0.001
+Breakdown delay time
+0.000
+J_NI dot B polynomial form: 1= poly in s.  2 = double gauss.  4 = ([x] [y]) list. 5 = W7X_ECCD_gauss_curve
+4
+J_NI dot B terms (x list or poly or double gauss terms)
+0 1
+J_NI y list (empty if using poly or double gauss)
+0 0
+J_NI turn on time (tau)
+0.000
+sigma_parallel poly form (1= polynomial, 2 = [x] [y] values)
+2
+sigma_parallel terms x_terms
+0  .99  1
+sigma_parallel terms y_terms (or empty line)
+1e8 1e8 1e8
+Itor form  1=exponential decay  2=ramp function
+2
+Itor steady state (@ t = inf) or values of current at time samples
+15000
+Itor decay rate or ramp time(seconds) for times for above samples
+2
+Phi_LCFS
+-2.418622598970076
+

@@ -1,0 +1,34 @@
+Iota evolution parameters file
+Inductive decay of bootstrap current
+Susceptance Matrix File Location
+/Users/schmittj/Documents/MATLAB/Susceptance/susceptance_MCONF_QHS_51.mat
+Decay type: netcurrent (set by net current) or inductive (magnetic/resistive diffusion)
+inductive
+Pressure polynomial form (1 = polynomial in 's'=nomralized toroidal flux)
+1
+Pressure polynomial terms
+0 
+Pressure time decay form  1=exponential decay  2=ramp function
+1
+Pressure decay rate or ramp time(seconds)
+0.001
+J_NI dot B polynomial form: 1= poly in s.  2 = double gauss.  3 = derivative of double gauss
+2
+J_NI dot B terms
+100000 .1 .3 0000 .1
+J_NI turn on time (tau)
+2e-4
+sigma_parallel poly form (1= polynomial)
+1
+sigma_parallel terms
+-3e6 4.0e6
+Itor form  1=exponential decay  2=ramp function
+1
+Itor steady state (@ t = inf)
+-3941.8
+Itor decay rate or ramp time(seconds)
+2e-4
+Phi_LCFS
+-0.039418
+
+

@@ -1,0 +1,38 @@
+Iota evolution parameters file
+Description: -2000A Ohmic Injection parameters
+Susceptance Matrix File Location
+/Users/schmittj/Documents/MATLAB/Susceptance/susceptance_MCONF_QHS_51.mat
+Decay type: netcurrent (set by net current) or inductive (magnetic/resistive diffusion)
+netcurrent
+Pressure polynomial form (1 = polynomial in 's'=nomralized toroidal flux)
+1
+Pressure polynomial terms
+0 
+Pressure time decay form  1=exponential decay  2=ramp function
+1
+Pressure decay rate or ramp time(seconds)
+0.001
+Breakdown delay time
+0.000
+J_NI dot B polynomial form: 1= poly in s.  2 = double gauss.  4 = ([x] [y]) list
+2
+J_NI dot B terms (x list or poly or double gauss terms)
+0 .05 .3 0 .1
+J_NI y list (empty if using poly or double gauss)
+
+J_NI turn on time (tau)
+0.002
+sigma_parallel poly form (1= polynomial, 2 = [x] [y] values)
+1
+sigma_parallel terms x_terms
+-3.99e7 4e7 
+sigma_parallel terms y_terms (or empty line)
+
+Itor form  1=exponential decay  2=ramp function
+2
+Itor steady state (@ t = inf) or values of current at time samples
+2000
+Itor decay rate or ramp time(seconds) or times for above samples
+0.05
+Phi_LCFS
+0.039418
