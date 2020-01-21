@@ -10,7 +10,7 @@ end
 % 1e-9 seems to be a good value for convergence. Should be checked for each
 % configuration.
 % 1e-9 works in most cases
-TOL_FLUX = 1e-4;
+%TOL_FLUX = 1e-4;
 %TOL_FLUX = 1e-9;
 %TOL_FLUX = 1e-14;
 
@@ -164,6 +164,8 @@ if MAKE_PLOT
     plot(R_center, Z_center, 'k+');
     plot(polyval(poly_inboard, z_dense), z_dense,'r');
     plot(polyval(poly_outboard, z_dense), z_dense,'b');
+    axis([min(R_inboard)*0.9 max(R_outboard)*1.1 ...
+        min([Z_inboard' Z_outboard'])*1.1 max([Z_inboard' Z_outboard'])*1.1]);
     %axis([1.3 1.55 -.3 .3]);
     pause(1);  % Allows time to update the figure on the screen.
 end
@@ -175,8 +177,7 @@ end
 %    poly_inboard, poly_outboard, R_apex, coilsetID, current);
 flux_helper = @(Z, R) flux_integrand2(Z, R, poly_inboard, poly_outboard, R_apex, coilsetID, current);
 flux = integral2(flux_helper, Z_bottom - 5e-4, Z_apex + 5e-4, ...
-    min(R) - 5e-4, max(R) + 5e-4, 'AbsTol', 1e-12, 'RelTol', 1e-8);
-flux
+    min(R) - 5e-4, max(R) + 5e-4, 'AbsTol', 1e-8, 'RelTol', 1e-4);
 
 
 % ++++++++++++++++
