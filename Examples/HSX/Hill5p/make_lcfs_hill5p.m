@@ -5,11 +5,11 @@ function make_lcfs_hill5p
 % definitions
 coilsetID = 'coilset_hsx_complete';
 configuration_name = 'hill_5p';
-coilCurrents = [10116. 708. 708. 708. 708. 708. 708.];
+coilCurrents = [10116. 7081. 7081. 7081. 7081. 7081. 7081.];
 %coilCurrents = 1.;
 title_str='HILL 5%';
 
-Rlaunch = 2.58 + 0.001 * (0:23);
+Rlaunch = 1.516 + 0.001 * (0:7); % 1.5216 is what SPG has in his thesis, Appendix #2
 
 num_field_periods = 4;
 nphi_step1 = 240;
