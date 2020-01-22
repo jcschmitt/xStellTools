@@ -5,7 +5,7 @@ Hill_5p
 coilset_hsx_complete
 
 <===Coil Currents
-10116. 708. 708. 708. 708. 708. 708.
+10116. 7081. 7081. 7081. 7081. 7081. 7081.
 
 <===Integration Tolerances
 <===relTol
