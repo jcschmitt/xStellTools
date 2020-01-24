@@ -16,8 +16,9 @@ makePDF = False
 for arg in sys.argv:
    if arg.lower()=='pdf':
       makePDF = True
-   else:
-      csvFile = arg
+
+csvFile = sys.argv[1]
+equilibriumFile = sys.argv[2]
 
 matplotlib.rcParams.update({'font.size': 12})
 
@@ -34,8 +35,7 @@ import matplotlib.pyplot as plt
 import h5py
 import numpy as np
 import os
-# import pickle
-import csv
+import pandas
 
 from scipy.io import netcdf
 from scipy.interpolate import PchipInterpolator
@@ -43,57 +43,53 @@ from scipy.interpolate import PchipInterpolator
 ####################### 
 mu0 = 4*np.pi*(1e-7)
 
+# Read NTSS processed results:
+NTSSjnc1 = pandas.read_csv(csvFile)
+NTSSjnc = NTSSjnc1.values
+# build s and jnc from NTSSjnc
+NTSS_JdotB = []
+NTSS_s = []
+for (x,y) in NTSSjnc:
+   NTSS_s.append(x)
+   NTSS_JdotB.append(y)
 
+print(NTSS_s)
+print(NTSS_JdotB)
 
-# Read sfincsScan processed results:
-# pickleFile = open('sfincsScan.dat','rb')
-# data=pickle.load(pickleFile)
-# pickleFile.close()
-
-# Read ntss processed results
-with open(csvFile, newline='') as f:
-   reader = csv.reader(f)
-   try:
-      for row in reader:
-         print(row)
-   except csv.Error as e:
-      sys.exit('file {}, line {}: {}'.format(filename, reader.line_num, e))
+#print(NTSSjnc1.columns)
+#print(NTSSjnc)
 
 # Convert FSABjHat to Tesla Amperes / m^2:
-factor = 437695 * 1e20 * 1.602177e-19
-
-lookFor = 'FSABjHat'
-foundIt = False
-for j in range(len(data['ylabels'])):
-   oldLabel = data['ylabels'][j]
-   if oldLabel.find(lookFor) == 0:
-      print "Found FSABjHat in sfincs output at index",j
-      foundIt = True
-      break
-if not foundIt:
-   print "Error! No quantity with name beginning "+lookFor+" could be found in the sfincsScan.dat file."
-   exit(1)
+# original: factor = 437695 * 1e20 * 1.602177e-19
+# <----JCS
+# attempt 1: factor = 2.5 * 1.0e3 
+factor = 2.54
 
 # Add points at s=0 and s=1:
-FSABjHat_SI_sfincsGrid = np.array([0] + list(data['ydata'][j]) + [0])*factor
-if data['xlabels'][j] != 'rN':
-   print "Error! Expected radial coordinate to be rN, but instead it was "+data['xlabels'][j]
-   exit(1)
-rN_sfincsGrid = np.array([0] + data['xdata'][j] + [1])
+#  FSABjHat_SI_sfincsGrid = np.array([0] + list(data['ydata'][j]) + [0])*factor
+#  if data['xlabels'][j] != 'rN':
+#     print "Error! Expected radial coordinate to be rN, but instead it was "+data['xlabels'][j]
+#     exit(1)
+#  rN_sfincsGrid = np.array([0] + data['xdata'][j] + [1])
+
+FSABjHat_SI_NTSS = np.array(NTSS_JdotB)*factor
+s_NTSS = np.array(NTSS_s)
+r_NTSS = np.sqrt(s_NTSS)
 
 ####################### 
 
 # Load the input.namelist file, which we will use just to get the vmec equilibrium file:
-inputFilename = "input.namelist"
-with open(inputFilename, 'r') as f:
-    inputFile = f.readlines()
+# inputFilename = "input.namelist"
+# with open(inputFilename, 'r') as f:
+#   inputFile = f.readlines()
 
 # Load some other required subroutines:
-execfile(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))+"/sfincsScan_common")
+# execfile(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))+"/sfincsScan_common")
 
 # <---- JCS 
-equilibriumFile = readVariable('equilibriumFile','string',required=True)
-equilibriumFile = equilibriumFile[1:-1]
+# equilibriumFile = readVariable('equilibriumFile','string',required=True)
+# equilibriumFile = equilibriumFile[1:-1]
+
 
 f=netcdf.netcdf_file(equilibriumFile,'r',mmap=False)
 nfp = f.variables['nfp'][()]
@@ -115,7 +111,7 @@ pres = f.variables['pres'][()]
 volavgB = f.variables['volavgB'][()]
 b0 = f.variables['b0'][()]
 phi_edge = phi[-1]/(2*np.pi)
-
+print "b0:",b0
 
 print "bsubumnc.shape:",bsubumnc.shape
 
@@ -126,10 +122,10 @@ ds = s_full[1]-s_full[0]
 s_half = s_full[1:]-0.5*ds
 s_fine = np.linspace(0,1,200)
 
-print "rN_sfincsGrid", rN_sfincsGrid
-print "FSABjHat_SI_sfincsGrid", FSABjHat_SI_sfincsGrid
+print "r_NTSS", r_NTSS
+print "FSABjHat_SI_NTSS", FSABjHat_SI_NTSS
 
-interpolator = PchipInterpolator(rN_sfincsGrid ** 2, FSABjHat_SI_sfincsGrid)
+interpolator = PchipInterpolator(s_NTSS, FSABjHat_SI_NTSS)
 FSABjHat_vmecGrid = interpolator(s_full)
 
 
@@ -235,13 +231,13 @@ plt.xlabel('s')
 plt.legend(loc=0)
 
 plt.subplot(numRows,numCols,8)
-plt.plot(rN_sfincsGrid, FSABjHat_SI_sfincsGrid, '.',label='FSABjHat from sfincs')
+plt.plot(r_NTSS, FSABjHat_SI_NTSS, '.',label='FSABjHat from NTSS')
 plt.xlabel('rN')
 plt.ylabel('FSABjHat (SI)')
 
 plt.subplot(numRows,numCols,9)
-plt.plot(s_full, FSABjHat_vmecGrid, '.-b',label='SFINCS, interpolated to vmec grid')
-plt.plot(rN_sfincsGrid ** 2, FSABjHat_SI_sfincsGrid, '.r',label='sfincs grid')
+plt.plot(s_full, FSABjHat_vmecGrid, '.-b',label='NTSS, interpolated to vmec grid')
+plt.plot(s_NTSS, FSABjHat_SI_NTSS, '.r',label='NTSS grid')
 plt.plot(s_full, jdotb, ':k',label='jdotb from VMEC')
 plt.xlabel('s')
 plt.ylabel('FSABjHat (SI)')
@@ -373,7 +369,7 @@ plt.subplot(numRows,numCols,1)
 
 
 
-plt.plot(rN_sfincsGrid, FSABjHat_SI_sfincsGrid, '.',label='<B.jHat>')
+plt.plot(r_NTSS, FSABjHat_SI_NTSS, '.',label='<B.jHat>')
 #plt.ylim(-1e6, 1.25e5)
 plt.xlabel('rN')
 plt.ylabel('FSABjHat (SI)')
