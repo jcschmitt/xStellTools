@@ -1,0 +1,429 @@
+#!/usr/bin/env python
+
+# This script converts the bootstrap current profile from NTSS output into the AC current
+# profile to be used as an input for VMEC
+# Large swathes of this code are based on convertSfincsProfileToVMecCurrentProfile.
+# Also see the note in the STELLOPT/SHARE/DOC
+
+import matplotlib
+import sys
+import inspect
+
+print "This is "+ inspect.getfile(inspect.currentframe())
+
+##Added by AM 2015-12##
+makePDF = False
+for arg in sys.argv:
+   if arg.lower()=='pdf':
+      makePDF = True
+   else:
+      csvFile = arg
+
+matplotlib.rcParams.update({'font.size': 12})
+
+if makePDF:
+   matplotlib.use('PDF')
+   # Change default font size
+   # font = {'size':6}
+   font = {'size':12}
+   matplotlib.rc('font', **font)
+   matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=0.5)
+   matplotlib.rc('axes',linewidth=0.7)
+
+import matplotlib.pyplot as plt
+import h5py
+import numpy as np
+import os
+# import pickle
+import csv
+
+from scipy.io import netcdf
+from scipy.interpolate import PchipInterpolator
+
+####################### 
+mu0 = 4*np.pi*(1e-7)
+
+
+
+# Read sfincsScan processed results:
+# pickleFile = open('sfincsScan.dat','rb')
+# data=pickle.load(pickleFile)
+# pickleFile.close()
+
+# Read ntss processed results
+with open(csvFile, newline='') as f:
+   reader = csv.reader(f)
+   try:
+      for row in reader:
+         print(row)
+   except csv.Error as e:
+      sys.exit('file {}, line {}: {}'.format(filename, reader.line_num, e))
+
+# Convert FSABjHat to Tesla Amperes / m^2:
+factor = 437695 * 1e20 * 1.602177e-19
+
+lookFor = 'FSABjHat'
+foundIt = False
+for j in range(len(data['ylabels'])):
+   oldLabel = data['ylabels'][j]
+   if oldLabel.find(lookFor) == 0:
+      print "Found FSABjHat in sfincs output at index",j
+      foundIt = True
+      break
+if not foundIt:
+   print "Error! No quantity with name beginning "+lookFor+" could be found in the sfincsScan.dat file."
+   exit(1)
+
+# Add points at s=0 and s=1:
+FSABjHat_SI_sfincsGrid = np.array([0] + list(data['ydata'][j]) + [0])*factor
+if data['xlabels'][j] != 'rN':
+   print "Error! Expected radial coordinate to be rN, but instead it was "+data['xlabels'][j]
+   exit(1)
+rN_sfincsGrid = np.array([0] + data['xdata'][j] + [1])
+
+####################### 
+
+# Load the input.namelist file, which we will use just to get the vmec equilibrium file:
+inputFilename = "input.namelist"
+with open(inputFilename, 'r') as f:
+    inputFile = f.readlines()
+
+# Load some other required subroutines:
+execfile(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))+"/sfincsScan_common")
+
+# <---- JCS 
+equilibriumFile = readVariable('equilibriumFile','string',required=True)
+equilibriumFile = equilibriumFile[1:-1]
+
+f=netcdf.netcdf_file(equilibriumFile,'r',mmap=False)
+nfp = f.variables['nfp'][()]
+ns = f.variables['ns'][()]
+mpol = f.variables['mpol'][()]
+ntor = f.variables['ntor'][()]
+xm_nyq = f.variables['xm_nyq'][()]
+xn_nyq = f.variables['xn_nyq'][()]
+mnmax_nyq = f.variables['mnmax_nyq'][()]
+bsubumnc = f.variables['bsubumnc'][()]
+ctor = f.variables['ctor'][()]
+ac = f.variables['ac'][()]
+am = f.variables['am'][()]
+jdotb = f.variables['jdotb'][()]
+bmnc = f.variables['bmnc'][()]
+gmnc = f.variables['gmnc'][()]
+phi = f.variables['phi'][()]
+pres = f.variables['pres'][()]
+volavgB = f.variables['volavgB'][()]
+b0 = f.variables['b0'][()]
+phi_edge = phi[-1]/(2*np.pi)
+
+
+print "bsubumnc.shape:",bsubumnc.shape
+
+print "bsubumnc[0,:] (should be 0 since it's on the half mesh):",bsubumnc[0,:]
+
+s_full = np.linspace(0,1,ns)
+ds = s_full[1]-s_full[0]
+s_half = s_full[1:]-0.5*ds
+s_fine = np.linspace(0,1,200)
+
+print "rN_sfincsGrid", rN_sfincsGrid
+print "FSABjHat_SI_sfincsGrid", FSABjHat_SI_sfincsGrid
+
+interpolator = PchipInterpolator(rN_sfincsGrid ** 2, FSABjHat_SI_sfincsGrid)
+FSABjHat_vmecGrid = interpolator(s_full)
+
+
+
+bsubumnc_end = bsubumnc[-1,0]*1.5-bsubumnc[-2,0]*0.5
+print "ctor:",ctor
+print "(2*pi/mu0)*bsubumnc[end,m=0,n=0] (should equal ctor):",2*np.pi/mu0*bsubumnc_end
+
+ac_profile = np.zeros(len(s_full))
+int_ac_profile_ds_fine = np.zeros(len(s_fine))
+int_ac_profile_ds = np.zeros(len(s_full))
+p_profile_fine = np.zeros(len(s_fine))
+dpds = np.zeros(len(s_full))
+for p in range(len(ac)):
+   ac_profile += ac[p]*(s_full ** p)
+   p_profile_fine += am[p]*(s_fine ** p)
+   if p>0:
+      dpds += am[p]*p*(s_full ** (p-1))
+   int_ac_profile_ds += ac[p]*(s_full ** (p+1))/(p+1)
+   int_ac_profile_ds_fine += ac[p]*(s_fine ** (p+1))/(p+1)
+
+# Compute <B^2> on the half mesh.
+# (Both bmnc and gmnc are on the half mesh, and both use mnmax_nyq.)
+FSAB2_half = np.zeros(ns)
+Ntheta = mpol*4
+Nzeta = ntor*4
+theta = np.linspace(0,2*np.pi,Ntheta,endpoint=False)
+zeta = np.linspace(0,2*np.pi/nfp,Nzeta,endpoint=False)
+dtheta = theta[1]-theta[0]
+dzeta = zeta[1]-zeta[0]
+zeta2D,theta2D = np.meshgrid(zeta,theta)
+for js in range(1,ns):
+   B = np.zeros((Ntheta,Nzeta))
+   g = np.zeros((Ntheta,Nzeta))
+   for imn in range(mnmax_nyq):
+      cosPart = np.cos(xm_nyq[imn]*theta2D-xn_nyq[imn]*zeta2D)
+      B += bmnc[js,imn]*cosPart
+      g += gmnc[js,imn]*cosPart
+   numerator = np.sum(B*B*g)*dtheta*dzeta
+   denominator = gmnc[js,0]*2*np.pi*2*np.pi/nfp
+   FSAB2_half[js] = numerator/denominator
+
+FSAB2_full = np.zeros(ns)
+FSAB2_full[1:-1] = 0.5*(FSAB2_half[1:-1] + FSAB2_half[2:])
+FSAB2_full[0] = FSAB2_half[1]*1.5 - FSAB2_half[2]*0.5
+FSAB2_full[-1] = FSAB2_half[-1]*1.5 - FSAB2_half[-2]*0.5
+
+I = ctor*int_ac_profile_ds/int_ac_profile_ds[-1]
+dIds = ctor*ac_profile/int_ac_profile_ds[-1]
+
+FSAJDotB_dIds_term = 1/(2*np.pi*phi_edge)*(FSAB2_full*dIds)
+FSAJDotB_dpds_term = 1/(2*np.pi*phi_edge)*mu0*I*dpds
+FSAJDotB = FSAJDotB_dIds_term + FSAJDotB_dpds_term
+
+fig = plt.figure(1)
+fig.patch.set_facecolor('white')
+
+numRows=3
+numCols=4
+
+plt.subplot(numRows,numCols,1)
+plt.plot(s_half, bsubumnc[1:,0],'.-')
+plt.xlabel('s')
+plt.title('bsubumnc(m=0,n=0)')
+
+plt.subplot(numRows,numCols,2)
+plt.plot(s_fine,-ctor*int_ac_profile_ds_fine/int_ac_profile_ds[-1],'r',label="-ctor * (int_0^s ds' ac) / (int_0^1 ds' ac)")
+plt.plot(s_half, 2*np.pi/mu0*bsubumnc[1:,0],'.b',label='I(s) = 2*pi/mu0*bsubumnc(m=0,n=0)')
+plt.xlabel('s')
+plt.legend(loc=0)
+
+plt.subplot(numRows,numCols,3)
+plt.plot(s_full,ac_profile)
+plt.xlabel('s')
+plt.title('AC profile')
+
+plt.subplot(numRows,numCols,4)
+plt.plot(s_fine, p_profile_fine,'-r',label='AM')
+plt.plot(s_half,pres[1:],'.b',label='pres')
+plt.xlabel('s')
+plt.title('pressure (AM)')
+plt.legend(loc=0)
+
+plt.subplot(numRows,numCols,5)
+plt.plot(s_full, dpds,'.-')
+plt.xlabel('s')
+plt.title('dp/ds')
+
+plt.subplot(numRows,numCols,6)
+plt.plot(s_half, FSAB2_half[1:],'.',label='<B^2>, half')
+plt.plot(s_full, FSAB2_full,'.',label='<B^2>, full')
+plt.plot([0,1],[volavgB*volavgB,volavgB*volavgB],label='volavgB ^ 2')
+plt.plot([0,1],[b0*b0,b0*b0],label='b0 ^ 2')
+plt.xlabel('s')
+plt.legend(loc=0)
+
+plt.subplot(numRows,numCols,7)
+plt.plot(s_full, jdotb,'+-',label='jdotb from VMEC')
+plt.plot(s_full,FSAJDotB_dIds_term,'o-',label='dIds term')
+plt.plot(s_full,FSAJDotB_dpds_term,'.-',label='dpds term')
+plt.plot(s_full,FSAJDotB,'x-',label='total')
+plt.xlabel('s')
+plt.legend(loc=0)
+
+plt.subplot(numRows,numCols,8)
+plt.plot(rN_sfincsGrid, FSABjHat_SI_sfincsGrid, '.',label='FSABjHat from sfincs')
+plt.xlabel('rN')
+plt.ylabel('FSABjHat (SI)')
+
+plt.subplot(numRows,numCols,9)
+plt.plot(s_full, FSABjHat_vmecGrid, '.-b',label='SFINCS, interpolated to vmec grid')
+plt.plot(rN_sfincsGrid ** 2, FSABjHat_SI_sfincsGrid, '.r',label='sfincs grid')
+plt.plot(s_full, jdotb, ':k',label='jdotb from VMEC')
+plt.xlabel('s')
+plt.ylabel('FSABjHat (SI)')
+plt.legend(loc=0)
+
+
+# Construct a matrix for the operation
+# (2 pi psi_a)^{-1} [ <B^2> d/ds + mu_0 (dp/ds) ]
+# which is applied to I(s):
+
+#ns = 7
+#s = np.linspace(0,1,ns)
+#ds = s[1]-s[0]
+dds = np.diag(1.0/(12*ds)*np.ones(ns-2),-2) - np.diag(2.0/(3*ds)*np.ones(ns-1),-1) + np.diag(2.0/(3*ds)*np.ones(ns-1),1) - np.diag(1.0/(12*ds)*np.ones(ns-2),2)
+
+dds[0,0]= -25/(12*ds)
+dds[0,1]= 4/(ds)
+dds[0,2]=-3/ds
+dds[0,3]=4/(3*ds)
+dds[0,4]=-1/(4*ds)
+
+dds[1,0]= -1/(4*ds)
+dds[1,1]= -5/(6*ds)
+dds[1,2]=3/(2*ds)
+dds[1,3]=-1/(2*ds)
+dds[1,4]=1/(12*ds)
+
+dds[ns-1,ns-1]= 25/(12*ds)
+dds[ns-1,ns-2]= -4/(ds)
+dds[ns-1,ns-3]=3/ds
+dds[ns-1,ns-4]=-4/(3*ds)
+dds[ns-1,ns-5]=1/(4*ds)
+
+dds[ns-2,ns-1]= 1/(4*ds)
+dds[ns-2,ns-2]= 5/(6*ds)
+dds[ns-2,ns-3]=-3/(2*ds)
+dds[ns-2,ns-4]=1/(2*ds)
+dds[ns-2,ns-5]=-1/(12*ds)
+
+#print "dds:"
+#print dds
+
+matrix = (np.dot(np.diag(FSAB2_full),dds) + np.diag(mu0*dpds)) / (2*np.pi*phi_edge)
+matrix[0,:]=0
+matrix[0,0]=1
+rhs = FSABjHat_vmecGrid
+rhs[0] = 0
+# JC Schmitt
+rhs[-1] = 0
+
+# print "matrix", matrix
+# print "rhs", rhs
+
+I_new = np.linalg.solve(matrix,rhs)
+
+# Here are 2 methods to compute dI/ds:
+# 1: Differentiate the I(s) we just obtained. This method amplifies noise.
+# 2: Solve the equation for dI/ds a 2nd time, this time using our known I(s)
+
+dIds_noisy  = np.dot(dds, I_new)
+
+# method 2:
+dIds_new = ((FSABjHat_vmecGrid*2*np.pi*phi_edge) - mu0*I_new*dpds) / FSAB2_full
+
+# Fit a polynomial for VMEC's AC profile:
+degree = 10
+# print "s_full", s_full
+# print "FSABjHat_vmecGrid", FSABjHat_vmecGrid
+# print "phi_edge", phi_edge
+# print "I_new", I_new
+# print "dpds", dpds
+# print "FSAB2_full", FSAB2_full
+# print "dIds_new", dIds_new
+print "degree", degree
+new_AC = np.polyfit(s_full, dIds_new, degree)
+
+
+plt.subplot(numRows,numCols,10)
+plt.plot(s_full, I_new,'.-')
+plt.xlabel('s')
+plt.ylabel('New I(s) profile')
+
+plt.subplot(numRows,numCols,11)
+plt.plot(s_full, dIds_noisy,'+-b',label='Noisy method')
+plt.plot(s_full, dIds_new,  'x:r',label='Smooth method')
+plt.plot(s_full, np.polyval(new_AC, s_full), '-k',label='Polynomial fit')
+plt.xlabel('s')
+plt.ylabel('New I(s) profile')
+plt.legend(loc=0)
+
+factor = 1
+curtor_new = I_new[-1]
+if curtor_new<0:
+   factor = -1
+print "Here come the new parameters to use for VMEC:"
+print "CURTOR =",curtor_new
+print "AC:",new_AC[::-1]*factor
+
+fig3 = plt.figure(3)
+plt.plot(np.sqrt(s_full), dIds_new, 'ok',label='Polynomial fit')
+#plt.plot(np.sqrt(s_full), np.polyval(new_AC, s_full), '-k',label='Polynomial fit')
+plt.grid()
+plt.xlabel(r'$\rho$')
+plt.ylabel('$A/m^2$')
+plt.xlim(-.01, 1.01)
+#plt.ylim(-8e3, 9e4)
+plt.title('$j_{bc}$, total')
+plt.tight_layout()
+plt.show()
+
+fig2 = plt.figure(2)
+fig2.patch.set_facecolor('white')
+numRows=1
+numCols=1
+plt.subplot(numRows,numCols,1)
+
+# x = np.array(xdata[iQuantity])
+# y = np.array(ydata[iQuantity])
+# x = numpy.array(xdata[iQuantity])
+# y = numpy.array(ydata[iQuantity])
+# mask = np.array([t=='ion' for t in root_types])
+# plt.plot(x[mask],y[mask],linespec,color='r',label='ion root')
+# mask = np.array([t=='unstable' for t in root_types])
+# plt.plot(x[mask],y[mask],linespec,color='g',label='unstable root')
+# mask = np.array([t=='electron' for t in root_types])
+# plt.plot(x[mask],y[mask],linespec,color='b',label='electron root')
+# mask = np.array([t=='unknown' for t in root_types])
+# plt.plot(x[mask],y[mask],linespec,color='orange',label='unknown root')
+
+
+
+plt.plot(rN_sfincsGrid, FSABjHat_SI_sfincsGrid, '.',label='<B.jHat>')
+#plt.ylim(-1e6, 1.25e5)
+plt.xlabel('rN')
+plt.ylabel('FSABjHat (SI)')
+plt.legend(loc=0)
+
+
+def maximizeWindow():
+    # Maximize window. The command for this depends on the backend.
+    mng = plt.get_current_fig_manager()
+    try:
+        mng.resize(*mng.window.maxsize())
+    except AttributeError:
+        try:
+            mng.window.showMaximized()
+        except AttributeError:
+            pass
+
+#maximizeWindow()
+
+
+plt.show()
+
+
+# exit(0)
+
+
+
+
+
+
+
+
+
+
+
+titleString = "Plot generated by "+ inspect.getfile(inspect.currentframe()) + "\nRun in "+os.getcwd()
+ax = fig.add_axes([0,0,1,1], frameon=False)
+ax.text(0.5,0.99,titleString,horizontalalignment='center',verticalalignment='top')
+
+# If this script was called with any command-line arguments, then do not actually display the plot:
+if len(sys.argv) == 1:
+    plt.show()
+
+
+##Added by AM 2015-12##
+if makePDF:
+   if len(sys.argv)>2 : #Use the substituted name as file name
+      print "Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".pdf."
+      plt.savefig(sys.argv[2] + ".pdf")
+   else: #Use script name as file name
+      print "Writing plot to " + os.getcwd() + "/" + os.path.basename(__file__) + ".pdf."
+      plt.savefig(os.path.basename(__file__) + ".pdf")
+#######################

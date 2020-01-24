@@ -1,0 +1,50 @@
+Iota evolution parameters file
+w7_oh_test_2
+Susceptance Matrix File Location
+/Users/schmittj/src/xStellTools/Susceptance/W7X_data/Kisslinger_Ideal_v1_ns_51_xstelltools.mat
+Decay type: netcurrent (set by net current) or inductive (magnetic/resistive diffusion) (Only netcurrent_multi_profile is implemented).
+netcurrent_multi_profile
+t_end, in seconds (usually set this to the same as the last entry, or earlier if you wish to truncate the simulation);
+9.5
+timestep: the 'delta t' of the simulation, in seconds
+0.01
+Itor_Wdia_History_file (csv)
+w7x_oh_2.csv
+time averaging method (0 = none, 1 = lowpass filter at f='time averaging options'
+0
+time averaging options (filter frequency)
+0
+Phi_LCFS
+-1.9477864764225
+Number of profiles t = (0.0, 0.1)
+1
+K=====Profile specifications start here.
+<===============================================================Profile #1.
+Time
+0.0
+Pressure polynomial form (1 = polynomial in s==nomralized toroidal flux 4 = (x,y) list)
+4
+Pressure polynomial terms or x- list
+0 1
+Pressure polynomial y-list
+0 0
+Pressure time decay form  1=exponential decay  2=ramp function
+1
+Pressure decay rate or ramp time(seconds)
+0.15
+J_NI dot B polynomial form: 1= poly in s.  2 = double gauss.  4 = ([x] [y]) list. 5 = W7X_ECCD_gauss_curve
+4
+J_NI dot B terms (x list or poly or double gauss terms)
+0 1
+J_NI y list (empty if using poly or double gauss)
+0 0
+J_NI turn on time (tau)
+0.08
+sigma_parallel poly form (1= polynomial, 2 = [x] [y] values)
+2
+sigma_parallel terms x_terms 0  .99  1
+0.000003519029937   0.004434857478264   0.019140223767402   0.046539170918498   0.093497106399513   0.129050745611786   0.164564135919153   0.212092814068097   0.396102889480440   0.659779403881905   0.839754031713849 1
+sigma_parallel terms y_terms (or empty line)2e8 4e6 1e5
+2.351562500000000e8 2.181919642857143e8 1.882812500000000e8 1.405133928571429e8 0.806919642857143e8 0.579241071428572e8 0.463169642857143e8 0.369419642857143e8 0.231026785714286e8 0.074776785714286e8 0.039062500000000e8 1e5
+% ==============================================
+% Comments at end of file
