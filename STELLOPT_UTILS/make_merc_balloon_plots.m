@@ -6,12 +6,15 @@ function make_merc_balloon_plots(CONFIG_LIST, VMEC_FILENAME, ...
 % ==========================================================
 
 num_configs = length(CONFIG_LIST);
+plot_data_beta = [];
+plot_data_max_gammatau = [];
+
 plot_index = [];
 for ii = 1:num_configs
     ii
     try
         vmec_data{ii} = load_vmec(VMEC_FILENAME{ii});
-
+        
         
         s{ii} = vmec_data{ii}.phi ./ vmec_data{ii}.phi(end);
         rho{ii} = sqrt(s{ii});
@@ -21,13 +24,15 @@ for ii = 1:num_configs
         splot{ii} = sall{ii}(2:end);
         rhoplot{ii} = sqrt(splot{ii});
         plot_index = [plot_index ii];
-
+        
         COMMENTS{ii} = ['\beta = ' num2str(vmec_data{ii}.betatot * 100) ' %'];
         jdotbCOMMENTS{ii} = ['\beta = ' num2str(vmec_data{ii}.betatot * 100) ' %, ' ...
-                             'Itor = ' num2str(vmec_data{ii}.ctor/1e3) ' kA'];
+            'Itor = ' num2str(vmec_data{ii}.ctor/1e3) ' kA'];
         
         cobradata{ii} = read_cobra(COBRA_FILENAME{ii});
-        
+        plot_data_beta = [plot_data_beta vmec_data{ii}.betatot];
+        plot_data_max_gammatau = [plot_data_max_gammatau max(max(cobradata{ii}.grate))];
+
     catch
         disp(['<----Did not find some data for index #' num2str(ii)]);
     end
@@ -243,17 +248,17 @@ for ii = plot_index
     ylabel('\gamma \tau_A');
     title(COMMENTS{ii})
     xlabel('$\rho = \sqrt{\psi_{tor} / \psi_{tor,LCFS}}$', 'Interpreter', 'latex')
-     grid on;
-     for jj = 1:length(cobradata{ii}.grate(:,1))
-     if jj == 1
-         legend_str{jj} = ['(\zeta = ' num2str(cobradata{ii}.zeta(jj)) ...
-             ', \theta = ' num2str(cobradata{ii}.theta(jj)) ')'];
-     else
-         legend_str{jj} = ['(' num2str(cobradata{ii}.zeta(jj)) ...
-             ', ' num2str(cobradata{ii}.theta(jj)) ')'];
-     end
-     end
-     
+    grid on;
+    for jj = 1:length(cobradata{ii}.grate(:,1))
+        if jj == 1
+            legend_str{jj} = ['(\zeta = ' num2str(cobradata{ii}.zeta(jj)) ...
+                ', \theta = ' num2str(cobradata{ii}.theta(jj)) ')'];
+        else
+            legend_str{jj} = ['(' num2str(cobradata{ii}.zeta(jj)) ...
+                ', ' num2str(cobradata{ii}.theta(jj)) ')'];
+        end
+    end
+    
 end
 legend(legend_str);
 
@@ -270,7 +275,7 @@ for ii = plot_index
     plot(splot{ii}(plot_indices), cobradata{ii}.grate(:,plot_indices)', '--', 'Marker', 'None', 'Linewidth', linewidth);
     ylabel('\gamma \tau_A');
     title(COMMENTS{ii})
-     grid on;
+    grid on;
     xlabel('$s = \psi_{tor} / \psi_{tor,LCFS}$', 'Interpreter', 'latex')
 end
 legend(legend_str);
@@ -286,7 +291,7 @@ for ii = plot_index
     xlabel('$\rho = \sqrt{\psi_{tor} / \psi_{tor,LCFS}}$', 'Interpreter', 'latex')
     
 end
-    legend(COMMENTS{plot_index})
+legend(COMMENTS{plot_index})
 
 figure;
 
@@ -299,7 +304,7 @@ for ii = plot_index
     
 end
 
-    legend(COMMENTS{plot_index})
+legend(COMMENTS{plot_index})
 figure;
 
 
@@ -310,7 +315,7 @@ for ii = plot_index
     xlabel('$\rho = \sqrt{\psi_{tor} / \psi_{tor,LCFS}}$', 'Interpreter', 'latex')
     
 end
-    legend(jdotbCOMMENTS{plot_index})
+legend(jdotbCOMMENTS{plot_index})
 
 figure
 
@@ -321,7 +326,7 @@ for ii = plot_index
     xlabel('$s = \psi_{tor} / \psi_{tor,LCFS}$', 'Interpreter', 'latex')
     
 end
-    legend(COMMENTS{plot_index})
+legend(COMMENTS{plot_index})
 
 figure;
 
@@ -333,7 +338,7 @@ for ii = plot_index
     xlabel('$s = \psi_{tor} / \psi_{tor,LCFS}$', 'Interpreter', 'latex')
     
 end
-    legend(COMMENTS{plot_index})
+legend(COMMENTS{plot_index})
 
 figure;
 
@@ -345,8 +350,16 @@ for ii = plot_index
     xlabel('$s = \psi_{tor} / \psi_{tor,LCFS}$', 'Interpreter', 'latex')
     
 end
-    legend(jdotbCOMMENTS{plot_index})
+legend(jdotbCOMMENTS{plot_index})
 
+
+
+figure
+box on;hold on
+plot(100*plot_data_beta,plot_data_max_gammatau, 'o');
+xlabel('Beta %')
+ylabel('max(\gamma \tau)');
+end
 
 
 
