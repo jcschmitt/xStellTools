@@ -10,6 +10,8 @@ if exist([prefix '.fig'])
     if isempty(str)
         str = 'Y';
     end
+else
+    str = 'Y';
 end
 
 if str == 'Y'
