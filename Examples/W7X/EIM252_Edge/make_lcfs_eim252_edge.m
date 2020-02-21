@@ -1,4 +1,4 @@
-function make_eim252_edge
+function make_lcfs_eim252_edge
 
 % definitions
 coilsetID = 'coilset_w7x_v3';
