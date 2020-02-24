@@ -18,7 +18,7 @@ ntheta_step2 = ntheta_step1 * num_field_periods;
 
 do_the_descur_stuff(coilsetID, coilCurrents, configuration_name, title_str, ...
     Rlaunch, num_field_periods, nphi_step1, ntheta_step1, num_launch_pts, ...
-    nphi_step2, ntheta_step2, 13);
+    nphi_step2, ntheta_step2);
 
 %=====
 
