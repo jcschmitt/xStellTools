@@ -1,7 +1,7 @@
 function [fig_handle_1, fig_handle_2] = ...
     plot_Boozer_spectrum(Boozer_output_file, surface_to_plot, ...
     modes_to_display, sorting_surface, PLOT_SPECTRUM, PLOT_SURFACE_2D, ...
-    color_list, symbol_cells, line_cells, colormap_in)
+    color_list, symbol_cells, line_cells, colormap_in, fig_number)
 %  function [fig_handle_1, fig_handle_2] = ...
 %     plot_boozer_spectrum(Boozer_output_file, surface_to_plot, ...
 %     modes_to_display, PLOT_SPECTRUM, PLOT_SURFACE_2D, ...
@@ -30,7 +30,9 @@ function [fig_handle_1, fig_handle_2] = ...
 %           200, [9 11 15 18 26 27 29 40 62 74 80 91  119], 200 , 1, 1)  
 %======================================================================
 
-
+if nargin < 11
+    fig_number = figure;
+    end
 if nargin < 10
     % color_list =  'bkgrcmybkgrcmy';
     % symbol_list = '...xosdxxx....';
@@ -155,7 +157,7 @@ if PLOT_SPECTRUM
         end
         
         % stellarator symmetric components
-        fig_handle_1 = figure;box on;
+        fig_handle_1 = figure(fig_number);box on;
         legend_text = [];
         
         %     XAXIS = ns_b;
@@ -184,7 +186,7 @@ if PLOT_SPECTRUM
         
         % non-stellarator symmetric components
         if lasym_b
-            fig_handle_1b = figure;box on;
+            fig_handle_1b = figure(fig_number+1);box on;
             legend_text_b = [];
             
             for ii = modes_to_display
@@ -290,7 +292,7 @@ if PLOT_SURFACE_2D
             BLines_pol(ii,:) = iota_b(surface_to_plot) * (BLines_tor - BLine_0(ii));
         end
         
-        fig_handle_2 = figure;
+        fig_handle_2 = figure(fig_number+2);
         contourf(tor_angle, pol_angle, modB_recon_3D, num_contour_divisions);
         colorbar;
         colormap(colormap_in);
