@@ -339,7 +339,10 @@ class stellgen:
                 "fe_boudninitit": "self.FILESETC['BOUNDARY_INIT_IN']",
                 "fe_cobrafileenabled": "self.FILESETC['COBRA_FILE']['Enabled']",
                 "fe_cobrafilein": "self.FILESETC['COBRA_FILEIN']",
-                "fe_cobrafileout": "self.FILESETC['COBRA_FILEOUT']"}
+                "fe_cobrafileout": "self.FILESETC['COBRA_FILEOUT']",
+                "fe_boozxformfileenabled": "self.FILESETC['BOOZ_XFORM_FILE']['Enabled']",
+                "fe_boozxformfilein": "self.FILESETC['BOOZ_XFORM_FILEIN']",
+                "fe_boozxformfileout": "self.FILESETC['BOOZ_XFORM_FILEOUT']"}
 
         # data2 holds the information for text boxes
         data2= {"optp_extralines": "self.OPTIMUM_EXTRA_LINES",
@@ -402,8 +405,12 @@ class stellgen:
 
         for this_key in data:
             setcmd = data[this_key] + ".set(loaddata['" + this_key + "'])"
-            #print('<----' + setcmd + '\n')
-            eval(setcmd)
+            try:
+               #print('<----' + setcmd + '\n')
+               eval(setcmd)
+            except:
+               print('<----Failed on: ' + setcmd + '\n')
+            
 
         for this_key in data2:
             delcmd = data2[this_key] + ".delete('1.0', 'end')"
@@ -2318,6 +2325,14 @@ class stellgen:
         self.FILESETC['COBRA_FILEOUT'] = tk.StringVar()
         self.FILESETC['COBRA_FILEOUT'].set('in_cobra.stell0.rerun')
  
+        self.FILESETC['BOOZ_XFORM_FILE'] = {}
+        self.FILESETC['BOOZ_XFORM_FILE']['Enabled'] = tk.BooleanVar()
+        self.FILESETC['BOOZ_XFORM_FILE']['Enabled'].set(False)
+        self.FILESETC['BOOZ_XFORM_FILEIN'] = tk.StringVar()
+        self.FILESETC['BOOZ_XFORM_FILEIN'].set('')
+        self.FILESETC['BOOZ_XFORM_FILEOUT'] = tk.StringVar()
+        self.FILESETC['BOOZ_XFORM_FILEOUT'].set('in_booz.stell0.rerun')
+ 
         
         # Make three frames. 
         self.filenames_frame1 = tk.LabelFrame(this_tab,
@@ -2446,7 +2461,7 @@ class stellgen:
 
         find_boundary.grid(row=counter, rowspan=1, column=1, columnspan=1)
         
-        
+       # cobra files 
         counter += 1
         counter2 = 1
         self.add_selectables_line_to_frame(counter, counter2, 'COBRA_FILE',
@@ -2464,6 +2479,27 @@ class stellgen:
         find_cobra = tk.Button(self.filenames_frame2,
                                 command=self.find_cobra, # self.doit,
                                 text='Select COBRA File')
+
+        find_cobra.grid(row=counter, rowspan=1, column=1, columnspan=1)
+
+      # booz_xform files
+        counter += 1
+        counter2 = 1
+        self.add_selectables_line_to_frame(counter, counter2, 'BOOZ_XFORM_FILE',
+                                           self.FILESETC, self.filenames_frame2)
+        counter += 1
+        self.add_label_and_entry_to_frame(counter, 'BOOZ_XFORM_FILEIN',
+                                          self.FILESETC,
+                                          self.filenames_frame2)
+        counter += 1
+        self.add_label_and_entry_to_frame(counter, 'BOOZ_XFORM_FILEOUT',
+                                          self.FILESETC,
+                                          self.filenames_frame2)
+
+        counter += 1
+        find_cobra = tk.Button(self.filenames_frame2,
+                                command=self.find_booz_xform, # self.doit,
+                                text='Select BOOZ_XFORM File')
 
         find_cobra.grid(row=counter, rowspan=1, column=1, columnspan=1)
 
@@ -2495,6 +2531,12 @@ class stellgen:
         importFile = filedialog.askopenfilename(
             initialdir=os.path.dirname('./input/'))
         self.FILESETC['COBRA_FILEIN'].set(importFile)
+
+    def find_booz_xform(self):
+        # Use input as the intial guess
+        importFile = filedialog.askopenfilename(
+            initialdir=os.path.dirname('./input/'))
+        self.FILESETC['BOOZ_XFORM_FILEIN'].set(importFile)
 
     def find_boundary(self):
         # Use input as the intial guess
@@ -3741,6 +3783,11 @@ class stellgen:
         if (self.FILESETC['COBRA_FILE']['Enabled'].get() is True):
             source_file = self.FILESETC['COBRA_FILEIN'].get()
             destination_file = os.path.join(output_directory, self.FILESETC['COBRA_FILEOUT'].get())
+            shutil.copyfile(source_file, destination_file)
+
+        if (self.FILESETC['BOOZ_XFORM_FILE']['Enabled'].get() is True):
+            source_file = self.FILESETC['BOOZ_XFORM_FILEIN'].get()
+            destination_file = os.path.join(output_directory, self.FILESETC['BOOZ_XFORM_FILEOUT'].get())
             shutil.copyfile(source_file, destination_file)
                      
 # This is where the magic happens

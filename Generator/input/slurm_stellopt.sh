@@ -10,7 +10,7 @@
 # file locations for standard error and output
 
 source /p/stellopt/ANALYSIS/jschmitt/src/module_fotd
-mpirun -n 8 --mca mtl ^psm --mca btl ^openib  /p/stellopt/ANALYSIS/jschmitt/src/stellopt/STELLOPTV2/Release/xstelloptv2 input.stell0 >& log.stellopt
+mpirun -n 8 --mca mtl ^psm --mca btl ^openib  /p/stellopt/ANALYSIS/jschmitt/src/STELLOPT/STELLOPTV2/Release/xstelloptv2 input.stell0 >& log.stellopt
 stellopt_tidyup
 
 
