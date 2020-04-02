@@ -192,7 +192,14 @@ phiIndexInc = round(360 / phiIncInDegrees);
 if 0
     iota = calculate_iota(rAxis, coords(:, 1:2), phiIncInDegrees);
 else
-    iota = 0;% calculate_iota_nonstelsym(surf_x_flux, surf_y_flux, surf_z_flux, surf_phi, nphi_step1, num_launch_pts);
+    % make all cases do the field line following for the axis for one
+    % period to get the Raxis and Zaxis values for each plane
+    [phiAxis, coordsAxis] = ...
+        field_line_follow(coilsetID, current, rAxis, 0, 0, ...
+        phiInc, 2*pi, relTol, absTol);
+
+    iota = calculate_iota_nonsymplanes(coordsAxis, coords(:, 1:2), ...
+        phi(end), phiIncInDegrees);
 end
 
 % 	break; % break out of this for testing purposes
