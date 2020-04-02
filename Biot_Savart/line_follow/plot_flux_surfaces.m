@@ -43,6 +43,10 @@ for ii = 1:numFiles
         r{ii} = filedata.coords(indexStart:indexInc:indexEnd,1);
         z{ii} = filedata.coords(indexStart:indexInc:indexEnd,2);
         
+        iota(ii) = filedata.iota;
+        torflux(ii) = filedata.flux_startLoc;
+        Rstart(ii) = filedata.rStart(ii);
+        
     catch
         warning(['Failed to load '  filenames{ii}]);
         r{ii} = [];
@@ -66,4 +70,19 @@ ylabel('Z');
 xlabel('R');
 
 axis equal
+
+figure;
+plot(Rstart, iota, 'Color', colorin, 'Marker', '.', 'MarkerSize', 8, ...
+    'LineStyle', 'None');
+ylabel('iota');xlabel('R')
+hold on;
+
+figure
+plot(Rstart, torflux, 'Color', colorin, 'Marker', '.', 'MarkerSize', 8, ...
+    'LineStyle', 'None');
+ylabel('Webers');xlabel('R')
+hold on;
+
+%figure(figureHandleOut);
+
 
