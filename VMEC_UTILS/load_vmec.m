@@ -1,12 +1,27 @@
-function vmec_data = load_vmec(vmec_woutfile_ext)
+function vmec_data = load_vmec(varargin)
 
-len_wout = length(vmec_woutfile_ext);
-last3 = [(len_wout-2):len_wout];
 
-if (strcmpi(vmec_woutfile_ext(last3), '.nc') )   
-    vmec_woutfile = vmec_woutfile_ext;
+options = struct('vmec_woutfile_ext', '', ...
+    'make_plots', 0, ...
+    'debug_level', 0);
+
+if (~isempty(varargin))
+    options = parse_input_options(options, varargin{:});
+end
+
+
+
+len_wout = length(options.vmec_woutfile_ext);
+if (len_wout >= 3)
+    last3 = [(len_wout-2):len_wout];
+    
+    if (strcmpi(options.vmec_woutfile_ext(last3), '.nc') )
+        vmec_woutfile = options.vmec_woutfile_ext;
+    else
+        vmec_woutfile = ['wout_' options.vmec_woutfile_ext '.nc'];
+    end
 else
-    vmec_woutfile = ['wout_' vmec_woutfile_ext '.nc'];
+    vmec_woutfile = ['wout_' options.vmec_woutfile_ext '.nc'];
 end
 
 vmec_data = read_vmec(vmec_woutfile);
@@ -36,60 +51,62 @@ end
 vmec_data.phip_real2(vmec_data.ns ) = NaN;
 vmec_data.vpp(vmec_data.ns ) = NaN;
 
-        
+
 
 s = vmec_data.phi ./ vmec_data.phi(end);
 rho = sqrt(s);
 
 vmec_data.welldepth =  (vmec_data.vp_real(2) - vmec_data.vp_real) / vmec_data.vp_real(2);
 
-        
-figure
-ii = 0;
-maxii = 7;
 
-ii = ii + 1;
-subplot(maxii,1,ii);
-plot(rho,  vmec_data.phip_real, '+--');
-xlabel('rho'); ylabel('phip_real');
-axis tight;
-
-ii = ii + 1;
-subplot(maxii,1,ii);
-plot(rho,  vmec_data.vp_real, '+--');
-xlabel('rho'); ylabel('vp_real');
-axis tight;
-
-ii = ii + 1;
-subplot(maxii,1,ii);
-plot(rho,  vmec_data.phip_real2, '+--');
-xlabel('rho'); ylabel('phip_real2');
-axis tight;
-
-ii = ii + 1;
-subplot(maxii,1,ii);
-plot(rho,  vmec_data.vpp, '+--');
-xlabel('rho'); ylabel('vpp');
-axis tight;
-
-ii = ii + 1;
-subplot(maxii,1,ii);
-plot(rho,  vmec_data.vp, '+--');
-xlabel('rho'); ylabel('vp');
-axis tight;
-
-ii = ii + 1;
-subplot(maxii,1,ii);
-plot(rho,  (vmec_data.vp(2) - vmec_data.vp) / vmec_data.vp(2), '+--');
-xlabel('rho'); ylabel('well from vp');
-axis tight;
-
-ii = ii + 1;
-subplot(maxii,1,ii);
-plot(rho,  vmec_data.welldepth, '+--');
-xlabel('rho'); ylabel('well from vp_real');
-axis tight;
-
+if options.make_plots
+    figure
+    ii = 0;
+    maxii = 7;
+    
+    ii = ii + 1;
+    subplot(maxii,1,ii);
+    plot(rho,  vmec_data.phip_real, '+--');
+    xlabel('rho'); ylabel('phip_real');
+    axis tight;
+    
+    ii = ii + 1;
+    subplot(maxii,1,ii);
+    plot(rho,  vmec_data.vp_real, '+--');
+    xlabel('rho'); ylabel('vp_real');
+    axis tight;
+    
+    ii = ii + 1;
+    subplot(maxii,1,ii);
+    plot(rho,  vmec_data.phip_real2, '+--');
+    xlabel('rho'); ylabel('phip_real2');
+    axis tight;
+    
+    ii = ii + 1;
+    subplot(maxii,1,ii);
+    plot(rho,  vmec_data.vpp, '+--');
+    xlabel('rho'); ylabel('vpp');
+    axis tight;
+    
+    ii = ii + 1;
+    subplot(maxii,1,ii);
+    plot(rho,  vmec_data.vp, '+--');
+    xlabel('rho'); ylabel('vp');
+    axis tight;
+    
+    ii = ii + 1;
+    subplot(maxii,1,ii);
+    plot(rho,  (vmec_data.vp(2) - vmec_data.vp) / vmec_data.vp(2), '+--');
+    xlabel('rho'); ylabel('well from vp');
+    axis tight;
+    
+    ii = ii + 1;
+    subplot(maxii,1,ii);
+    plot(rho,  vmec_data.welldepth, '+--');
+    xlabel('rho'); ylabel('well from vp_real');
+    axis tight;
+    
+end
 
 
 
