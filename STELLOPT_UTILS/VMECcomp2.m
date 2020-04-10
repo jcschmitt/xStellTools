@@ -1,4 +1,4 @@
-function output = VMECcomp( filename,datatype )
+function output = VMECcomp2( filename,datatype )
 %VMECcomp(filename,datatype) Creates plots comparing VMEC equilibria.
 %   The VMECcomp function plots allows the user to create comparrision
 %   plots of specific quantities between VMEC equilibria.  This is
@@ -487,7 +487,7 @@ switch datatype
         set(gca,'YTick',1:nfiles);
         set(gca,'YTickLabel',filename);
         zlabel('Z [m]');
-        view(3);
+        view([360 0]);
         axis equal
         subplot(1,3,2);
         hold on
@@ -516,7 +516,7 @@ switch datatype
         set(gca,'YTick',1:nfiles);
         set(gca,'YTickLabel',filename);
         zlabel('Z [m]');
-        view(3);
+        view([360 0]);
         axis equal
         subplot(1,3,3);
         hold on
@@ -545,8 +545,110 @@ switch datatype
         set(gca,'YTick',1:nfiles);
         set(gca,'YTickLabel',filename);
         zlabel('Z [m]');
-        view(3);
+        view([360 0]);
         axis equal
+        output=gcf;
+    case {'flux_edge_55'}
+        ntheta=90;
+        hold on
+        num_zeta_steps = 11;
+        zeta_list = linspace(0, 2*pi, num_zeta_steps);
+        for jj = 1:11
+            zeta = zeta_list(jj);
+            figure(jj);
+            %subplot(2,6,jj);
+            hold on;
+            %zeta = 0;
+            for i=1:nfiles
+                color = 'k';
+                if i==1, color='b';end
+                if i==nfiles, color='m';end
+                ns=vmec_data{i}.ns;
+                rmnc=vmec_data{i}.rmnc;
+                zmns=vmec_data{i}.zmns;
+                xm=vmec_data{i}.xm;
+                xn=vmec_data{i}.xn;
+                r=cfunct(0:2*pi/(ntheta-1):2*pi,zeta,rmnc,xm,xn);
+                z=sfunct(0:2*pi/(ntheta-1):2*pi,zeta,zmns,xm,xn);
+                if (vmec_data{i}.iasym)
+                    rmns=vmec_data{i}.rmns;
+                    zmnc=vmec_data{i}.zmnc;
+                    r=r+sfunct(0:2*pi/(ntheta-1):2*pi,zeta,rmns,xm,xn);
+                    z=z+cfunct(0:2*pi/(ntheta-1):2*pi,zeta,zmnc,xm,xn);
+                end
+                %plot3(r(1,1),i,z(1,1),'+','Color',color);
+                %plot3(r(ns,:),i.*ones(1,ntheta),z(ns,:),color);
+                plot(r(1,1), z(1,1),'+','Color',color);
+                for this_ns = ceil(ns * ([1 8 13 19]/ 19).^2);
+                    plot(r(this_ns,:), z(this_ns,:),color);
+                end
+            end
+            xlabel('R [m]');
+            set(gca,'YTick',1:nfiles);
+            set(gca,'YTickLabel',filename);
+            zlabel('Z [m]');
+            %view([360 0]);
+            axis normal
+            %subplot(1,3,2);
+            hold on
+        end
+        
+%         zeta = 2*pi/4/vmec_data{i}.nfp;
+%         for i=1:nfiles
+%             color = 'k';
+%             if i==1, color='b';end
+%             if i==nfiles, color='r';end
+%             ns=vmec_data{i}.ns;
+%             rmnc=vmec_data{i}.rmnc;
+%             zmns=vmec_data{i}.zmns;
+%             xm=vmec_data{i}.xm;
+%             xn=vmec_data{i}.xn;
+%             r=cfunct(0:2*pi/(ntheta-1):2*pi,zeta,rmnc,xm,xn);
+%             z=sfunct(0:2*pi/(ntheta-1):2*pi,zeta,zmns,xm,xn);
+%             if (vmec_data{i}.iasym)
+%                 rmns=vmec_data{i}.rmns;
+%                 zmnc=vmec_data{i}.zmnc;
+%                 r=r+sfunct(0:2*pi/(ntheta-1):2*pi,zeta,rmns,xm,xn);
+%                 z=z+cfunct(0:2*pi/(ntheta-1):2*pi,zeta,zmnc,xm,xn);
+%             end
+%             plot3(r(1,1),i,z(1,1),'+','Color',color);
+%             plot3(r(ns,:),i.*ones(1,ntheta),z(ns,:),color);
+%         end
+%         xlabel('R [m]');
+%         set(gca,'YTick',1:nfiles);
+%         set(gca,'YTickLabel',filename);
+%         zlabel('Z [m]');
+%         view([360 0]);
+%         axis equal
+%         subplot(1,3,3);
+%         hold on
+%         zeta = pi/vmec_data{i}.nfp;
+%         for i=1:nfiles
+%             color = 'k';
+%             if i==1, color='b';end
+%             if i==nfiles, color='r';end
+%             ns=vmec_data{i}.ns;
+%             rmnc=vmec_data{i}.rmnc;
+%             zmns=vmec_data{i}.zmns;
+%             xm=vmec_data{i}.xm;
+%             xn=vmec_data{i}.xn;
+%             r=cfunct(0:2*pi/(ntheta-1):2*pi,zeta,rmnc,xm,xn);
+%             z=sfunct(0:2*pi/(ntheta-1):2*pi,zeta,zmns,xm,xn);
+%             if (vmec_data{i}.iasym)
+%                 rmns=vmec_data{i}.rmns;
+%                 zmnc=vmec_data{i}.zmnc;
+%                 r=r+sfunct(0:2*pi/(ntheta-1):2*pi,zeta,rmns,xm,xn);
+%                 z=z+cfunct(0:2*pi/(ntheta-1):2*pi,zeta,zmnc,xm,xn);
+%             end
+%             plot3(r(1,1),i,z(1,1),'+','Color',color);
+%             plot3(r(ns,:),i.*ones(1,ntheta),z(ns,:),color);
+%         end
+%         xlabel('R [m]');
+%         set(gca,'YTick',1:nfiles);
+%         set(gca,'YTickLabel',filename);
+%         zlabel('Z [m]');
+%         view([360 0]);
+%         axis equal
         output=gcf;
     case 'fluxpi2'
         ntheta=90;

@@ -1,9 +1,13 @@
-function save_gcf_local(prefix)
+function save_gcf_local(prefix, force_flag)
+
+if nargin < 2
+    force_flag = 0;
+end
 
 fh = gcf();
 %hgexport(fh, [prefix '.eps']);
 
-if exist([prefix '.fig'])
+if (exist([prefix '.fig']) && ~force_flag)
     disp (['K====' prefix '.fig file exists.']);
     prompt = ['K===Overwrite this file and others (.eps, .pdf, /jpg, .png) Y/n? (default = Y):'];
     str = input(prompt, 's');
