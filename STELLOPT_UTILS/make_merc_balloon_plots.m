@@ -5,6 +5,9 @@ function COMMENTS = make_merc_balloon_plots(VMEC_FILENAME, ...
 % ==========================================================
 % ==========================================================
 
+full_beta_itor_values = 0; % controls if the beta values and net bootstrap current values are 'rounded' or not
+
+
 num_configs = length(VMEC_FILENAME);
 plot_data_beta = [];
 plot_data_max_gammatau = [];
@@ -26,9 +29,15 @@ for ii = 1:num_configs
         rhoplot{ii} = sqrt(splot{ii});
         plot_index = [plot_index ii];
         
-        COMMENTS{ii} = ['\beta = ' num2str(vmec_data{ii}.betatot * 100) ' %'];
-        jdotbCOMMENTS{ii} = ['\beta = ' num2str(vmec_data{ii}.betatot * 100) ' %, ' ...
-            'Itor = ' num2str(vmec_data{ii}.ctor/1e3) ' kA'];
+        if full_beta_itor_values
+            COMMENTS{ii} = ['\beta = ' num2str(vmec_data{ii}.betatot * 100) ' %'];
+            jdotbCOMMENTS{ii} = ['\beta = ' num2str(vmec_data{ii}.betatot * 100) ' %, ' ...
+                'Itor = ' num2str(vmec_data{ii}.ctor/1e3) ' kA'];
+        else
+            COMMENTS{ii} = ['\beta = ' num2str(0.01 * round(vmec_data{ii}.betatot * 10000)) ' %'];
+            jdotbCOMMENTS{ii} = ['\beta = ' num2str(0.01 * round(vmec_data{ii}.betatot * 10000)) ' %, ' ...
+                'Itor = ' num2str(0.1* round(vmec_data{ii}.ctor/1e2)) ' kA'];
+        end
         
         cobradata{ii} = read_cobra(COBRA_FILENAME{ii});
         plot_data_beta = [plot_data_beta vmec_data{ii}.betatot];
