@@ -34,6 +34,16 @@ f.zeta = zeta;
 f.theta = theta;
 f.ns = ns;
 
+
+
+
+cobra_max_profile(ns) = -inf;
+
+for ii = 1:(ns-1)
+    cobra_max_profile(ii) = max(grate(:,ii));
+end
+f.cobra_max_profile = cobra_max_profile;
+
 % Now parse into ns by theta by zeta arrays
 % grate=permute(grate,[2 1]);
 % i_axis=unique(theta);
@@ -45,11 +55,10 @@ f.ns = ns;
 % for k=1:size(grate,2)
 %     f.grate(:,i_axis==theta(k),j_axis==zeta(k))=grate(:,k);
 % end
-% 
+%
 % f.zeta=zeta;
 % f.theta=theta;
 % f.ns=ns;
 % f.surfs=surfs;
 
-end
 
