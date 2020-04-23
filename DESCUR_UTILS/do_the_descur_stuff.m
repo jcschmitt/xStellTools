@@ -3,6 +3,7 @@ function do_the_descur_stuff(coilsetID, coilCurrents, configuration_name, title_
     nphi_step2, ntheta_step2, items_to_do)
 
 if nargin < 12
+    disp('<---Specific indices were not given. All launch point included in scan.');
     items_to_do = 1:num_launch_pts
 end
 
@@ -10,6 +11,7 @@ end
 
 % make filenames for LCFS and more
 fluxout_filename = ['Flux_' configuration_name];
+iotaout_filename = ['Iota_' configuration_name];
 
 for ii = items_to_do
     LCFS_filename{ii} = ['LCFS_' configuration_name '_Rlaunch_' num2str(round(1000*Rlaunch(ii))) 'mm.mat'];
@@ -40,12 +42,28 @@ if 1
     end
 end
 
-surf_x = 0; surf_y = 0; surf_z = 0;
+surf_x = 0; surf_y = 0; surf_z = 0;surf_phi = 0;
 for ii = items_to_do
     load(LCFS_filename{ii})
     surf_x_flux{ii} = surf_x;
     surf_y_flux{ii} = surf_y;
     surf_z_flux{ii} = surf_z;
+    surf_phi_flux{ii} = surf_phi;
+end
+
+
+% Calculate iota, save it,
+if 1
+
+        iota = calculate_iota_nonstelsym(surf_x_flux, surf_y_flux, surf_z_flux, surf_phi, nphi_step1, num_launch_pts);
+        save(iotaout_filename, 'Rlaunch', 'iota');
+end
+
+if 1
+    % plot iota
+    iota_data = load(iotaout_filename, 'Rlaunch', 'iota');
+    figure; box on; hold on;
+    plot(iota_data.Rlaunch, iota_data.iota, 'o--');
 end
 
 % Calculate toroidal flux (this should be pretty quick)
@@ -73,6 +91,8 @@ if 1
         [outfilename{ii}, descurcmdfilename{ii}] = ...
             make_descur_file(LCFS_filename{ii}, LCFS_pathname{ii}, ...
             num_field_periods, nphi_step2, ntheta_step2);
+        close all
+        pause(1)
     end
     figure(401);
     legend(legend_str);
@@ -104,3 +124,6 @@ if 1
             num_field_periods)
     end
 end
+
+
+    
