@@ -2896,15 +2896,17 @@ class stellgen:
         bounds_text = ''
         
         for ii in range(0,num_fourier_modes):
-            #print('<----ii: ' + str(ii) + ', rmnc: ' + str(abs(rmnc_coil[ii])))
+            print('<----ii: ' + str(ii) + ', rmnc: ' + str(abs(rmnc_coil[ii])))
+            print('<----ii: ' + str(ii) + ', zmns: ' + str(abs(zmns_coil[ii])))
             for jj in range(0,10):
                 this_key = 'RCBOUNDS' + str(jj)
-                #print('this_key = ' + this_key)
+                print('this_key = ' + this_key)
                 try:
                     this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
                     this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
                     this_ubound = float(self.BOUNDS_PARAMS[this_key]['UBOUNDS'].get())
                 except:
+                    print('<---exception  handler this_key=',this_key)
                     this_target = np.Inf
                     this_lbound = -1.
                     this_ubound = 1.
@@ -2916,14 +2918,17 @@ class stellgen:
                                    ', ' + str(n[ii]) + ') = ' + str(this_ubound)
                     break
 
+            print(r_bounds_min)
+            print(r_bounds_max)
             for jj in range(0,10):
                 this_key = 'RCBOUNDS' + str(jj)
-                #print('this_key = ' + this_key)
+                print('this_key = ' + this_key)
                 try:
                     this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
                     this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
                     this_ubound = float(self.BOUNDS_PARAMS[this_key]['UBOUNDS'].get())
                 except:
+                    print('<---exception  handler this_key=',this_key)
                     this_target = np.Inf
                     this_lbound = -1.
                     this_ubound = 1.
@@ -2935,6 +2940,8 @@ class stellgen:
                                    ', ' + str(n[ii]) + ') = ' + str(this_ubound)
                     break
 
+            print(z_bounds_min)
+            print(z_bounds_max)
 
             # if (abs(rmnc_coil[ii]) < 0.0005):
             #    r_bounds_min = '  REGCOIL_RCWS_RBOUND_C_MIN(' + str(m[ii]) + \
@@ -3206,13 +3213,24 @@ class stellgen:
         bounds_text = ''
         for nn in range (0, 9):
             for mm in range(-8,9):
-                this_rbc = rbc[nn][mm+8]
-                this_zbs = zbs[nn][mm+8]
-                #print('  mm=', str(mm), ' nn=', str(nn), ', rbc(mm,nn) = ', str(this_rbc))
-                #print('  mm=', str(mm), ' nn=', str(nn), ', zbs(mm,nn) = ', str(this_zbs))
+                print('<--nn,mm=',nn,mm)
+                try:
+                    this_rbc = rbc[nn][mm+8]
+                except:
+                    this_rbc = 0
+                try:
+                    this_zbs = zbs[nn][mm+8]
+                except:
+                    this_zbs = 0
+                if (this_rbc is None):
+                    this_rbc = 0
+                if (this_zbs is None):
+                    this_zbs = 0
+                print('  mm=', str(mm), ' nn=', str(nn), ', rbc(mm,nn) = ', str(this_rbc))
+                print('  mm=', str(mm), ' nn=', str(nn), ', zbs(mm,nn) = ', str(this_zbs))
                 for jj in range(0,10):
                     this_key = 'LCFSBOUNDS' + str(jj)
-                    #print('this_key = ' + this_key)
+                    print('this_key = ' + this_key)
                     try:
                         this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
                         this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
@@ -3231,7 +3249,7 @@ class stellgen:
 
                 for jj in range(0,10):
                     this_key = 'LCFSBOUNDS' + str(jj)
-                    #print('this_key = ' + this_key)
+                    print('this_key = ' + this_key)
                     try:
                         this_target = float(self.BOUNDS_PARAMS[this_key]['LE_TARGET'].get())
                         this_lbound = float(self.BOUNDS_PARAMS[this_key]['LBOUNDS'].get())
@@ -3242,9 +3260,9 @@ class stellgen:
                         this_ubound = 1.
 
                     if (abs(this_zbs) < this_target):
-                        zbs_min = '  ZBC_MIN(' + str(mm) + \
+                        zbs_min = '  ZBS_MIN(' + str(mm) + \
                                        ', ' + str(nn) + ') = ' + str(this_lbound)
-                        zbs_max = '  ZBC_MIN(' + str(mm) + \
+                        zbs_max = '  ZBS_MAX(' + str(mm) + \
                                        ', ' + str(nn) + ') = ' + str(this_ubound)
                         break
 
