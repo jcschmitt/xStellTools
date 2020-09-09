@@ -33,17 +33,7 @@ end
 if 1
     
     parfor ii = items_to_do
-        [allsurf_x{ii}, allsurf_y{ii}, allsurf_z{ii}, allsurf_phi{ii}] = ...
-            calc_descur_RZ_points_RZ(coilsetID, Rlaunch(ii), Zlaunch(ii), nphi_step1, ntheta_step1, coilCurrents);
-    end
-    for ii = items_to_do
-        surf_x = allsurf_x{ii};
-        surf_y = allsurf_y{ii};
-        surf_z = allsurf_z{ii};
-        surf_phi = allsurf_phi{ii};
-        save(LCFS_filename{ii}, 'Rlaunch', 'Zlaunch', 'coilCurrents', ...
-            'coilsetID', 'configuration_name', 'nphi_step1', 'ntheta_step1', ...
-            'surf_x', 'surf_y', 'surf_z', 'surf_phi');
+         poincare_help(coilsetID, Rlaunch(ii), Zlaunch(ii), nphi_step1, ntheta_step1, coilCurrents, LCFS_filename{ii}, configuration_name)
     end
 end
 
@@ -148,4 +138,11 @@ if 0
     end
 end
 
+function output = poincare_help(coilsetID, Rlaunch, Zlaunch, nphi_step1, ntheta_step1, coilCurrents, LCFS_filename, configuration_name)
+ 
+        [surf_x, surf_y, surf_z, surf_phi] = ...
+            calc_descur_RZ_points_RZ(coilsetID, Rlaunch, Zlaunch, nphi_step1, ntheta_step1, coilCurrents);
+        save(LCFS_filename, 'Rlaunch', 'Zlaunch', 'coilCurrents', ...
+            'coilsetID', 'configuration_name', 'nphi_step1', 'ntheta_step1', ...
+            'surf_x', 'surf_y', 'surf_z', 'surf_phi');
 
