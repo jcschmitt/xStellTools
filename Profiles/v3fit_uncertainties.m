@@ -382,8 +382,17 @@ if get(handles.radiobutton15, 'Value')
     scsq_params = [curtor AC0 AC1 AC2 AC3 AC4 AC5];
     [ dI_dparam ] = sum_cossq_s_j_fd(sdata, scsq_params, ind_active_I );
 elseif get(handles.radiobutton16, 'Value')
-    J_Norm = curtor / ( AC1*(pi^2-4)/(32*pi^2) + AC2/8 + AC3/4 + AC4*3/8 + ...
-        AC5*(7/32 + 1/(8*pi^2)));
+    switch AC0
+        case 3
+            J_Norm = curtor / (AC1 * (pi^2-4)/(8*pi^2) + AC2 * 1/2 + ...
+                AC3 * (3/8 + 1/(2 *pi^2)));
+        case 4
+            J_Norm = curtor / (AC1 * (pi^2-4)/(18*pi^2) + AC2 * 2/9 + ...
+                AC3 * (4/9) + AC4 * (5/18 + 2/(9 * pi^2)));
+        case 5
+            J_Norm = curtor / ( AC1*(pi^2-4)/(32*pi^2) + AC2/8 + AC3/4 + ...
+                AC4*3/8 + AC5*(7/32 + 1/(8*pi^2)));
+    end
     current_solution = J_Norm * sum_cossq_sqrts_j(sdata, current_profile_params);
     scsq_params = [curtor AC0 AC1 AC2 AC3 AC4 AC5];
     [ dI_dparam ] = sum_cossq_sqrts_j_fd(sdata, scsq_params, ind_active_I );    
