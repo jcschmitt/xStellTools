@@ -603,6 +603,15 @@ set(handles.edit5, 'String', num2str(handles.vmdata.am(4)));
 set(handles.edit6, 'String', num2str(handles.vmdata.am(5)));
 set(handles.edit7, 'String', num2str(handles.vmdata.am(6)));
 
+if (strcmpi(handles.vmdata.pcurrtype), 'sum_cossq_s')
+    set(handles.radiobutton15, 'Value', '1.0')
+    
+elseif (strcmpi(handles.vmdata.pcurrtype), 'sum_cossq_s')
+    set(handles.radiobutton16, 'Value', '1.0')
+else
+    warning('Unprocessed current profile')
+end
+
 set(handles.edit10, 'String', num2str(handles.vmdata.ctor));
 set(handles.edit11, 'String', num2str(handles.vmdata.ac(1)));
 set(handles.edit12, 'String', num2str(handles.vmdata.ac(2)));
