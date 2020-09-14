@@ -23,7 +23,6 @@ switch N_cssq
     case 2
         error('not developed yet')
     case 3
-        warning('not developed yet')
         F1 = (pi^2-4)/(8*pi^2);
         F2 = 1/2;
         F3 = 3/8 + 1/(2 *pi^2);
