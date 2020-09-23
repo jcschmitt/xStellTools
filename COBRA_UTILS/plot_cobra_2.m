@@ -26,7 +26,7 @@ for ii = 1:length(cobra_extensions)
         cobra_new = cobradata{ii}.grate(:,jj);
         
         %plot(rhoplot, cobradata{ii}.grate', 'o');
-        plot(splot_new, cobra_new, 'bo', 'Linewidth', 1);
+        plot(splot_new, cobra_new, 'b.', 'MarkerSize', 10);
         %plot(rhoplot, cobradata{ii}.grate', '--', 'Linewidth', 3);
     end
     title(strrep( ([title_prefix, ' ', cobra_extensions{ii}]), '_', '\_'));
@@ -38,7 +38,7 @@ grid on
 
 
 
-figure;box on; hold on; 
+%figure;box on; hold on; 
 for ii = 1:length(cobra_extensions)
     cobradata{ii} = read_cobra(['cobra_grate.' cobra_extensions{ii}]);
 
@@ -51,7 +51,7 @@ for ii = 1:length(cobra_extensions)
     %[   [tgrid, zgrid] = meshgrid(cobradata{ii}.theta, cobradata{ii}.zeta)
     tgrid = reshape(cobradata{ii}.theta, 5,5)
     zgrid = reshape(cobradata{ii}.zeta, 5,5)
-    for jj = [1:5:100]
+    for jj = [1:5:nsm1]
         figure
         grate_plot= reshape(cobradata{ii}.grate(:,jj), 5,5);
         %plot(rhoplot, cobradata{ii}.grate', 'o');
@@ -59,10 +59,10 @@ for ii = 1:length(cobra_extensions)
         title(strrep( ([title_prefix, ' ', cobra_extensions{ii} '  ns=', num2str(jj)]), '_', '\_'));
         colorbar
     end
+    xlabel('$\theta$', 'Interpreter', 'Latex')
+    ylabel('\zeta');
+    grid on
 
 end
-xlabel('$\rho$', 'Interpreter', 'Latex')
-ylabel('\gamma\tau');
-grid on
 
 
