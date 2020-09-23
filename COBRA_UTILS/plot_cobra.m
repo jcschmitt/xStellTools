@@ -1,6 +1,9 @@
 function plot_cobra(cobra_extensions, title_prefix)
 %plot_cobra(cobra_extensions, title_prefix)
 % Plot COBRA output
+if nargin < 2
+    title_prefix = '';
+end
 
 figure;box on; hold on; 
 for ii = 1:length(cobra_extensions)
