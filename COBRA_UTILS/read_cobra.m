@@ -22,8 +22,10 @@ surfs=data(1,:);
 grate=data(3,:);
 while ~feof(fid)
     data=fscanf(fid,'%f %f %d\n',3);
-    if isempty(data); break; end
-    zeta=[zeta data(1)];
+    if isempty(data); 
+        break;
+    end
+    zeta=[zeta data(1)]
     theta=[theta data(2)];
     data=fscanf(fid,'%d %f %f\n',[3 ns]);
     grate=[grate; data(3,:)];
